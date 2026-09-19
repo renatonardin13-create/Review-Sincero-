@@ -298,9 +298,10 @@ const SHOPEE_LIVE_CATEGORY_DATA: Record<string, { title: string; price: string; 
  */
 async function fetchShopeeLiveTrendsLive(category = 'Tech'): Promise<FormattedTrendItem[]> {
   try {
-    // Shopee is heavily protected against scraping.
-    // We attempt a fetch with realistic headers, but expect frequent failures.
-    const res = await fetch(`https://shopee.com.br/search?keyword=${encodeURIComponent(category)}`, {
+    const url = `https://shopee.com.br/search?keyword=${encodeURIComponent(category)}`;
+    console.log(`[liveTrends] Attempting Shopee fetch: ${url}`);
+    
+    const res = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -308,13 +309,17 @@ async function fetchShopeeLiveTrendsLive(category = 'Tech'): Promise<FormattedTr
       }
     });
 
+    console.log(`[liveTrends] Shopee fetch status: ${res.status}`);
     if (!res.ok) throw new Error(`Shopee HTTP ${res.status}`);
+    
+    const text = await res.text();
+    console.log(`[liveTrends] Shopee response length: ${text.length} chars`);
     
     // Simplistic parsing for demonstration - actual Shopee scraping requires advanced tools
     // We'll return empty if we can't parse reliably
     return []; 
   } catch (err) {
-    console.warn('[liveTrends] Shopee Live fetch failed:', err);
+    console.error('[liveTrends] Shopee Live fetch failed:', err);
     return [];
   }
 }

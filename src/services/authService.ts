@@ -130,12 +130,16 @@ export function logoutUser(): null {
 export function getRegisteredUsersList(): AuthUser[] {
   try {
     const list = localStorage.getItem(USERS_LIST_STORAGE_KEY);
+    console.log(`[authService] getRegisteredUsersList - saved: ${list ? 'yes' : 'no'}`);
     if (list) {
-      return JSON.parse(list);
+      const parsed = JSON.parse(list);
+      console.log(`[authService] getRegisteredUsersList - parsed length: ${parsed.length}`);
+      return parsed;
     }
   } catch (e) {
-    console.error(e);
+    console.error('[authService] Error parsing users list:', e);
   }
+  console.log(`[authService] getRegisteredUsersList - returning default fallback`);
   return [DEFAULT_ADMIN_USER, DEFAULT_FREE_USER];
 }
 
@@ -195,8 +199,11 @@ export function addNewUserManual(name: string, email: string): string {
   };
   
   const list = getRegisteredUsersList();
+  console.log(`[authService] addNewUserManual - list before push: ${list.length}`);
   list.push({ ...newUser, blocked: false, tempPassword: password } as any);
+  console.log(`[authService] addNewUserManual - list after push: ${list.length}`);
   localStorage.setItem(USERS_LIST_STORAGE_KEY, JSON.stringify(list));
+  console.log(`[authService] addNewUserManual - saved to storage`);
   
   return password;
 }
