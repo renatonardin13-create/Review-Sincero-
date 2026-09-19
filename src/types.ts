@@ -51,6 +51,37 @@ export interface ScoreCriteria {
   experience: number;
 }
 
+export interface MonthlySearchVolume {
+  month: string;
+  year: number;
+  searches: number;
+}
+
+export interface RealKeywordMetric {
+  keyword: string;
+  avgMonthlySearches?: number;
+  competition?: 'BAIXA' | 'MÉDIA' | 'ALTA' | 'DESCONHECIDA';
+  competitionIndex?: number;
+  monthlySearchVolumes?: MonthlySearchVolume[];
+  lowTopPageBid?: number;
+  highTopPageBid?: number;
+  currency?: string;
+  isIdea?: boolean;
+}
+
+export interface KeywordPlannerResponse {
+  success: boolean;
+  source: 'google_ads_api' | 'google_suggest_real' | 'cache';
+  isRealApiConfigured: boolean;
+  queryKeywords: string[];
+  location: string;
+  language: string;
+  results: RealKeywordMetric[];
+  cached?: boolean;
+  message?: string;
+  error?: string;
+}
+
 export interface KeywordSuggestion {
   id: string;
   term: string;

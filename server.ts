@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import { handleKeywordPlannerRequest, checkRateLimit } from "./server/keywordPlanner";
 
 dotenv.config();
 
@@ -815,6 +816,41 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     } catch (err: any) {
       console.error("Erro na análise de IA:", err);
       res.status(500).json({ error: err.message || "Erro ao processar análise com IA." });
+    }
+  });
+
+  // API Route: Real Keyword Planner (Google Ads API & Real Query Discovery)
+  app.post("/api/keyword-planner", async (req, res) => {
+    try {
+      const clientIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
+      if (!checkRateLimit(clientIp)) {
+        return res.status(429).json({
+          error: "Limite de requisições excedido. Aguarde alguns instantes antes de realizar nova pesquisa."
+        });
+      }
+
+      const { keywords, location, language, includeIdeas } = req.body;
+
+      if (!keywords || (typeof keywords === 'string' && !keywords.trim()) || (Array.isArray(keywords) && keywords.length === 0)) {
+        return res.status(400).json({
+          error: "Informe ao menos uma palavra-chave válida para consulta."
+        });
+      }
+
+      const plannerResult = await handleKeywordPlannerRequest({
+        keywords,
+        location,
+        language,
+        includeIdeas: includeIdeas !== false
+      });
+
+      res.json(plannerResult);
+    } catch (err: any) {
+      console.error("Erro no Planejador de Palavras-chave:", err);
+      res.status(500).json({
+        error: "Não foi possível consultar os dados. Verifique a configuração da integração e tente novamente.",
+        details: err.message
+      });
     }
   });
 

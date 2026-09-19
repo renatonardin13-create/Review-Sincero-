@@ -42,13 +42,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'reviews', label: 'Meus Reviews', icon: FileText },
     { id: 'create', label: 'Criar Review', icon: PlusCircle, action: onNewReview },
+    { id: 'keyword-planner', label: 'Planejador Palavras', icon: Search },
     { id: 'trends', label: 'Categorias & Trends', icon: Layers },
     { id: 'templates', label: 'Templates', icon: LayoutTemplate },
     { id: 'settings', label: 'Exportar & Lojinha', icon: Download }
   ];
 
   const ferramentasItems = [
-    { id: 'trends', label: 'Analisar Tendências', icon: Search },
+    { id: 'keyword-planner', label: 'Planejador de Palavras', icon: Search },
+    { id: 'trends', label: 'Analisar Tendências', icon: TrendingUp },
     { id: 'comparar', label: 'Comparar Produtos', icon: Scale, action: () => setCurrentView('trends') },
     { id: 'comissoes', label: 'Calculadora Comissão', icon: Percent, action: () => setCurrentView('settings') },
     { id: 'trends', label: 'Produtos Campeões', icon: Package },

@@ -105,6 +105,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </button>
 
           <button
+            onClick={() => setCurrentView('keyword-planner')}
+            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#131B2A] text-[#38BDF8] border border-[#24334A] hover:text-white hover:border-[#38BDF8]/60 transition-all"
+          >
+            <span className="text-sm">🔍</span>
+            <span>Palavras-chave</span>
+          </button>
+
+          <button
             onClick={onNewReview}
             className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-medium bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white transition-all"
           >
