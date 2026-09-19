@@ -19,13 +19,15 @@ interface PromoBannerCarouselProps {
   autoplaySpeed?: number; // em segundos
   enabled?: boolean;
   onManageClick?: () => void;
+  previewMode?: 'auto' | 'desktop' | 'mobile';
 }
 
 export const PromoBannerCarousel: React.FC<PromoBannerCarouselProps> = ({
   banners = [],
   autoplaySpeed = 6,
   enabled = true,
-  onManageClick
+  onManageClick,
+  previewMode = 'auto'
 }) => {
   const activeBanners = banners.filter((b) => b.active);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -55,6 +57,8 @@ export const PromoBannerCarousel: React.FC<PromoBannerCarouselProps> = ({
   }
 
   const currentSlide = activeBanners[currentIndex] || activeBanners[0];
+  const desktopImg = currentSlide.desktopImageUrl || currentSlide.imageUrl || 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80';
+  const mobileImg = currentSlide.mobileImageUrl || desktopImg;
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + activeBanners.length) % activeBanners.length);
@@ -80,38 +84,75 @@ export const PromoBannerCarousel: React.FC<PromoBannerCarouselProps> = ({
     }
   };
 
+  // Determine container styling if previewing as mobile or desktop
+  const isForcedMobile = previewMode === 'mobile';
+  const isForcedDesktop = previewMode === 'desktop';
+
   return (
     <div
-      className="relative w-full rounded-3xl overflow-hidden border border-[#262626] bg-[#0E0E0E] shadow-2xl group transition-all"
+      className={`relative w-full rounded-3xl overflow-hidden border border-[#262626] bg-[#0E0E0E] shadow-2xl group transition-all mx-auto ${
+        isForcedMobile ? 'max-w-[500px]' : 'max-w-full'
+      }`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Slide Container - Aspect Ratio 1200x300 Desktop / Responsive */}
-      <div className="relative min-h-[220px] sm:min-h-[250px] md:min-h-[280px] lg:min-h-[300px] flex items-center overflow-hidden">
+      {/* Slide Container - Responsive Aspect Ratio */}
+      <div className={`relative flex items-center overflow-hidden ${
+        isForcedMobile 
+          ? 'min-h-[260px]' 
+          : 'min-h-[220px] sm:min-h-[250px] md:min-h-[280px] lg:min-h-[300px]'
+      }`}>
         {/* Background Image with Dark Gradient Overlays for High Legibility */}
         <div className="absolute inset-0 z-0">
-          <img
-            key={currentSlide.id + '-img'}
-            src={
-              currentSlide.imageUrl ||
-              'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80'
-            }
-            alt={currentSlide.title}
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src =
-                'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80';
-            }}
-          />
+          {isForcedMobile ? (
+            <img
+              key={currentSlide.id + '-mob-forced'}
+              src={mobileImg}
+              alt={currentSlide.title}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = desktopImg;
+              }}
+            />
+          ) : isForcedDesktop ? (
+            <img
+              key={currentSlide.id + '-desk-forced'}
+              src={desktopImg}
+              alt={currentSlide.title}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out"
+            />
+          ) : (
+            <picture className="w-full h-full">
+              {currentSlide.mobileImageUrl && (
+                <source
+                  media="(max-width: 768px)"
+                  srcSet={currentSlide.mobileImageUrl}
+                />
+              )}
+              <img
+                key={currentSlide.id + '-img'}
+                src={desktopImg}
+                alt={currentSlide.title}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80';
+                }}
+              />
+            </picture>
+          )}
+
           {/* Multi-stage dark gradient overlays */}
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 md:via-black/75 to-black/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent md:hidden" />
         </div>
 
         {/* Content Area */}
-        <div className="relative z-10 w-full p-6 sm:p-8 md:p-10 lg:p-12 flex flex-col justify-between max-w-3xl">
-          <div className="space-y-3">
+        <div className="relative z-10 w-full p-5 sm:p-8 md:p-10 lg:p-12 flex flex-col justify-between max-w-3xl">
+          <div className="space-y-2.5 sm:space-y-3">
             {/* Badge & Sponsor Pill */}
             <div className="flex flex-wrap items-center gap-2">
               {currentSlide.badgeText && (
@@ -131,7 +172,7 @@ export const PromoBannerCarousel: React.FC<PromoBannerCarouselProps> = ({
             </div>
 
             {/* Product Title */}
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight line-clamp-2 drop-shadow-md">
+            <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight line-clamp-2 drop-shadow-md">
               {currentSlide.title}
             </h2>
 
@@ -142,12 +183,12 @@ export const PromoBannerCarousel: React.FC<PromoBannerCarouselProps> = ({
           </div>
 
           {/* CTA Button & Affiliate Link */}
-          <div className="pt-4 sm:pt-6 flex flex-wrap items-center gap-3">
+          <div className="pt-3.5 sm:pt-6 flex flex-wrap items-center gap-3">
             <a
               href={currentSlide.affiliateUrl || '#'}
               target={currentSlide.targetBlank !== false ? '_blank' : '_self'}
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-6 sm:px-8 py-3.5 rounded-2xl text-xs sm:text-sm shadow-xl shadow-[#F5C542]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-5 sm:px-8 py-3 sm:py-3.5 rounded-2xl text-xs sm:text-sm shadow-xl shadow-[#F5C542]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <span>{currentSlide.ctaText || 'Acessar Oferta'}</span>
               <ExternalLink className="w-4 h-4 stroke-[2.5]" />
@@ -157,7 +198,7 @@ export const PromoBannerCarousel: React.FC<PromoBannerCarouselProps> = ({
               <button
                 type="button"
                 onClick={onManageClick}
-                className="text-[11px] text-[#A1A1A1] hover:text-white bg-black/40 hover:bg-black/60 border border-white/10 px-3 py-2 rounded-xl transition-all"
+                className="text-[11px] text-[#A1A1A1] hover:text-white bg-black/40 hover:bg-black/60 border border-white/10 px-3 py-2 rounded-xl transition-all cursor-pointer"
               >
                 Gerenciar Banners
               </button>

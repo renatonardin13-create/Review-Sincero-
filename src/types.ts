@@ -204,7 +204,9 @@ export interface PromoBannerSlide {
   id: string;
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl: string; // Imagem principal Desktop (1200 x 300 px)
+  desktopImageUrl?: string; // Imagem Desktop (1200 x 300 px)
+  mobileImageUrl?: string; // Imagem Mobile / Tablet (600 x 300 px)
   affiliateUrl: string;
   ctaText: string;
   badgeText?: string;
