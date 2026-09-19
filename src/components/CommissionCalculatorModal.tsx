@@ -33,25 +33,33 @@ interface CommissionCalculatorModalProps {
   }) => void;
 }
 
-type PlatformID = 'meli' | 'shopee' | 'amazon' | 'hotmart' | 'braip' | 'monetizze' | 'eduzz' | 'logzz' | 'custom';
+type PlatformID = 'meli' | 'shopee' | 'amazon' | 'hotmart' | 'braip' | 'monetizze' | 'eduzz' | 'logzz' | 'clickbank' | 'banggood' | 'custom';
 type NicheID = 'moda' | 'beleza' | 'suplementos' | 'casa' | 'tech' | 'infoprodutos' | 'brinquedos' | 'outros';
 
 interface PlatformDetails {
+  id: string;
   name: string;
   color: string;
   activeClass: string;
+  logo: string;
+  pais: string;
+  moeda: string;
+  comissaoPadrao: number;
+  status: 'Ativo' | 'Em Breve' | 'Manutenção';
 }
 
 const PLATFORMS: Record<PlatformID, PlatformDetails> = {
-  meli: { name: 'Mercado Livre', color: '#FFE600', activeClass: 'bg-[#FFE600] text-black border-[#FFE600]' },
-  shopee: { name: 'Shopee', color: '#EE4D2D', activeClass: 'bg-[#EE4D2D] text-white border-[#EE4D2D]' },
-  amazon: { name: 'Amazon Brasil', color: '#FF9900', activeClass: 'bg-[#FF9900] text-black border-[#FF9900]' },
-  hotmart: { name: 'Hotmart', color: '#F5C542', activeClass: 'bg-[#F5C542] text-black border-[#F5C542]' },
-  braip: { name: 'Braip', color: '#8257E5', activeClass: 'bg-[#8257E5] text-white border-[#8257E5]' },
-  monetizze: { name: 'Monetizze', color: '#0066FF', activeClass: 'bg-[#0066FF] text-white border-[#0066FF]' },
-  eduzz: { name: 'Eduzz', color: '#00C853', activeClass: 'bg-[#00C853] text-black border-[#00C853]' },
-  logzz: { name: 'Logzz', color: '#EC4899', activeClass: 'bg-[#EC4899] text-white border-[#EC4899]' },
-  custom: { name: 'Outra / Custom', color: '#9CA3AF', activeClass: 'bg-white text-black border-white' }
+  meli: { id: 'meli', name: 'Mercado Livre', color: '#FFE600', activeClass: 'bg-[#FFE600] text-black border-[#FFE600]', logo: '🤝', pais: 'Brasil', moeda: 'BRL', comissaoPadrao: 11, status: 'Ativo' },
+  shopee: { id: 'shopee', name: 'Shopee', color: '#EE4D2D', activeClass: 'bg-[#EE4D2D] text-white border-[#EE4D2D]', logo: '🧡', pais: 'Brasil', moeda: 'BRL', comissaoPadrao: 14, status: 'Ativo' },
+  amazon: { id: 'amazon', name: 'Amazon Brasil', color: '#FF9900', activeClass: 'bg-[#FF9900] text-black border-[#FF9900]', logo: '📦', pais: 'Brasil', moeda: 'BRL', comissaoPadrao: 10, status: 'Ativo' },
+  hotmart: { id: 'hotmart', name: 'Hotmart', color: '#F5C542', activeClass: 'bg-[#F5C542] text-black border-[#F5C542]', logo: '🔥', pais: 'Brasil/Global', moeda: 'BRL/USD', comissaoPadrao: 50, status: 'Ativo' },
+  braip: { id: 'braip', name: 'Braip', color: '#8257E5', activeClass: 'bg-[#8257E5] text-white border-[#8257E5]', logo: '⚡', pais: 'Brasil', moeda: 'BRL', comissaoPadrao: 45, status: 'Ativo' },
+  monetizze: { id: 'monetizze', name: 'Monetizze', color: '#0066FF', activeClass: 'bg-[#0066FF] text-white border-[#0066FF]', logo: '🪙', pais: 'Brasil', moeda: 'BRL', comissaoPadrao: 50, status: 'Ativo' },
+  eduzz: { id: 'eduzz', name: 'Eduzz', color: '#00C853', activeClass: 'bg-[#00C853] text-black border-[#00C853]', logo: '🎓', pais: 'Brasil', moeda: 'BRL', comissaoPadrao: 45, status: 'Ativo' },
+  logzz: { id: 'logzz', name: 'Logzz', color: '#EC4899', activeClass: 'bg-[#EC4899] text-white border-[#EC4899]', logo: '🚚', pais: 'Brasil', moeda: 'BRL', comissaoPadrao: 35, status: 'Ativo' },
+  clickbank: { id: 'clickbank', name: 'ClickBank', color: '#0F52BA', activeClass: 'bg-[#0F52BA] text-white border-[#0F52BA]', logo: '🌍', pais: 'EUA/Internacional', moeda: 'USD', comissaoPadrao: 65, status: 'Ativo' },
+  banggood: { id: 'banggood', name: 'Banggood', color: '#FF6600', activeClass: 'bg-[#FF6600] text-white border-[#FF6600]', logo: '🇨🇳', pais: 'China/Global', moeda: 'USD', comissaoPadrao: 8, status: 'Ativo' },
+  custom: { id: 'custom', name: 'Outra / Custom', color: '#9CA3AF', activeClass: 'bg-white text-black border-white', logo: '⚙️', pais: 'Qualquer', moeda: 'BRL', comissaoPadrao: 10, status: 'Ativo' }
 };
 
 interface NicheDetails {
@@ -84,6 +92,8 @@ interface RepresentativeProduct {
 const REPRESENTATIVE_CATALOG: Record<PlatformID, Record<NicheID, RepresentativeProduct[]>> = {
   meli: {} as any, // Populated dynamically from API / local catalog
   shopee: {} as any, // Populated dynamically from API / local catalog
+  clickbank: {} as any,
+  banggood: {} as any,
   custom: {} as any,
 
   amazon: {
@@ -623,6 +633,26 @@ const PLATFORM_NICHE_RATES: Record<Exclude<PlatformID, 'custom'>, Record<NicheID
     infoprodutos: { rate: 40, avgPrice: 147.00, note: "Materiais digitais de suporte integrados pagam 40%." },
     brinquedos: { rate: 30, avgPrice: 110.00, note: "Jogos recreativos e artigos de lazer pagam 30%." },
     outros: { rate: 35, avgPrice: 150.00, note: "Dropshipping nacional de diversos segmentos paga em média 35%." },
+  },
+  clickbank: {
+    moda: { rate: 50, avgPrice: 85.00, note: "Vestuário e acessórios internacionais na ClickBank pagam em média 50%." },
+    beleza: { rate: 60, avgPrice: 69.00, note: "Suplementos cosméticos de pele e skincare pagam em média 60%." },
+    suplementos: { rate: 70, avgPrice: 147.00, note: "Suplementos de saúde e perda de peso pagam comissões recorrentes altas de até 70%." },
+    casa: { rate: 40, avgPrice: 99.00, note: "Guias digitais de reforma de residências e DIY pagam 40%." },
+    tech: { rate: 40, avgPrice: 199.00, note: "Sistemas eletrônicos de negociação e robôs de trading pagam 40%." },
+    infoprodutos: { rate: 75, avgPrice: 97.00, note: "Produtos digitais premium de e-learning chegam a pagar 75% na ClickBank." },
+    brinquedos: { rate: 50, avgPrice: 49.00, note: "Guias educacionais para pais e famílias pagam 50%." },
+    outros: { rate: 50, avgPrice: 79.00, note: "Média geral de produtos diversos na ClickBank é de 50%." },
+  },
+  banggood: {
+    moda: { rate: 8, avgPrice: 29.00, note: "Vestuários e tecidos de dropshipping global na Banggood pagam 8%." },
+    beleza: { rate: 10, avgPrice: 19.90, note: "Produtos de maquiagem e pincéis elétricos pagam 10% de comissão." },
+    suplementos: { rate: 10, avgPrice: 39.00, note: "Artigos de cuidados pessoais de saúde pagam 10%." },
+    casa: { rate: 8, avgPrice: 49.00, note: "Artigos domésticos, iluminação LED e organizadores pagam 8%." },
+    tech: { rate: 6, avgPrice: 189.00, note: "Acessórios eletrônicos, carregadores rápidos e drones na Banggood pagam 6%." },
+    infoprodutos: { rate: 15, avgPrice: 15.00, note: "Manuais de instrução eletrônica e guias de modelagem 3D pagam 15%." },
+    brinquedos: { rate: 8, avgPrice: 24.90, note: "Brinquedos de controle remoto e peças pagam comissão de 8%." },
+    outros: { rate: 7, avgPrice: 35.00, note: "Outros artigos diversos na Banggood têm comissão média de 7%." },
   }
 };
 
@@ -824,6 +854,7 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
   const dailyEarnings = salesPerDay * commissionPerSale;
   const monthlyEarnings = dailyEarnings * 30;
   const monthlySales = salesPerDay * 30;
+  const currencySymbol = PLATFORMS[platform]?.moeda === 'USD' ? 'US$' : 'R$';
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
@@ -983,7 +1014,7 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
                     <div className="flex-1 min-w-0 space-y-0.5">
                       <h4 className="text-[11px] font-bold truncate leading-tight">{prod.title}</h4>
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-[#22C55E]">R$ {prod.price.toFixed(2)}</span>
+                        <span className="text-[10px] font-black text-[#22C55E]">{currencySymbol} {prod.price.toFixed(2)}</span>
                         {prod.commissionRate && (
                           <span className="text-[9px] px-1.5 py-0.25 rounded bg-[#22C55E]/10 text-[#22C55E] font-extrabold">{prod.commissionRate}% Com.</span>
                         )}
@@ -1022,7 +1053,7 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
             </div>
             <div className="text-center sm:text-right shrink-0">
               <span className="text-[10px] text-[#8E939E] block">Preço de Venda</span>
-              <span className="text-lg font-black text-[#22C55E]">R$ {selectedProduct.price.toFixed(2)}</span>
+              <span className="text-lg font-black text-[#22C55E]">{currencySymbol} {selectedProduct.price.toFixed(2)}</span>
             </div>
           </div>
         )}
@@ -1041,7 +1072,7 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
           <div className="bg-[#11141D] border border-[#1E2433] rounded-2xl p-4 space-y-2">
             <div className="flex justify-between text-xs font-bold text-[#E0E0E0]">
               <span>Preço Simulado do Produto:</span>
-              <span className="text-[#F5C542]">R$ {productPrice.toFixed(2)}</span>
+              <span className="text-[#F5C542]">{currencySymbol} {productPrice.toFixed(2)}</span>
             </div>
             <input
               type="range"
@@ -1119,7 +1150,7 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
             <div className="p-3 rounded-xl bg-black/40 border border-[#1A3F28]/50">
               <span className="text-[10px] text-[#8E939E] block font-bold uppercase tracking-wider">Sua Comissão / Venda</span>
               <span className="text-lg font-black text-white block mt-1">
-                R$ {commissionPerSale.toFixed(2)}
+                {currencySymbol} {commissionPerSale.toFixed(2)}
               </span>
             </div>
 
@@ -1133,7 +1164,7 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
             <div className="p-3 rounded-xl bg-black/40 border border-[#1A3F28]/50">
               <span className="text-[10px] text-[#22C55E] block font-bold uppercase tracking-wider">Seu Lucro Mensal Est.</span>
               <span className="text-xl font-black text-[#22C55E] block mt-1">
-                R$ {monthlyEarnings.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {currencySymbol} {monthlyEarnings.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
           </div>
@@ -1155,7 +1186,7 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
                 if (selectedProduct) {
                   onNewReview({
                     productName: selectedProduct.title,
-                    productPrice: `R$ ${selectedProduct.price.toFixed(2).replace('.', ',')}`,
+                    productPrice: `${currencySymbol} ${selectedProduct.price.toFixed(2).replace('.', ',')}`,
                     productImage: selectedProduct.image,
                     productCategory: NICHES[niche].name,
                     productDescription: selectedProduct.description || 'Produto simulado via calculadora inteligente.',
@@ -1164,7 +1195,7 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
                 } else {
                   onNewReview({
                     productName: `Produto de ${NICHES[niche].emoji} ${NICHES[niche].name}`,
-                    productPrice: `R$ ${productPrice.toFixed(2).replace('.', ',')}`,
+                    productPrice: `${currencySymbol} ${productPrice.toFixed(2).replace('.', ',')}`,
                     productImage: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80',
                     productCategory: NICHES[niche].name,
                     productDescription: `Excelente oportunidade de promoção de ${NICHES[niche].name} com taxa de ${commissionRate}% de comissão.`,
