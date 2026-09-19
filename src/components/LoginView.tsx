@@ -127,15 +127,17 @@ export const LoginView: React.FC<LoginViewProps> = ({
     <div className="relative min-h-screen w-full bg-[#07090E] text-white flex flex-col items-center justify-center p-4 sm:p-6 overflow-x-hidden select-none">
       {/* Background Architectural / Studio Moodboard Overlay */}
       {loginMedia?.youtubeEnabled && youtubeId ? (
-        <iframe
-          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
-          className="fixed inset-0 w-full h-full pointer-events-none opacity-40 object-cover"
-          style={{ zIndex: 0 }}
-          title="YouTube Background"
-        />
+        <div className="fixed inset-0 z-0 overflow-hidden bg-black">
+          <iframe
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&cc_load_policy=0&playsinline=1&loop=1&playlist=${youtubeId}&fs=0&disablekb=1&iv_load_policy=3`}
+            className="absolute top-1/2 left-1/2 w-screen h-[56.25vw] min-h-screen min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2"
+            title="YouTube Background"
+            allow="autoplay; encrypted-media"
+          />
+        </div>
       ) : (
         <div 
-          className="fixed inset-0 pointer-events-none opacity-25 bg-cover bg-center"
+          className="fixed inset-0 z-0 pointer-events-none opacity-25 bg-cover bg-center"
           style={{
             backgroundImage: `radial-gradient(circle at 50% 30%, rgba(245, 197, 66, 0.08) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(30, 41, 59, 0.4) 0%, transparent 50%), url('${loginMedia?.backgroundImageUrl || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80'}')`
           }}
