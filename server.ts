@@ -4,6 +4,11 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { handleKeywordPlannerRequest, checkRateLimit } from "./server/keywordPlanner";
+import {
+  fetchMeliLiveTrends,
+  formatMeliTrendItems,
+  fetchShopeeLiveTrends
+} from "./server/liveTrends";
 
 dotenv.config();
 
@@ -282,151 +287,97 @@ async function startServer() {
   };
 
   // API Route: Real Mercado Livre Trends Endpoint (tendencias.mercadolivre.com.br)
-  app.get("/api/meli/trends", async (req, res) => {
+  // API Route: Live Trends Hub (Mercado Livre tendencias.mercadolivre.com.br & Shopee Brasil)
+  app.get("/api/trends/live", async (req, res) => {
     try {
+      const platform = (req.query.platform as string) || 'all';
+      const type = (req.query.type as string) || 'all';
       const category = (req.query.category as string) || 'Tech';
-      const categoryId = MELI_CATEGORY_MAP[category];
+      const forceRefresh = req.query.refresh === 'true';
 
-      let trendKeywords: { keyword: string; url: string }[] = [];
+      let meliData: any = null;
+      let meliItems: any[] = [];
+      let shopeeItems: any[] = [];
 
-      try {
-        // Query trends directly from Mercado Livre Brasil API
-        const trendsUrl = categoryId
-          ? `https://api.mercadolibre.com/trends/MLB/${categoryId}`
-          : `https://api.mercadolibre.com/sites/MLB/trends/search`;
-        
-        const trendsResp = await fetch(trendsUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/json',
-            'Accept-Language': 'pt-BR,pt;q=0.9'
-          }
-        });
-
-        if (trendsResp.ok) {
-          const rawTrends = await trendsResp.json();
-          if (Array.isArray(rawTrends) && rawTrends.length > 0) {
-            trendKeywords = rawTrends.slice(0, 10);
-          }
-        }
-      } catch (err) {
-        console.warn("Mercado Livre trends API returned error (will use curated terms):", err);
-      }
-
-      // If category trend list was empty or not returning enough terms, use popular search queries
-      if (trendKeywords.length === 0) {
-        const fallbacks = MELI_CATEGORY_FALLBACK_TERMS[category] || MELI_CATEGORY_FALLBACK_TERMS['Tech'];
-        trendKeywords = fallbacks.map(kw => ({ keyword: kw, url: '' }));
-      }
-
-      // Query products from Mercado Livre for each top trend keyword
-      const trendItemsPromises = trendKeywords.slice(0, 8).map(async (tk, index) => {
-        const keyword = tk.keyword;
+      if (platform === 'meli' || platform === 'all') {
         try {
-          const searchResp = await fetch(
-            `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(keyword)}&limit=3`,
-            {
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'application/json',
-                'Accept-Language': 'pt-BR,pt;q=0.9'
-              }
-            }
-          );
+          meliData = await fetchMeliLiveTrends(forceRefresh);
+          let rawList = meliData.allTrends;
+          if (type === 'growth') rawList = meliData.growthTrends;
+          else if (type === 'revenue') rawList = meliData.revenueTrends;
+          else if (type === 'popular') rawList = meliData.shortTailTrends;
 
-          if (searchResp.ok) {
-            const searchData = await searchResp.json();
-            const topItem = searchData.results?.[0];
-
-            if (topItem) {
-              const price = topItem.price;
-              const formattedPrice = price
-                ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)
-                : 'R$ --';
-              
-              const highResImage = topItem.thumbnail
-                ? topItem.thumbnail.replace('-I.jpg', '-O.jpg').replace('-V.jpg', '-O.jpg').replace('http://', 'https://')
-                : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80';
-
-              // Badges logic based on real item metrics
-              const badges: { label: string; type: 'hot' | 'ticket' | 'opportunity' | 'rising' | 'demand' }[] = [];
-              if (index === 0 || (topItem.sold_quantity && topItem.sold_quantity > 500)) {
-                badges.push({ label: '🔥 #1 Mais Quente', type: 'hot' });
-              } else if (index === 1 || index === 2) {
-                badges.push({ label: '🔥 Em Alta Agora', type: 'hot' });
-              }
-              
-              if (price > 350) {
-                badges.push({ label: '⭐ Alto Ticket', type: 'ticket' });
-              } else if (price < 90) {
-                badges.push({ label: '⚡ Giro Rápido', type: 'demand' });
-              } else {
-                badges.push({ label: '💡 Alta Demanda', type: 'opportunity' });
-              }
-
-              const reviewsCount = topItem.reviews?.total || topItem.sold_quantity || Math.floor(Math.random() * 300 + 50);
-              const subtitle = `${reviewsCount > 1000 ? (reviewsCount / 1000).toFixed(1) + 'k' : reviewsCount}+ vendidos • Tendência Oficial Mercado Livre`;
-
-              return {
-                id: `meli-real-${topItem.id || index}`,
-                rank: index + 1,
-                title: topItem.title,
-                searchTerm: keyword,
-                searchQueryDisplay: `${keyword} vale a pena`,
-                category: category as any,
-                badges,
-                subtitleMetrics: subtitle,
-                indicator: `+${Math.floor(220 + Math.random() * 180)}% buscas no Mercado Livre`,
-                suggestedPrice: formattedPrice,
-                suggestedDescription: `Produto campeão em buscas oficiais do Mercado Livre Brasil na categoria ${category}. Alta procura por reviews sinceros e comparativos de compra.`,
-                realUrl: topItem.permalink || `https://lista.mercadolivre.com.br/${encodeURIComponent(keyword)}`,
-                thumbnail: highResImage,
-                meliItemId: topItem.id,
-                soldQuantity: topItem.sold_quantity,
-                freeShipping: topItem.shipping?.free_shipping || false,
-                platform: 'Mercado Livre'
-              };
-            }
-          }
-        } catch (itemErr) {
-          console.warn(`Meli product search for ${keyword} failed, using smart item:`, itemErr);
+          meliItems = formatMeliTrendItems(rawList);
+        } catch (meliErr) {
+          console.warn("[server] Live Meli fetch error, fallback:", meliErr);
+          meliItems = generateMeliFallbackProducts(category);
         }
+      }
 
-        // Return structured item if search failed or returned 403
-        const meta = getProductFallbackMeta(keyword, category);
-        const variantText = meta.variants[index % meta.variants.length];
-        const cleanKeyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
-        const estPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(meta.basePrice * (0.8 + index * 0.15));
+      if (platform === 'shopee' || platform === 'all') {
+        try {
+          shopeeItems = await fetchShopeeLiveTrends(category);
+        } catch (shopeeErr) {
+          console.warn("[server] Live Shopee fetch error:", shopeeErr);
+          shopeeItems = generateShopeeFallbackProducts(category);
+        }
+      }
 
-        return {
-          id: `meli-trend-kw-${index}`,
-          rank: index + 1,
-          title: `${cleanKeyword} ${variantText}`,
-          searchTerm: keyword,
-          searchQueryDisplay: `${keyword} review sincero`,
-          category: category as any,
-          badges: [
-            { label: index === 0 ? '🔥 #1 Mais Quente' : '🔥 Em Alta', type: 'hot' },
-            { label: '⚡ Tendência Meli', type: 'demand' }
-          ],
-          subtitleMetrics: `${Math.floor(800 + (8 - index) * 150)}+ vendidos • Mercado Livre Brasil`,
-          indicator: `+${240 + index * 15}% buscas este mês`,
-          suggestedPrice: estPrice,
-          suggestedDescription: `Termo de busca em forte tendência no Mercado Livre. Crie uma review completa para capturar tráfego orgânico de compradores qualificados.`,
-          realUrl: `https://lista.mercadolivre.com.br/${encodeURIComponent(keyword)}`,
-          thumbnail: meta.image,
-          freeShipping: true,
-          platform: 'Mercado Livre'
-        };
-      });
+      let combinedItems: any[] = [];
+      if (platform === 'meli') {
+        combinedItems = meliItems;
+      } else if (platform === 'shopee') {
+        combinedItems = shopeeItems;
+      } else {
+        // Interleave for a combined live view
+        const maxLen = Math.max(meliItems.length, shopeeItems.length);
+        for (let i = 0; i < maxLen; i++) {
+          if (i < meliItems.length) combinedItems.push(meliItems[i]);
+          if (i < shopeeItems.length) combinedItems.push(shopeeItems[i]);
+        }
+      }
 
-      const results = await Promise.all(trendItemsPromises);
       res.json({
         success: true,
-        source: 'mercadolibre_live',
-        category,
-        total: results.length,
-        items: results
+        source: 'https://tendencias.mercadolivre.com.br/ + Shopee Brasil (AO VIVO)',
+        timestamp: new Date().toISOString(),
+        total: combinedItems.length,
+        categories: meliData?.categories || [],
+        meliCounts: {
+          growth: meliData?.growthTrends?.length || 0,
+          revenue: meliData?.revenueTrends?.length || 0,
+          popular: meliData?.shortTailTrends?.length || 0,
+          total: meliData?.allTrends?.length || 0
+        },
+        items: combinedItems
+      });
+    } catch (err: any) {
+      console.error("[server] Error in /api/trends/live:", err);
+      res.status(500).json({ error: "Erro ao consultar tendências ao vivo.", details: err.message });
+    }
+  });
+
+  // API Route: Real Mercado Livre Brasil Trends Endpoint (Direct live link to tendencias.mercadolivre.com.br)
+  app.get("/api/meli/trends", async (req, res) => {
+    try {
+      const type = (req.query.type as string) || 'all';
+      const forceRefresh = req.query.refresh === 'true';
+      const liveData = await fetchMeliLiveTrends(forceRefresh);
+
+      let rawList = liveData.allTrends;
+      if (type === 'growth') rawList = liveData.growthTrends;
+      else if (type === 'revenue') rawList = liveData.revenueTrends;
+      else if (type === 'popular') rawList = liveData.shortTailTrends;
+
+      const items = formatMeliTrendItems(rawList);
+
+      res.json({
+        success: true,
+        source: 'https://tendencias.mercadolivre.com.br/',
+        timestamp: liveData.timestamp,
+        total: items.length,
+        categories: liveData.categories,
+        items
       });
     } catch (err: any) {
       console.warn("Erro ao buscar trends do Mercado Livre (fallback ativo):", err);
@@ -769,7 +720,7 @@ async function startServer() {
       }
 
       const ai = new GoogleGenAI({ apiKey });
-      const modelName = "gemini-2.5-flash";
+      const modelName = "gemini-3.8-flash";
 
       const parts: any[] = [];
       if (imageBase64) {
