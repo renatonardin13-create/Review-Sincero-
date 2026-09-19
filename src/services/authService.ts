@@ -144,14 +144,61 @@ export function recordUserInDirectory(user: AuthUser): void {
     const list = getRegisteredUsersList();
     const existingIdx = list.findIndex((u) => u.email.toLowerCase() === user.email.toLowerCase());
     if (existingIdx !== -1) {
-      list[existingIdx] = { ...list[existingIdx], lastLoginAt: new Date().toISOString() };
+      // Preserve blocked status if it exists
+      const blocked = (list[existingIdx] as any).blocked || false;
+      list[existingIdx] = { ...user, lastLoginAt: new Date().toISOString(), blocked };
     } else {
-      list.push(user);
+      list.push({ ...user, blocked: false } as any);
     }
     localStorage.setItem(USERS_LIST_STORAGE_KEY, JSON.stringify(list));
   } catch (e) {
     console.error(e);
   }
+}
+
+export function deleteUserFromDirectory(email: string): void {
+  try {
+    const list = getRegisteredUsersList();
+    const newList = list.filter((u) => u.email.toLowerCase() !== email.toLowerCase());
+    localStorage.setItem(USERS_LIST_STORAGE_KEY, JSON.stringify(newList));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function toggleUserBlockStatus(email: string): void {
+  try {
+    const list = getRegisteredUsersList();
+    const newList = list.map((u) => {
+      if (u.email.toLowerCase() === email.toLowerCase()) {
+        return { ...u, blocked: !(u as any).blocked };
+      }
+      return u;
+    });
+    localStorage.setItem(USERS_LIST_STORAGE_KEY, JSON.stringify(newList));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function addNewUserManual(name: string, email: string): string {
+  const password = Math.random().toString(36).slice(-8);
+  const newUser: AuthUser = {
+    id: 'usr-' + Date.now(),
+    email: email.toLowerCase(),
+    name,
+    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+    role: 'user',
+    provider: 'email',
+    createdAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString()
+  };
+  
+  const list = getRegisteredUsersList();
+  list.push({ ...newUser, blocked: false, tempPassword: password } as any);
+  localStorage.setItem(USERS_LIST_STORAGE_KEY, JSON.stringify(list));
+  
+  return password;
 }
 
 export function checkUserReviewLimit(user: AuthUser, settings: any, reviewCount: number): boolean {

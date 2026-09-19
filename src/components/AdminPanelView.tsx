@@ -18,11 +18,14 @@ import {
   Search,
   Save,
   Check,
-  RotateCcw
+  RotateCcw,
+  Ban,
+  Unlock,
+  UserPlus
 } from 'lucide-react';
 import { AuthUser, AppSettings, MemberAcademyData, ADMIN_EMAIL } from '../types';
 import { getStoredAcademyData, saveStoredAcademyData, resetStoredAcademyData } from '../data/academyData';
-import { getRegisteredUsersList } from '../services/authService';
+import { getRegisteredUsersList, deleteUserFromDirectory, toggleUserBlockStatus, addNewUserManual } from '../services/authService';
 
 interface AdminPanelViewProps {
   currentUser: AuthUser;
@@ -43,13 +46,38 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
   const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis'>('overview');
   const [academyData, setAcademyData] = useState<MemberAcademyData>(getStoredAcademyData);
-  const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList);
+  const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+  const [newUser, setNewUser] = useState({ name: '', email: '' });
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
 
   // Quick form for banners settings in admin
   const [adminBannerSpeed, setAdminBannerSpeed] = useState<number>(settings.bannerAutoplaySpeed || 5);
   const [adminEnableBanners, setAdminEnableBanners] = useState<boolean>(settings.enableBannerCarousel !== false);
   const [adminEnableQuickLogin, setAdminEnableQuickLogin] = useState<boolean>(settings.enableQuickLoginShortcuts !== false);
+
+  const refreshUsers = () => setRegisteredUsers(getRegisteredUsersList());
+
+  const handleAddNewUser = () => {
+    if (!newUser.name || !newUser.email) return;
+    const password = addNewUserManual(newUser.name, newUser.email);
+    setGeneratedPassword(password);
+    setNewUser({ name: '', email: '' });
+    refreshUsers();
+  };
+
+  const handleDeleteUser = (email: string) => {
+    if (confirm('Tem certeza que deseja excluir este usuário?')) {
+      deleteUserFromDirectory(email);
+      refreshUsers();
+    }
+  };
+
+  const handleToggleBlock = (email: string) => {
+    toggleUserBlockStatus(email);
+    refreshUsers();
+  };
 
   const handleSaveBannerConfig = () => {
     onSaveSettings({
@@ -386,28 +414,71 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                 Lista de usuários que acessaram o aplicativo com suas contas Google ou e-mails.
               </p>
             </div>
-            <span className="text-xs text-[#F5C542] font-mono font-bold bg-[#F5C542]/10 px-3 py-1 rounded-full border border-[#F5C542]/20">
-              {registeredUsers.length} usuários
-            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowAddUser(!showAddUser)}
+                className="bg-[#2563EB] hover:bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4" />
+                Adicionar Manualmente
+              </button>
+              <span className="text-xs text-[#F5C542] font-mono font-bold bg-[#F5C542]/10 px-3 py-2 rounded-full border border-[#F5C542]/20">
+                {registeredUsers.length} usuários
+              </span>
+            </div>
           </div>
+
+          {showAddUser && (
+            <div className="p-4 bg-[#181818] border border-[#282828] rounded-2xl space-y-3">
+              <h4 className="text-sm font-bold text-white">Adicionar Novo Usuário</h4>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Nome"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                  className="bg-[#101010] border border-[#333] rounded-xl p-2.5 text-xs text-white flex-1"
+                />
+                <input
+                  type="email"
+                  placeholder="E-mail"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                  className="bg-[#101010] border border-[#333] rounded-xl p-2.5 text-xs text-white flex-1"
+                />
+                <button
+                  onClick={handleAddNewUser}
+                  className="bg-[#22C55E] hover:bg-[#1fa851] text-black font-black px-4 py-2.5 rounded-xl text-xs"
+                >
+                  Adicionar
+                </button>
+              </div>
+              {generatedPassword && (
+                <div className="text-xs text-[#F5C542] bg-[#252008] p-2 rounded-lg border border-[#F5C542]/20">
+                  Usuário criado! Senha temporária: <strong>{generatedPassword}</strong> (Copie agora, ela não será exibida novamente)
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="space-y-3">
             {registeredUsers.map((user, idx) => {
               const userIsAdmin = user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+              const isBlocked = (user as any).blocked;
               return (
                 <div
                   key={idx}
-                  className="p-4 bg-[#181818] border border-[#282828] rounded-2xl flex items-center justify-between gap-4"
+                  className={`p-4 bg-[#181818] border rounded-2xl flex items-center justify-between gap-4 ${isBlocked ? 'border-red-900/50' : 'border-[#282828]'}`}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${
                         userIsAdmin
                           ? 'bg-[#F5C542] text-black shadow-md'
-                          : 'bg-[#2563EB] text-white'
+                          : isBlocked ? 'bg-red-900 text-red-200' : 'bg-[#2563EB] text-white'
                       }`}
                     >
-                      {userIsAdmin ? '👑' : '👤'}
+                      {userIsAdmin ? '👑' : isBlocked ? '🚫' : '👤'}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -416,21 +487,35 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                           className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${
                             userIsAdmin
                               ? 'bg-[#F5C542]/20 text-[#F5C542]'
-                              : 'bg-blue-500/20 text-blue-400'
+                              : isBlocked ? 'bg-red-900/20 text-red-400' : 'bg-blue-500/20 text-blue-400'
                           }`}
                         >
-                          {userIsAdmin ? 'Administrador Master' : 'Usuário Gratuito'}
+                          {userIsAdmin ? 'Administrador Master' : isBlocked ? 'Bloqueado' : 'Usuário Gratuito'}
                         </span>
                       </div>
                       <p className="text-xs text-[#8E8E8E]">{user.email}</p>
                     </div>
                   </div>
 
-                  <div className="text-right text-[11px] text-[#666]">
-                    <span>Último Acesso:</span>
-                    <p className="text-[#A1A1A1] font-mono">
-                      {new Date(user.lastLoginAt).toLocaleDateString('pt-BR')}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    {!userIsAdmin && (
+                      <>
+                        <button
+                          onClick={() => handleToggleBlock(user.email)}
+                          className={`p-2 rounded-xl border text-xs cursor-pointer ${isBlocked ? 'bg-emerald-900/20 border-emerald-500/30 text-emerald-400' : 'bg-[#202020] border-[#333] text-[#F5C542]'}`}
+                          title={isBlocked ? "Desbloquear" : "Bloquear"}
+                        >
+                          {isBlocked ? <Unlock className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user.email)}
+                          className="p-2 bg-[#202020] hover:bg-red-900/20 border border-[#333] hover:border-red-500/30 text-red-400 rounded-xl text-xs transition-colors cursor-pointer"
+                          title="Excluir"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               );
