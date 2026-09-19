@@ -14,7 +14,7 @@ import {
   Zap,
   ArrowLeft
 } from 'lucide-react';
-import { AuthUser, ADMIN_EMAIL } from '../types';
+import { AuthUser, ADMIN_EMAIL, AppSettings } from '../types';
 import {
   loginWithEmailAccount,
   loginWithGoogleAccount,
@@ -25,12 +25,14 @@ interface LoginViewProps {
   onLoginSuccess: (user: AuthUser) => void;
   onCancel?: () => void;
   currentUser?: AuthUser;
+  settings?: AppSettings;
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({
   onLoginSuccess,
   onCancel,
-  currentUser
+  currentUser,
+  settings
 }) => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState<string>('');
@@ -450,6 +452,44 @@ export const LoginView: React.FC<LoginViewProps> = ({
             )}
           </div>
         </div>
+
+        {/* Quick Login Shortcuts */}
+        {settings?.enableQuickLoginShortcuts !== false && (
+          <div className="w-full mt-4 bg-[#11141D]/90 border border-white/10 rounded-[24px] p-4 text-center space-y-3 animate-in fade-in slide-in-from-bottom-2">
+            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider flex items-center justify-center gap-1">
+              <Zap className="w-3 h-3 text-[#F5C542]" /> ATALHOS DE TESTE RÁPIDO:
+            </span>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signin');
+                  setEmail('renatonardin13@gmail.com');
+                  setPassword('123456');
+                  setName('Renato Nardin');
+                }}
+                className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#201808] to-[#120F05] border border-[#F5C542]/30 text-xs font-bold text-[#F5C542] hover:border-[#F5C542]/50 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+              >
+                <Crown className="w-3.5 h-3.5 text-[#F5C542]" />
+                <span>Preencher Admin</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signin');
+                  setEmail('aluno@gmail.com');
+                  setPassword('123456');
+                  setName('Aluno de Testes');
+                }}
+                className="py-2.5 px-3 rounded-xl bg-[#181C26] border border-white/10 text-xs font-bold text-[#94A3B8] hover:text-white hover:border-white/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+              >
+                <User className="w-3.5 h-3.5 text-[#94A3B8]" />
+                <span>Preencher Comum</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

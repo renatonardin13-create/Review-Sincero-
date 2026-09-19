@@ -50,12 +50,14 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   // Quick form for banners settings in admin
   const [adminBannerSpeed, setAdminBannerSpeed] = useState<number>(settings.bannerAutoplaySpeed || 5);
   const [adminEnableBanners, setAdminEnableBanners] = useState<boolean>(settings.enableBannerCarousel !== false);
+  const [adminEnableQuickLogin, setAdminEnableQuickLogin] = useState<boolean>(settings.enableQuickLoginShortcuts !== false);
 
   const handleSaveBannerConfig = () => {
     onSaveSettings({
       ...settings,
       bannerAutoplaySpeed: adminBannerSpeed,
-      enableBannerCarousel: adminEnableBanners
+      enableBannerCarousel: adminEnableBanners,
+      enableQuickLoginShortcuts: adminEnableQuickLogin
     });
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2000);
@@ -153,7 +155,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
         {[
           { id: 'overview', label: '📊 Visão Geral', icon: BarChart3 },
           { id: 'academy', label: '🎓 Gerenciar Videoaulas & Curso', icon: Film },
-          { id: 'banners', label: '💰 Monetização & Banners Globais', icon: DollarSign },
+          { id: 'banners', label: '⚙️ Ajustes & Monetização Global', icon: DollarSign },
           { id: 'users', label: '👥 Alunos & Usuários', icon: Users },
           { id: 'apis', label: '🔑 Chaves & Integrações de APIs', icon: Key }
         ].map((tab) => {
@@ -326,6 +328,24 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                 <option value={8}>8 Segundos (Lento)</option>
                 <option value={10}>10 Segundos</option>
               </select>
+            </div>
+
+            {/* Quick Login Shortcuts Toggle */}
+            <div className="p-4 bg-[#181818] border border-[#282828] rounded-2xl space-y-2 sm:col-span-2">
+              <label className="text-xs font-bold text-white block">
+                Atalhos de Teste Rápido (Preencher Admin / Preencher Comum) na Tela de Login:
+              </label>
+              <select
+                value={adminEnableQuickLogin ? 'true' : 'false'}
+                onChange={(e) => setAdminEnableQuickLogin(e.target.value === 'true')}
+                className="w-full bg-[#101010] border border-[#333] rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#F5C542] cursor-pointer"
+              >
+                <option value="true">✅ Exibir os botões de atalho rápidos para preenchimento de teste</option>
+                <option value="false">❌ Ocultar os botões de atalho rápidos para produção</option>
+              </select>
+              <p className="text-[10px] text-[#8E8E8E] leading-normal">
+                Nota: Quando desativado, os usuários comuns não verão os botões de atalho rápidos ao carregar a tela de acesso.
+              </p>
             </div>
           </div>
 

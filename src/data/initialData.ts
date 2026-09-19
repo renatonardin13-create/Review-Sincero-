@@ -86,7 +86,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   exportWithSeoTags: true,
   promoBanners: DEFAULT_PROMO_BANNERS,
   bannerAutoplaySpeed: 6,
-  enableBannerCarousel: true
+  enableBannerCarousel: true,
+  enableQuickLoginShortcuts: true
 };
 
 export const SAMPLE_REVIEWS: Review[] = [

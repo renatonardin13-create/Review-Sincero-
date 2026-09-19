@@ -325,6 +325,7 @@ export default function App() {
     return (
       <LoginView
         currentUser={currentUser}
+        settings={settings}
         onLoginSuccess={(user) => {
           handleUserChange(user);
           setCurrentView('dashboard');
