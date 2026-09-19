@@ -18,7 +18,11 @@ import {
   Search,
   Save,
   Check,
-  RotateCcw
+  RotateCcw,
+  UserPlus,
+  User,
+  UserMinus,
+  Ban
 } from 'lucide-react';
 import { AuthUser, AppSettings, MemberAcademyData, ADMIN_EMAIL } from '../types';
 import { getStoredAcademyData, saveStoredAcademyData, resetStoredAcademyData } from '../data/academyData';
@@ -44,7 +48,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
   const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis' | 'login'>('overview');
   const [academyData, setAcademyData] = useState<MemberAcademyData>(getStoredAcademyData);
-  const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList);
+  const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
 
   // Quick form for banners settings in admin
@@ -425,56 +429,45 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
         <div className="bg-[#121212] border border-[#222] rounded-3xl p-6 md:p-8 space-y-6 animate-in fade-in">
           <div className="border-b border-[#222] pb-5 flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-black text-white">Usuários & Logins Registrados</h3>
+              <h3 className="text-lg font-black text-white">Gerenciamento de Alunos</h3>
               <p className="text-xs text-[#8E8E8E]">
-                Lista de usuários que acessaram o aplicativo com suas contas Google ou e-mails.
+                Controle o acesso, edite e remova usuários do sistema.
               </p>
             </div>
-            <span className="text-xs text-[#F5C542] font-mono font-bold bg-[#F5C542]/10 px-3 py-1 rounded-full border border-[#F5C542]/20">
-              {registeredUsers.length} usuários
-            </span>
+            <button className="bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 cursor-pointer">
+              <UserPlus className="w-4 h-4" />
+              <span>Adicionar Aluno</span>
+            </button>
           </div>
 
           <div className="space-y-3">
-            {registeredUsers.map((user, idx) => {
+            {registeredUsers.map((user) => {
               const userIsAdmin = user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
               return (
                 <div
-                  key={idx}
+                  key={user.id}
                   className="p-4 bg-[#181818] border border-[#282828] rounded-2xl flex items-center justify-between gap-4"
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${
                         userIsAdmin
-                          ? 'bg-[#F5C542] text-black shadow-md'
+                          ? 'bg-[#F5C542] text-black'
                           : 'bg-[#2563EB] text-white'
                       }`}
                     >
                       {userIsAdmin ? '👑' : '👤'}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-white">{user.name}</h4>
-                        <span
-                          className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${
-                            userIsAdmin
-                              ? 'bg-[#F5C542]/20 text-[#F5C542]'
-                              : 'bg-blue-500/20 text-blue-400'
-                          }`}
-                        >
-                          {userIsAdmin ? 'Administrador Master' : 'Usuário Gratuito'}
-                        </span>
-                      </div>
+                      <h4 className="text-sm font-bold text-white">{user.name}</h4>
                       <p className="text-xs text-[#8E8E8E]">{user.email}</p>
                     </div>
                   </div>
 
-                  <div className="text-right text-[11px] text-[#666]">
-                    <span>Último Acesso:</span>
-                    <p className="text-[#A1A1A1] font-mono">
-                      {new Date(user.lastLoginAt).toLocaleDateString('pt-BR')}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <button className="p-2 bg-[#202020] hover:bg-[#282828] text-white border border-[#333] rounded-xl" title="Editar"><Edit3 className="w-4 h-4" /></button>
+                    <button className="p-2 bg-[#202020] hover:bg-[#282828] text-orange-400 border border-[#333] rounded-xl" title="Bloquear"><Ban className="w-4 h-4" /></button>
+                    <button className="p-2 bg-[#202020] hover:bg-[#282828] text-red-400 border border-[#333] rounded-xl" title="Excluir"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
               );

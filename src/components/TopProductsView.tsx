@@ -405,6 +405,44 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
           ))}
         </div>
       </div>
+      
+      {/* Descobrir no Mercado Livre */}
+      <div className="p-6 rounded-3xl bg-[#121212] border border-[#242424] space-y-4">
+        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <Search className="w-4 h-4 text-[#F5C542]" />
+          <span>Descobrir no Mercado Livre</span>
+        </h3>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            id="termo"
+            type="text"
+            placeholder="Termo de busca"
+            className="flex-1 bg-[#0A0A0A] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white"
+          />
+          <input
+            id="categoria"
+            type="text"
+            placeholder="Categoria"
+            className="flex-1 bg-[#0A0A0A] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white"
+          />
+          <button
+            onClick={async () => {
+              const termo = (document.getElementById('termo') as HTMLInputElement).value;
+              const categoria = (document.getElementById('categoria') as HTMLInputElement).value;
+              if (!termo || !categoria) return;
+              await fetch('/api/marketplace/discover', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ termo, categoria, usuario: 'admin' })
+              });
+              fetchReconciledCatalogFromApi();
+            }}
+            className="px-4 py-2.5 rounded-xl bg-[#F5C542] text-black font-black text-xs hover:bg-[#e5b738]"
+          >
+            Buscar no Mercado Livre
+          </button>
+        </div>
+      </div>
 
       {liveSearchResults.length > 0 && (
         <div className="flex items-center justify-between p-3 rounded-xl bg-[#F5C542]/10 border border-[#F5C542]/30 text-xs text-white">

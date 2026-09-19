@@ -139,6 +139,38 @@ export function getRegisteredUsersList(): AuthUser[] {
   return [DEFAULT_ADMIN_USER, DEFAULT_FREE_USER];
 }
 
+export function saveRegisteredUsersList(users: AuthUser[]): void {
+  localStorage.setItem(USERS_LIST_STORAGE_KEY, JSON.stringify(users));
+}
+
+export function addUser(user: Omit<AuthUser, 'id' | 'createdAt' | 'lastLoginAt'>): AuthUser {
+  const users = getRegisteredUsersList();
+  const newUser: AuthUser = {
+    ...user,
+    id: `usr-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString(),
+    role: user.email === ADMIN_EMAIL ? 'admin' : 'user'
+  };
+  users.push(newUser);
+  saveRegisteredUsersList(users);
+  return newUser;
+}
+
+export function updateUser(id: string, updates: Partial<Omit<AuthUser, 'id' | 'createdAt' | 'lastLoginAt'>>): void {
+  const users = getRegisteredUsersList();
+  const idx = users.findIndex(u => u.id === id);
+  if (idx !== -1) {
+    users[idx] = { ...users[idx], ...updates };
+    saveRegisteredUsersList(users);
+  }
+}
+
+export function deleteUser(id: string): void {
+  const users = getRegisteredUsersList();
+  saveRegisteredUsersList(users.filter(u => u.id !== id));
+}
+
 export function recordUserInDirectory(user: AuthUser): void {
   try {
     const list = getRegisteredUsersList();

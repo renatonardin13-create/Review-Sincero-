@@ -1299,6 +1299,61 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     });
   }
 
+  // API Route: Descobrir e persistir produtos descobertos no Mercado Livre
+  let discoveredProducts: any[] = [];
+
+  app.post("/api/marketplace/discover", async (req, res) => {
+    try {
+      const { termo, categoria, usuario } = req.body;
+      if (!termo || !categoria) {
+        return res.status(400).json({ error: "Termo e categoria são obrigatórios." });
+      }
+
+      console.log(`[server] Registro de descoberta: ${termo} em ${categoria} por ${usuario}`);
+
+      // Simulação de busca na API do Meli (reutilizando a lógica existente de search)
+      const meliSearchUrl = `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}&limit=10`;
+      const resp = await fetch(meliSearchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json'
+        }
+      });
+
+      let items: any[] = [];
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.results) {
+          items = data.results.map((item: any, idx: number) => ({
+            id: `disc-${item.id}`,
+            title: item.title,
+            category: categoria,
+            platform: 'Mercado Livre',
+            price: item.price ? `R$ ${item.price.toFixed(2).replace('.', ',')}` : 'R$ --',
+            rawPrice: item.price,
+            productImage: item.thumbnail?.replace('-I.jpg', '-O.jpg'),
+            affiliateUrl: item.permalink,
+            technicalDescription: 'Produto descoberto através de pesquisa manual no sistema.',
+            soldQuantity: item.sold_quantity,
+            platform: 'Mercado Livre'
+          }));
+        }
+      }
+
+      // Persistir no nosso store em memória (backend)
+      items.forEach(item => {
+        if (!discoveredProducts.find(p => p.id === item.id)) {
+          discoveredProducts.push(item);
+        }
+      });
+
+      res.json({ success: true, total: items.length, items });
+    } catch (err: any) {
+      console.error("[server] Error in /api/marketplace/discover:", err);
+      res.status(500).json({ error: "Erro ao buscar produtos descobertos." });
+    }
+  });
+
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Review Sincero running on http://localhost:${PORT}`);
   });
