@@ -62,6 +62,7 @@ import {
   buildWhiteLabelEmbedUrl,
   getYouTubeThumbnail
 } from '../utils/youtubeHelper';
+import { CustomVideoPlayer } from './CustomVideoPlayer';
 
 interface MembersAcademyViewProps {
   onNavigateTo?: (viewId: string) => void;
@@ -717,30 +718,22 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
                   </div>
                 </div>
 
-                {/* THE VIDEO IFRAME EMBED (WHITE-LABEL CONFIG) */}
-                <div className="relative w-full aspect-video bg-black flex items-center justify-center group overflow-hidden">
-                  {activeLesson.youtubeId ? (
-                    <iframe
-                      src={buildWhiteLabelEmbedUrl(activeLesson.youtubeId, false)}
-                      title={activeLesson.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                      className="w-full h-full border-0 absolute inset-0 z-10"
-                    />
-                  ) : (
-                    <div className="text-center p-8 space-y-2">
-                      <Tv className="w-8 h-8 text-[#94A3B8] mx-auto opacity-50" />
-                      <p className="text-xs text-[#94A3B8]">Vídeo não configurado para esta aula.</p>
-                    </div>
-                  )}
-
-                  {/* Anti-branding Overlay Badge */}
-                  <div className="absolute top-3 left-3 z-20 pointer-events-none opacity-0 group-hover:opacity-90 transition-opacity">
-                    <div className="bg-[#080808]/90 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-md text-[10px] font-bold text-white shadow-lg flex items-center gap-1.5">
-                      <Film className="w-3 h-3 text-[#F5C542]" />
-                      <span>PLAYER EXCLUSIVO VIP</span>
-                    </div>
-                  </div>
+                {/* THE CUSTOM WHITE-LABEL VIDEO PLAYER */}
+                <div className="relative w-full">
+                  <CustomVideoPlayer
+                    videoUrlOrId={activeLesson.youtubeId || ''}
+                    title={activeLesson.title}
+                    moduleName={activeModule?.title}
+                    duration={activeLesson.duration}
+                    hasNextLesson={academyData.lessons.findIndex((l) => l.id === activeLessonId) < academyData.lessons.length - 1}
+                    onNextLesson={handleNextLesson}
+                    onMarkCompleted={() => {
+                      if (!activeLessonIsCompleted) {
+                        handleToggleCompleted(activeLesson.id);
+                      }
+                    }}
+                    isCompleted={activeLessonIsCompleted}
+                  />
                 </div>
 
                 {/* PLAYER QUICK ACTION CONTROLS */}
