@@ -543,9 +543,13 @@ export default function App() {
       <CommissionCalculatorModal
         isOpen={isCalculatorOpen}
         onClose={() => setIsCalculatorOpen(false)}
-        onNewReview={() => {
-          setActiveReviewForEdit(null);
-          setCurrentView('create');
+        onNewReview={(prod) => {
+          if (prod) {
+            handleUseChampionProduct(prod);
+          } else {
+            setActiveReviewForEdit(null);
+            setCurrentView('create');
+          }
         }}
       />
 
