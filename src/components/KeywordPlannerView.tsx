@@ -769,11 +769,11 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
 
                 <div className="bg-[#0D0707] border border-[#2D1414] rounded-xl p-3.5 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-[#F87171]">CUSTOMER_ID / GOOGLE_ADS_CUSTOMER_ID</span>
+                    <span className="font-mono font-bold text-[#F87171]">CUSTOMER_ID</span>
                     <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 uppercase">Obrigatório</span>
                   </div>
                   <p className="text-[#94A3B8] text-[11px] leading-normal">
-                    ID da sua conta de cliente do Google Ads. Deve conter exatamente <strong>10 dígitos numéricos</strong> sem hifens.
+                    ID da sua conta de cliente do Google Ads (também aceita <code className="font-mono text-[10px] text-amber-300">GOOGLE_ADS_CUSTOMER_ID</code>). Deve conter exatamente 10 dígitos numéricos.
                   </p>
                 </div>
 
