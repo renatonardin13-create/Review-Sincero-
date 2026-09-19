@@ -22,12 +22,15 @@ import {
   UserPlus,
   User,
   UserMinus,
-  Ban
+  Ban,
+  Upload
 } from 'lucide-react';
 import { AuthUser, AppSettings, MemberAcademyData, ADMIN_EMAIL } from '../types';
 import { getStoredAcademyData, saveStoredAcademyData, resetStoredAcademyData } from '../data/academyData';
 import { getRegisteredUsersList } from '../services/authService';
 import { isValidYoutubeUrl } from '../utils/urlUtils';
+import { storage } from '../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface AdminPanelViewProps {
   currentUser: AuthUser;
@@ -50,6 +53,29 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const [academyData, setAcademyData] = useState<MemberAcademyData>(getStoredAcademyData);
   const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+
+  const handleAddUser = () => {
+      if (!newUserName || !newUserEmail) {
+          alert('Preencha nome e e-mail.');
+          return;
+      }
+      import('../services/authService').then(service => {
+          service.addUser({
+              name: newUserName,
+              email: newUserEmail,
+              role: 'user',
+              provider: 'email',
+              avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
+          });
+          setRegisteredUsers(service.getRegisteredUsersList());
+          setShowAddUserModal(false);
+          setNewUserName('');
+          setNewUserEmail('');
+      });
+  };
 
   // Quick form for banners settings in admin
   const [adminBannerSpeed, setAdminBannerSpeed] = useState<number>(settings.bannerAutoplaySpeed || 5);
@@ -57,15 +83,24 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const [adminEnableQuickLogin, setAdminEnableQuickLogin] = useState<boolean>(settings.enableQuickLoginShortcuts !== false);
   const [adminLoginMedia, setAdminLoginMedia] = useState(settings.loginMedia || {
     backgroundImageUrl: '',
-    youtubeVideoUrl: '',
-    youtubeEnabled: false
   });
 
-  const handleSaveAllConfig = () => {
-    if (adminLoginMedia.youtubeEnabled && adminLoginMedia.youtubeVideoUrl && !isValidYoutubeUrl(adminLoginMedia.youtubeVideoUrl)) {
-        alert("URL do YouTube inválida. Use um formato compatível.");
-        return;
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const storageRef = ref(storage, `login-backgrounds/${file.name}`);
+    try {
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        setAdminLoginMedia({ ...adminLoginMedia, backgroundImageUrl: downloadURL });
+    } catch (error) {
+        console.error("Error uploading image: ", error);
+        alert("Erro ao fazer upload da imagem.");
     }
+  };
+
+  const handleSaveAllConfig = () => {
     onSaveSettings({
       ...settings,
       bannerAutoplaySpeed: adminBannerSpeed,
@@ -349,44 +384,27 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-white block">URL da Imagem de Fundo:</label>
-                <input
-                  type="text"
-                  value={adminLoginMedia.backgroundImageUrl || ''}
-                  onChange={(e) => setAdminLoginMedia({ ...adminLoginMedia, backgroundImageUrl: e.target.value })}
-                  placeholder="https://exemplo.com/fundo.jpg"
-                  className="w-full bg-[#101010] border border-[#333] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#F5C542]"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-white block">URL do Vídeo YouTube:</label>
-                <input
-                  type="text"
-                  value={adminLoginMedia.youtubeVideoUrl || ''}
-                  onChange={(e) => setAdminLoginMedia({ ...adminLoginMedia, youtubeVideoUrl: e.target.value })}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  className="w-full bg-[#101010] border border-[#333] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#F5C542]"
-                />
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 bg-[#181818] border border-[#282828] rounded-xl">
-                 <input
-                    type="checkbox"
-                    checked={adminLoginMedia.youtubeEnabled}
-                    onChange={(e) => setAdminLoginMedia({ ...adminLoginMedia, youtubeEnabled: e.target.checked })}
-                    className="w-4 h-4 text-[#F5C542] rounded focus:ring-[#F5C542]"
-                 />
-                 <label className="text-xs font-bold text-white">Ativar Vídeo YouTube como Fundo</label>
+                <label className="text-xs font-bold text-white block">Imagem de Fundo:</label>
+                <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={adminLoginMedia.backgroundImageUrl || ''}
+                      onChange={(e) => setAdminLoginMedia({ ...adminLoginMedia, backgroundImageUrl: e.target.value })}
+                      placeholder="URL da imagem"
+                      className="flex-1 bg-[#101010] border border-[#333] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#F5C542]"
+                    />
+                    <label className="bg-[#22C55E] text-black font-bold p-3 rounded-xl cursor-pointer hover:bg-[#1fa851]">
+                        <Upload className="w-4 h-4" />
+                        <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                    </label>
+                </div>
               </div>
             </div>
 
             <div className="space-y-2">
                 <label className="text-xs font-bold text-white block">Preview (Simulação):</label>
                 <div className="w-full aspect-video bg-[#000] rounded-2xl border border-[#222] overflow-hidden relative flex items-center justify-center">
-                   {adminLoginMedia.youtubeEnabled && adminLoginMedia.youtubeVideoUrl ? (
-                      <div className="text-xs text-white">Preview YouTube Indisponível (Use o App)</div>
-                   ) : adminLoginMedia.backgroundImageUrl ? (
+                   {adminLoginMedia.backgroundImageUrl ? (
                       <img src={adminLoginMedia.backgroundImageUrl} alt="Preview" className="w-full h-full object-cover" />
                    ) : (
                       <div className="text-xs text-[#555]">Fundo Padrão</div>
@@ -434,11 +452,28 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                 Controle o acesso, edite e remova usuários do sistema.
               </p>
             </div>
-            <button className="bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 cursor-pointer">
+            <button 
+                onClick={() => setShowAddUserModal(true)}
+                className="bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 cursor-pointer"
+            >
               <UserPlus className="w-4 h-4" />
               <span>Adicionar Aluno</span>
             </button>
           </div>
+
+          {showAddUserModal && (
+              <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+                  <div className="bg-[#181818] p-6 rounded-2xl w-full max-w-md space-y-4">
+                      <h4 className="text-lg font-bold text-white">Adicionar Novo Aluno</h4>
+                      <input type="text" placeholder="Nome" value={newUserName} onChange={e => setNewUserName(e.target.value)} className="w-full bg-[#101010] p-3 rounded-xl border border-[#333] text-white" />
+                      <input type="email" placeholder="E-mail" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} className="w-full bg-[#101010] p-3 rounded-xl border border-[#333] text-white" />
+                      <div className="flex gap-2">
+                          <button onClick={() => setShowAddUserModal(false)} className="flex-1 bg-[#222] p-2 rounded-xl text-white">Cancelar</button>
+                          <button onClick={handleAddUser} className="flex-1 bg-[#F5C542] p-2 rounded-xl text-black font-bold">Salvar</button>
+                      </div>
+                  </div>
+              </div>
+          )}
 
           <div className="space-y-3">
             {registeredUsers.map((user) => {

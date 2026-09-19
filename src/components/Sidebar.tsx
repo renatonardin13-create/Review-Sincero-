@@ -202,11 +202,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         {item.badge}
                       </span>
                     )}
-                    {item.id === 'create' && !item.badge && (
-                      <span className="ml-auto text-[9px] bg-[#F5C542]/20 text-[#F5C542] font-bold px-1.5 py-0.5 rounded">
-                        IA
-                      </span>
-                    )}
+                    {/* Badge removed */}
                   </button>
                 );
               })}
