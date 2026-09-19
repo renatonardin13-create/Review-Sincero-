@@ -1,5 +1,5 @@
 import React from 'react';
-import { Review, AppSettings } from '../types';
+import { Review, AppSettings, AuthUser, ADMIN_EMAIL } from '../types';
 import {
   Plus,
   FileText,
@@ -14,13 +14,19 @@ import {
   ShieldCheck,
   Sparkles,
   BookOpen,
-  DollarSign
+  DollarSign,
+  Crown,
+  User,
+  Zap,
+  Lock
 } from 'lucide-react';
 import { PromoBannerCarousel } from './PromoBannerCarousel';
 
 interface DashboardProps {
   reviews: Review[];
   settings?: AppSettings;
+  currentUser?: AuthUser;
+  onOpenAuthModal?: () => void;
   onNewReview: () => void;
   onEditReview: (review: Review) => void;
   onViewReview: (review: Review) => void;
@@ -32,6 +38,8 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({
   reviews,
   settings,
+  currentUser,
+  onOpenAuthModal,
   onNewReview,
   onEditReview,
   onViewReview,
@@ -47,8 +55,77 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
 
+  const isAdmin =
+    currentUser?.role === 'admin' ||
+    currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
+      {/* User Access Profile Status Card */}
+      <div
+        className={`p-4 md:p-5 rounded-3xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all shadow-xl ${
+          isAdmin
+            ? 'bg-gradient-to-r from-[#1C1809] via-[#151307] to-[#0D0D0D] border-[#F5C542]/40 shadow-[#F5C542]/5'
+            : 'bg-gradient-to-r from-[#0F172A] via-[#0B1120] to-[#0D0D0D] border-[#2563EB]/40 shadow-[#2563EB]/5'
+        }`}
+      >
+        <div className="flex items-center gap-3.5">
+          <div
+            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shrink-0 shadow-lg ${
+              isAdmin
+                ? 'bg-[#F5C542] text-black shadow-[#F5C542]/20'
+                : 'bg-[#2563EB] text-white shadow-[#2563EB]/20'
+            }`}
+          >
+            {isAdmin ? <Crown className="w-6 h-6" /> : <User className="w-6 h-6" />}
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-white uppercase tracking-wider">
+                Perfil Ativo:
+              </span>
+              <span
+                className={`text-xs font-black px-2.5 py-0.5 rounded-full uppercase border ${
+                  isAdmin
+                    ? 'bg-[#F5C542]/20 text-[#F5C542] border-[#F5C542]/40'
+                    : 'bg-[#2563EB]/20 text-[#38BDF8] border-[#2563EB]/40'
+                }`}
+              >
+                {isAdmin ? '👑 Administrador Master (Acesso Total)' : '👤 Usuário Comum (Plano Gratuito)'}
+              </span>
+            </div>
+            <p className="text-xs text-[#A1A1A1] mt-1">
+              {isAdmin
+                ? `Olá ${currentUser?.name || 'Renato Nardin'}, você possui privilégios totais de gestão e controle administrativo.`
+                : `Olá ${currentUser?.name || 'Aluno'}, você tem acesso gratuito aos geradores e recursos essenciais.`}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 w-full md:w-auto">
+          {isAdmin ? (
+            <button
+              type="button"
+              onClick={() => setCurrentView('admin')}
+              className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-[#F5C542] hover:bg-[#F5C542]/90 text-black font-black text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-[#F5C542]/20 transition-transform active:scale-95"
+            >
+              <Crown className="w-4 h-4" />
+              <span>Abrir Painel Admin</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenAuthModal}
+              className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-[#38BDF8]/30 text-[#38BDF8] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+            >
+              <Zap className="w-4 h-4 text-[#F5C542]" />
+              <span>Alternar Perfil / Login</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* =========================================================================
           PROMOTIONAL BANNER SLIDES CAROUSEL (Requested for monetization)
          ========================================================================= */}

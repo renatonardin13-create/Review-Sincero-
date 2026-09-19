@@ -16,6 +16,7 @@ import { CompareProductsView } from './components/CompareProductsView';
 import { TopProductsView } from './components/TopProductsView';
 import { CommissionCalculatorModal } from './components/CommissionCalculatorModal';
 import { AdminPanelView } from './components/AdminPanelView';
+import { AccessRestrictedView } from './components/AccessRestrictedView';
 import { AuthModal } from './components/AuthModal';
 import { getStoredUser, saveStoredUser } from './services/authService';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
@@ -27,8 +28,12 @@ export default function App() {
   const [isCalculatorOpen, setIsCalculatorOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
-  // Auth User State
+  // Auth User State & Role Verification
   const [currentUser, setCurrentUser] = useState<AuthUser>(() => getStoredUser());
+
+  const isAdmin =
+    currentUser?.role === 'admin' ||
+    currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
   const handleUserChange = (user: AuthUser) => {
     setCurrentUser(user);
@@ -333,6 +338,8 @@ export default function App() {
             <Dashboard
               reviews={reviews}
               settings={settings}
+              currentUser={currentUser}
+              onOpenAuthModal={() => setIsAuthModalOpen(true)}
               onNewReview={() => {
                 setActiveReviewForEdit(null);
                 setCurrentView('create');
@@ -349,13 +356,21 @@ export default function App() {
           )}
 
           {currentView === 'admin' && (
-            <AdminPanelView
-              currentUser={currentUser}
-              settings={settings}
-              onSaveSettings={setSettings}
-              onOpenVideoManager={() => setCurrentView('tutorial')}
-              onNavigateTo={setCurrentView}
-            />
+            isAdmin ? (
+              <AdminPanelView
+                currentUser={currentUser}
+                settings={settings}
+                onSaveSettings={setSettings}
+                onOpenVideoManager={() => setCurrentView('tutorial')}
+                onNavigateTo={setCurrentView}
+              />
+            ) : (
+              <AccessRestrictedView
+                currentUser={currentUser}
+                onOpenAuthModal={() => setIsAuthModalOpen(true)}
+                onGoToDashboard={() => setCurrentView('dashboard')}
+              />
+            )
           )}
 
           {currentView === 'campeoes' && (
