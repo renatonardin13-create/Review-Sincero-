@@ -42,6 +42,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string; role?: string } | null>(null);
 
+  // Configuração opcional de fundo: imagem ou vídeo
+  const [bgType] = useState<'image' | 'video'>('image'); // Pode ser alterado conforme necessidade
+  const [bgUrl] = useState('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80');
+  const [bgVideoUrl] = useState('https://www.w3schools.com/howto/rain.mp4'); // Exemplo de vídeo
+
   // Live check if the typed email is the Administrator
   const isInputAdmin = email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase().trim();
 
@@ -123,12 +128,24 @@ export const LoginView: React.FC<LoginViewProps> = ({
   return (
     <div className="relative min-h-screen w-full bg-[#07090E] text-white flex flex-col items-center justify-center p-4 sm:p-6 overflow-x-hidden select-none">
       {/* Background Architectural / Studio Moodboard Overlay */}
-      <div 
-        className="fixed inset-0 pointer-events-none opacity-25 bg-cover bg-center"
-        style={{
-          backgroundImage: `radial-gradient(circle at 50% 30%, rgba(245, 197, 66, 0.08) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(30, 41, 59, 0.4) 0%, transparent 50%), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80')`
-        }}
-      />
+      {bgType === 'video' ? (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="fixed inset-0 w-full h-full object-cover pointer-events-none opacity-25"
+        >
+          <source src={bgVideoUrl} type="video/mp4" />
+        </video>
+      ) : (
+        <div 
+          className="fixed inset-0 pointer-events-none opacity-25 bg-cover bg-center"
+          style={{
+            backgroundImage: `radial-gradient(circle at 50% 30%, rgba(245, 197, 66, 0.08) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(30, 41, 59, 0.4) 0%, transparent 50%), url('${bgUrl}')`
+          }}
+        />
+      )}
 
       {/* Dark Ambient Grid & Blueprint Overlay */}
       <div className="fixed inset-0 pointer-events-none bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)]" />
