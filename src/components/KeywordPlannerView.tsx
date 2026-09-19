@@ -5,6 +5,7 @@ import {
   KeywordPlannerErrorCode,
   KeywordPlannerDiagnostics
 } from '../types';
+import { keywordService } from '../services/keywordService';
 import {
   Search,
   Sparkles,
@@ -41,7 +42,7 @@ interface KeywordPlannerViewProps {
 const ERROR_TRANSLATIONS: Record<KeywordPlannerErrorCode, { title: string; friendlyMessage: string; hint: string }> = {
   'GOOGLE_ADS_NOT_CONFIGURED': {
     title: 'Integração Google Ads Não Configurada',
-    friendlyMessage: 'Google Ads ainda não está configurado no servidor.',
+    friendlyMessage: 'Google Ads não configurado',
     hint: 'Adicione as variáveis GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CUSTOMER_ID, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET e GOOGLE_ADS_REFRESH_TOKEN no ambiente.'
   },
   'GOOGLE_ADS_AUTH_ERROR': {
@@ -139,9 +140,8 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
   const fetchDiagnostics = async () => {
     setDiagnosticsLoading(true);
     try {
-      const resp = await fetch('/api/keyword-planner/diagnostics');
-      if (resp.ok) {
-        const data: KeywordPlannerDiagnostics = await resp.json();
+      const data = await keywordService.fetchDiagnostics();
+      if (data) {
         setDiagnostics(data);
       }
     } catch (e) {
@@ -179,24 +179,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
     setExpandedTrendKw(null);
 
     try {
-      const response = await fetch('/api/keyword-planner', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          keywords: cleanKw,
-          location,
-          language,
-          includeIdeas
-        })
-      });
-
-      const data: KeywordPlannerResponse = await response.json().catch(() => ({
-        success: false,
-        code: 'UNKNOWN_ERROR' as const,
-        message: 'Falha ao interpretar resposta do servidor.'
-      }));
+      const data = await keywordService.fetchKeywords(cleanKw, location, language, includeIdeas);
 
       setResponseMeta(data);
 
@@ -230,7 +213,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
       setErrorCode('UNKNOWN_ERROR');
       setErrorStep('network_fetch');
       setErrorMessage('Não foi possível consultar os dados. Verifique a conexão com o servidor e tente novamente.');
-      setErrorDetails(err.message || 'Erro de rede ao disparar requisição POST /api/keyword-planner');
+      setErrorDetails(err.message || 'Erro de rede ao disparar requisição via keywordService');
       fetchDiagnostics();
     }
   };

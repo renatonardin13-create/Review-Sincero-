@@ -25,7 +25,7 @@ export const DEFAULT_FREE_USER: AuthUser = {
   lastLoginAt: new Date().toISOString()
 };
 
-export function getStoredUser(): AuthUser {
+export function getStoredUser(): AuthUser | null {
   try {
     const saved = localStorage.getItem(AUTH_STORAGE_KEY);
     if (saved) {
@@ -41,12 +41,16 @@ export function getStoredUser(): AuthUser {
   } catch (e) {
     console.error('[authService] Error parsing user:', e);
   }
-  // Default to Free User so new sessions are safe, and the admin can log in using their credentials
-  return DEFAULT_FREE_USER;
+  // Return null if not logged in to enforce authentication flow
+  return null;
 }
 
-export function saveStoredUser(user: AuthUser): void {
+export function saveStoredUser(user: AuthUser | null): void {
   try {
+    if (!user) {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      return;
+    }
     if (user.email && user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim()) {
       user.role = 'admin';
     } else {
@@ -118,18 +122,9 @@ export function loginWithEmailAccount(emailInput: string, nameInput?: string): A
   return user;
 }
 
-export function logoutUser(): AuthUser {
-  // Reset to guest free user or clear
-  const guestUser: AuthUser = {
-    ...DEFAULT_FREE_USER,
-    id: 'usr-guest-' + Date.now(),
-    email: 'convidado@review-sincero.app',
-    name: 'Visitante Gratuito',
-    role: 'user',
-    lastLoginAt: new Date().toISOString()
-  };
-  saveStoredUser(guestUser);
-  return guestUser;
+export function logoutUser(): null {
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  return null;
 }
 
 export function getRegisteredUsersList(): AuthUser[] {

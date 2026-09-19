@@ -371,53 +371,63 @@ export const LoginView: React.FC<LoginViewProps> = ({
             </button>
           </form>
 
-          {/* Social / Divider */}
-          <div className="mt-6">
-            <div className="relative flex items-center justify-center">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10" />
-              </div>
-              <span className="relative px-3 bg-[#11141D] text-[11px] text-[#64748B]">
-                ou continue com
-              </span>
-            </div>
+          {/* Social / Divider - ONLY IN DEV ENVIRONMENT */}
+          {(() => {
+            const isDev = typeof window !== 'undefined' && (
+              window.location.hostname === 'localhost' || 
+              window.location.hostname === '127.0.0.1' || 
+              window.location.hostname.includes('dev') ||
+              window.location.port === '3000'
+            );
+            if (!isDev) return null;
 
-            {/* 3 Social Buttons as shown in the design */}
-            <div className="grid grid-cols-3 gap-3 mt-4">
-              
-              {/* Google Button */}
-              <button
-                type="button"
-                onClick={() => handleGoogleLogin(ADMIN_EMAIL, 'Renato Nardin')}
-                disabled={isLoading}
-                title="Entrar com Google (Admin Master)"
-                className="h-12 rounded-2xl bg-[#181C26] border border-white/10 hover:border-white/20 hover:bg-[#1F2432] flex items-center justify-center transition-all cursor-pointer group col-span-3"
-              >
-                {/* SVG Google 4 colors logo */}
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path
-                      fill="#EA4335"
-                      d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.9C6.2 7.4 8.9 5 12 5z"
-                    />
-                    <path
-                      fill="#4285F4"
-                      d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.3 14.7c-.2-.7-.4-1.5-.4-2.7s.1-2 .4-2.7L1.6 6.4C.6 8.3 0 10.5 0 12.8s.6 4.5 1.6 6.4l3.7-2.9c0-.6 0-1 0-1.6z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.4-6.7-5.3L1.6 16.4C3.5 20.2 7.4 23.5 12 23.5z"
-                    />
-                  </svg>
-                  <span className="text-xs font-bold text-white/90">Entrar com Google</span>
+            return (
+              <div className="mt-6">
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/10" />
+                  </div>
+                  <span className="relative px-3 bg-[#11141D] text-[11px] text-[#64748B]">
+                    Atalhos de Teste Rápido (DEV)
+                  </span>
                 </div>
-              </button>
-            </div>
-          </div>
+
+                <div className="grid grid-cols-3 gap-3 mt-4">
+                  {/* Google Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleGoogleLogin(ADMIN_EMAIL, 'Renato Nardin')}
+                    disabled={isLoading}
+                    title="Entrar com Google (Admin Master)"
+                    className="h-12 rounded-2xl bg-[#181C26] border border-white/10 hover:border-white/20 hover:bg-[#1F2432] flex items-center justify-center transition-all cursor-pointer group col-span-3"
+                  >
+                    {/* SVG Google 4 colors logo */}
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24">
+                        <path
+                          fill="#EA4335"
+                          d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.9C6.2 7.4 8.9 5 12 5z"
+                        />
+                        <path
+                          fill="#4285F4"
+                          d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.3 14.7c-.2-.7-.4-1.5-.4-2.7s.1-2 .4-2.7L1.6 6.4C.6 8.3 0 10.5 0 12.8s.6 4.5 1.6 6.4l3.7-2.9c0-.6 0-1 0-1.6z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.4-6.7-5.3L1.6 16.4C3.5 20.2 7.4 23.5 12 23.5z"
+                        />
+                      </svg>
+                      <span className="text-xs font-bold text-white/90">Entrar com Google (Atalho Admin)</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Bottom Switcher */}
           <div className="mt-6 text-center">
@@ -453,43 +463,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </div>
         </div>
 
-        {/* Quick Login Shortcuts */}
-        {settings?.enableQuickLoginShortcuts !== false && (
-          <div className="w-full mt-4 bg-[#11141D]/90 border border-white/10 rounded-[24px] p-4 text-center space-y-3 animate-in fade-in slide-in-from-bottom-2">
-            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider flex items-center justify-center gap-1">
-              <Zap className="w-3 h-3 text-[#F5C542]" /> ATALHOS DE TESTE RÁPIDO:
-            </span>
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('signin');
-                  setEmail('renatonardin13@gmail.com');
-                  setPassword('123456');
-                  setName('Renato Nardin');
-                }}
-                className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#201808] to-[#120F05] border border-[#F5C542]/30 text-xs font-bold text-[#F5C542] hover:border-[#F5C542]/50 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
-              >
-                <Crown className="w-3.5 h-3.5 text-[#F5C542]" />
-                <span>Preencher Admin</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('signin');
-                  setEmail('aluno@gmail.com');
-                  setPassword('123456');
-                  setName('Aluno de Testes');
-                }}
-                className="py-2.5 px-3 rounded-xl bg-[#181C26] border border-white/10 text-xs font-bold text-[#94A3B8] hover:text-white hover:border-white/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
-              >
-                <User className="w-3.5 h-3.5 text-[#94A3B8]" />
-                <span>Preencher Comum</span>
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

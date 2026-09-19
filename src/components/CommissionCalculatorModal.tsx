@@ -19,6 +19,7 @@ import {
   Zap
 } from 'lucide-react';
 import { AUTHORITATIVE_MARKETPLACE_CATALOG } from '../services/reconciliationService';
+import { affiliatePlatforms, getPlatformCommissionSourceLabel } from '../services/affiliateService';
 
 interface CommissionCalculatorModalProps {
   isOpen: boolean;
@@ -691,6 +692,9 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [productPrice, setProductPrice] = useState<number>(119.90);
   const [commissionRate, setCommissionRate] = useState<number>(11); // %
+  const currentPlatformMetadata = useMemo(() => {
+    return affiliatePlatforms.find(p => p.id === platform);
+  }, [platform]);
   const [dailyVisitors, setDailyVisitors] = useState<number>(150);
   const [conversionRate, setConversionRate] = useState<number>(3.5); // %
   const [selectedNote, setSelectedNote] = useState<string>(
@@ -925,6 +929,8 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
                     onClick={() => {
                       setPlatform(key);
                       setLiveSearchResults([]);
+                      const defaultRate = affiliatePlatforms.find(p => p.id === key)?.commissionRate || 10;
+                      setCommissionRate(defaultRate);
                     }}
                     className={`py-2.5 px-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer text-center truncate ${
                       isSelected
@@ -1109,6 +1115,26 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
               }}
               className="w-full accent-[#22C55E] cursor-pointer"
             />
+            {currentPlatformMetadata && (
+              <div className="mt-1 pt-1.5 border-t border-white/5 flex flex-col gap-1 text-[10px] text-[#8E939E]">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider shrink-0 ${
+                    currentPlatformMetadata.commissionSource === 'REAL'
+                      ? 'bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20'
+                      : currentPlatformMetadata.commissionSource === 'CONFIGURADA'
+                      ? 'bg-[#F5C542]/10 text-[#F5C542] border border-[#F5C542]/20'
+                      : currentPlatformMetadata.commissionSource === 'ESTIMADA'
+                      ? 'bg-[#38BDF8]/10 text-[#38BDF8] border border-[#38BDF8]/20'
+                      : 'bg-white/5 text-[#8E939E] border border-white/10'
+                  }`}>
+                    {getPlatformCommissionSourceLabel(currentPlatformMetadata.commissionSource)}
+                  </span>
+                  <span className="text-[10px] text-[#A1A1A1] font-medium leading-none">
+                    {currentPlatformMetadata.sourceDetails}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="bg-[#11141D] border border-[#1E2433] rounded-2xl p-4 space-y-2">

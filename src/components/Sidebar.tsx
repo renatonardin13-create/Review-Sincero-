@@ -20,7 +20,8 @@ import {
   User,
   Users,
   Film,
-  LogIn
+  LogIn,
+  LogOut
 } from 'lucide-react';
 import { AuthUser, ADMIN_EMAIL } from '../types';
 
@@ -31,8 +32,9 @@ interface SidebarProps {
   onOpenCalculator?: () => void;
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
-  currentUser?: AuthUser;
+  currentUser?: AuthUser | null;
   onOpenAuthModal?: () => void;
+  onLogout?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -43,7 +45,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   mobileOpen,
   setMobileOpen,
   currentUser,
-  onOpenAuthModal
+  onOpenAuthModal,
+  onLogout
 }) => {
   const isAdmin =
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
@@ -62,10 +65,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'keyword-planner', label: 'Planejador de Palavras', icon: Search },
     { id: 'trends', label: 'Analisar Tendências', icon: TrendingUp },
     {
-      id: 'comissoes',
+      id: 'calculadora',
       label: 'Calculadora de Lucro',
       icon: Calculator,
-      action: onOpenCalculator ? onOpenCalculator : () => setCurrentView('comissoes')
+      action: onOpenCalculator ? onOpenCalculator : () => setCurrentView('calculadora')
     },
     { id: 'settings', label: 'Perfil & Config', icon: User },
     {
@@ -302,6 +305,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <LogIn className="w-3 h-3" />
             <span>Abrir Tela de Login / Trocar Conta</span>
           </button>
+
+          {currentUser && onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="w-full py-1.5 px-3 rounded-xl bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 hover:border-red-500/30 text-[10px] font-semibold text-red-400 hover:text-red-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <LogOut className="w-3 h-3" />
+              <span>Sair da Conta (Logout)</span>
+            </button>
+          )}
         </div>
       </aside>
     </>

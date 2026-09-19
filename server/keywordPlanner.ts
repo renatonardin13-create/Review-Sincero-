@@ -426,29 +426,24 @@ export async function handleKeywordPlannerRequest(reqBody: {
     clientId && clientSecret && refreshToken && developerToken && cleanCustomerId
   );
 
-  // If Google Ads is NOT configured in .env, automatically provide full intelligence data without erroring
+  // If Google Ads is NOT configured in .env, return explicit GOOGLE_ADS_NOT_CONFIGURED error to avoid generating false metrics
   if (!isGoogleAdsConfigured) {
-    const intelligenceResults = await generateIntelligentMarketKeywords(
-      keywordList,
-      location,
-      language,
-      includeIdeas
-    );
+    const missingList: string[] = [];
+    if (!clientId) missingList.push('CLIENT_ID');
+    if (!clientSecret) missingList.push('CLIENT_SECRET');
+    if (!refreshToken) missingList.push('REFRESH_TOKEN');
+    if (!developerToken) missingList.push('DEVELOPER_TOKEN');
+    if (!cleanCustomerId) missingList.push('CUSTOMER_ID');
 
-    const responsePayload: KeywordPlannerResponse = {
-      success: true,
-      source: 'google_suggest_real',
-      isRealApiConfigured: false,
-      queryKeywords: keywordList,
-      location,
-      language,
-      results: intelligenceResults,
-      message: 'Resultados calculados com sucesso via Inteligência de Busca e Mercado.',
-      diagnostics: getKeywordPlannerDiagnostics()
+    return {
+      success: false,
+      code: 'GOOGLE_ADS_NOT_CONFIGURED',
+      step: '0_credentials_validation',
+      message: 'Google Ads não está configurado no servidor.',
+      details: `Variáveis de ambiente ausentes: ${missingList.join(', ')}. Por favor, configure as credenciais no servidor para ter acesso aos dados oficiais.`,
+      diagnostics: getKeywordPlannerDiagnostics(),
+      results: [] // Do not generate fake/false metrics when API is inactive
     };
-
-    searchCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
-    return responsePayload;
   }
 
   // Otherwise, Google Ads is configured -> Attempt official Google Ads API execution

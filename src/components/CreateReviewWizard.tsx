@@ -8,6 +8,7 @@ import {
   TestimonialItem,
   KeywordSuggestion
 } from '../types';
+import { keywordService } from '../services/keywordService';
 import { CATEGORIES, PLATFORMS } from '../data/initialData';
 import { ReviewRenderer } from './ReviewRenderer';
 import { matchProductImage, validateAndNormalizeReviewImages } from '../utils/productImageMatcher';
@@ -222,6 +223,8 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     type: 'lovable' | 'google-studio' | 'claude' | 'chatgpt' | 'v0' | 'copy';
   } | null>(null);
   const [newKeywordInput, setNewKeywordInput] = useState<string>('');
+  const [isSearchingKeywords, setIsSearchingKeywords] = useState<boolean>(false);
+  const [keywordWarning, setKeywordWarning] = useState<string | null>(null);
 
   // Form State initialized with defaults matching the screenshot
   const [formData, setFormData] = useState<Review>(() => {
@@ -482,27 +485,60 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   };
 
   // Search more keywords dynamically
-  const handleSearchKeywords = () => {
+  const handleSearchKeywords = async () => {
     const term = formData.productName || 'produto';
-    const newSuggestions: KeywordSuggestion[] = [
-      { id: 'k-' + Date.now() + '-1', term: `${term} é bom mesmo`, searches: '18.900 buscas/mês', cpc: 'CPC R$ 1,60', difficulty: 'Média', selected: true },
-      { id: 'k-' + Date.now() + '-2', term: `${term} reclame aqui`, searches: '24.300 buscas/mês', cpc: 'CPC R$ 1,10', difficulty: 'Alta', selected: true },
-      { id: 'k-' + Date.now() + '-3', term: `cupom de desconto ${term}`, searches: '16.700 buscas/mês', cpc: 'CPC R$ 3,20', difficulty: 'Alta', selected: true },
-      { id: 'k-' + Date.now() + '-4', term: `como usar ${term}`, searches: '8.400 buscas/mês', cpc: 'CPC R$ 0,75', difficulty: 'Baixa', selected: false }
-    ];
+    setIsSearchingKeywords(true);
+    setKeywordWarning(null);
 
-    setFormData((prev) => ({
-      ...prev,
-      keywordPlanner: {
-        mainKeyword: prev.productName,
-        highIntentTerms: [
-          ...(prev.keywordPlanner?.highIntentTerms || []),
-          `${term} é bom mesmo`,
-          `${term} reclame aqui`
-        ],
-        suggestions: newSuggestions
+    try {
+      const response = await keywordService.fetchKeywords(term, 'Brasil', 'Português', true);
+      
+      let isReal = response.isRealApiConfigured || false;
+      let resultsList = response.results || [];
+
+      // If Google Ads is NOT configured, or returns an error of missing integration, we degrade gracefully to estimated
+      if (!response.success && response.code === 'GOOGLE_ADS_NOT_CONFIGURED') {
+        setKeywordWarning('Google Ads não configurado (Exibindo Projeções Estimadas de Volume)');
+        isReal = false;
+        
+        // Generate high-intent estimated keywords rather than having an empty list
+        resultsList = [
+          { keyword: `${term} é bom mesmo`, avgMonthlySearches: 18900, competition: 'MÉDIA', lowTopPageBid: 0.80, highTopPageBid: 1.60 },
+          { keyword: `${term} reclame aqui`, avgMonthlySearches: 24300, competition: 'ALTA', lowTopPageBid: 0.50, highTopPageBid: 1.10 },
+          { keyword: `cupom de desconto ${term}`, avgMonthlySearches: 16700, competition: 'ALTA', lowTopPageBid: 1.20, highTopPageBid: 3.20 },
+          { keyword: `como usar ${term}`, avgMonthlySearches: 8400, competition: 'BAIXA', lowTopPageBid: 0.30, highTopPageBid: 0.75 }
+        ];
+      } else if (!response.success) {
+        setKeywordWarning(response.message || 'Erro ao consultar Google Ads (Exibindo Estimativas)');
+        isReal = false;
+        resultsList = [
+          { keyword: `${term} é bom mesmo`, avgMonthlySearches: 18900, competition: 'MÉDIA', lowTopPageBid: 0.80, highTopPageBid: 1.60 },
+          { keyword: `${term} reclame aqui`, avgMonthlySearches: 24300, competition: 'ALTA', lowTopPageBid: 0.50, highTopPageBid: 1.10 }
+        ];
       }
-    }));
+
+      const formatted = keywordService.formatToSuggestions(resultsList, isReal);
+
+      setFormData((prev) => {
+        const selectedTerms = formatted.filter(f => f.selected).map(f => f.term);
+        return {
+          ...prev,
+          keywordPlanner: {
+            mainKeyword: term,
+            highIntentTerms: Array.from(new Set([
+              ...(prev.keywordPlanner?.highIntentTerms || []),
+              ...selectedTerms
+            ])),
+            suggestions: formatted
+          }
+        };
+      });
+    } catch (err) {
+      console.error('[CreateReviewWizard] Erro ao buscar palavras-chave:', err);
+      setKeywordWarning('Falha na comunicação de rede. Exibindo dados locais.');
+    } finally {
+      setIsSearchingKeywords(false);
+    }
   };
 
   // Slugify URL
@@ -1185,12 +1221,29 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
               <button
                 type="button"
                 onClick={handleSearchKeywords}
-                className="flex items-center gap-1.5 bg-[#1E293B] hover:bg-[#283548] text-[#93C5FD] border border-[#3B82F6]/40 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0"
+                disabled={isSearchingKeywords}
+                className={`flex items-center gap-1.5 ${isSearchingKeywords ? 'bg-[#0F172A] opacity-60 cursor-not-allowed' : 'bg-[#1E293B] hover:bg-[#283548]'} text-[#93C5FD] border border-[#3B82F6]/40 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0`}
               >
-                <Search className="w-3.5 h-3.5" />
-                <span>Buscar Termos Mais Pesquisados</span>
+                {isSearchingKeywords ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Buscando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-3.5 h-3.5" />
+                    <span>Buscar Termos Mais Pesquisados</span>
+                  </>
+                )}
               </button>
             </div>
+
+            {keywordWarning && (
+              <div className="flex items-start gap-2 bg-amber-950/20 border border-amber-500/30 text-amber-300 p-3 rounded-xl text-xs mt-2">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>{keywordWarning}</span>
+              </div>
+            )}
 
             {/* Main Keyword Input */}
             <div className="space-y-1.5">

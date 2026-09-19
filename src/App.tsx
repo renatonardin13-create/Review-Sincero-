@@ -19,8 +19,44 @@ import { AdminPanelView } from './components/AdminPanelView';
 import { AccessRestrictedView } from './components/AccessRestrictedView';
 import { AuthModal } from './components/AuthModal';
 import { LoginView } from './components/LoginView';
-import { getStoredUser, saveStoredUser } from './services/authService';
+import { getStoredUser, saveStoredUser, logoutUser } from './services/authService';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
+
+const VIEW_TO_PATH: Record<string, string> = {
+  'dashboard': '/aluno',
+  'tutorial': '/tutorial',
+  'reviews': '/reviews',
+  'create': '/create',
+  'templates': '/templates',
+  'campeoes': '/produtos-campeoes',
+  'comparar': '/comparar-produtos',
+  'keyword-planner': '/planejador-palavras',
+  'trends': '/analisar-tendencias',
+  'settings': '/settings',
+  'admin': '/adm',
+  'settings-banners': '/adm/banners',
+  'login': '/login',
+  'calculadora': '/calculadora'
+};
+
+const PATH_TO_VIEW: Record<string, string> = {
+  '/aluno': 'dashboard',
+  '/': 'dashboard',
+  '/tutorial': 'tutorial',
+  '/reviews': 'reviews',
+  '/create': 'create',
+  '/templates': 'templates',
+  '/produtos-campeoes': 'campeoes',
+  '/comparar-produtos': 'comparar',
+  '/planejador-palavras': 'keyword-planner',
+  '/analisar-tendencias': 'trends',
+  '/settings': 'settings',
+  '/adm': 'admin',
+  '/admin': 'admin',
+  '/adm/banners': 'settings-banners',
+  '/login': 'login',
+  '/calculadora': 'calculadora'
+};
 
 export default function App() {
   const [currentView, setCurrentView] = useState<string>('dashboard');
@@ -30,14 +66,80 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
   // Auth User State & Role Verification
-  const [currentUser, setCurrentUser] = useState<AuthUser>(() => getStoredUser());
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => getStoredUser());
 
   const isAdmin =
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
-  const handleUserChange = (user: AuthUser) => {
+  const handleUserChange = (user: AuthUser | null) => {
     setCurrentUser(user);
     saveStoredUser(user);
+  };
+
+  // Synchronize state currentView with URL pathname
+  useEffect(() => {
+    const handleUrlSync = () => {
+      const path = window.location.pathname;
+      const user = getStoredUser();
+
+      if (!user) {
+        if (path !== '/login') {
+          window.history.replaceState(null, '', '/login');
+        }
+        setCurrentView('login');
+        return;
+      }
+
+      const userIsAdmin = user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+
+      if (path === '/login' || path === '/') {
+        window.history.replaceState(null, '', '/aluno');
+        setCurrentView('dashboard');
+        return;
+      }
+
+      if ((path === '/adm' || path === '/adm/banners' || path === '/admin') && !userIsAdmin) {
+        window.history.replaceState(null, '', '/aluno');
+        setCurrentView('dashboard');
+        return;
+      }
+
+      const mappedView = PATH_TO_VIEW[path];
+      if (mappedView) {
+        setCurrentView(mappedView);
+      } else {
+        window.history.replaceState(null, '', '/aluno');
+        setCurrentView('dashboard');
+      }
+    };
+
+    handleUrlSync();
+
+    window.addEventListener('popstate', handleUrlSync);
+    return () => {
+      window.removeEventListener('popstate', handleUrlSync);
+    };
+  }, [currentUser]);
+
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    const expectedPath = VIEW_TO_PATH[currentView];
+
+    if (expectedPath && currentPath !== expectedPath) {
+      window.history.pushState(null, '', expectedPath);
+    }
+
+    if (currentView === 'calculadora') {
+      setIsCalculatorOpen(true);
+    } else {
+      setIsCalculatorOpen(false);
+    }
+  }, [currentView]);
+
+  const handleLogout = () => {
+    logoutUser();
+    setCurrentUser(null);
+    setCurrentView('login');
   };
 
   // LocalStorage state for reviews & settings
@@ -49,7 +151,8 @@ export default function App() {
       console.error(e);
     }
     const initialUser = getStoredUser();
-    return SAMPLE_REVIEWS.map(r => ({ ...r, userId: r.userId || initialUser.id }));
+    const fallbackUserId = initialUser?.id || 'usr-member-free';
+    return SAMPLE_REVIEWS.map(r => ({ ...r, userId: r.userId || fallbackUserId }));
   });
 
   const userReviews = React.useMemo(() => {
@@ -337,7 +440,7 @@ export default function App() {
   if (currentView === 'login') {
     return (
       <LoginView
-        currentUser={currentUser}
+        currentUser={currentUser || undefined}
         settings={settings}
         onLoginSuccess={(user) => {
           handleUserChange(user);
@@ -358,11 +461,12 @@ export default function App() {
           setActiveReviewForEdit(null);
           setCurrentView('create');
         }}
-        onOpenCalculator={() => setIsCalculatorOpen(true)}
+        onOpenCalculator={() => setCurrentView('calculadora')}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
         currentUser={currentUser}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Layout Area */}
@@ -376,7 +480,7 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           authorName={settings.authorName}
-          currentUser={currentUser}
+          currentUser={currentUser || undefined}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
         />
 
@@ -385,7 +489,7 @@ export default function App() {
             <Dashboard
               reviews={userReviews}
               settings={settings}
-              currentUser={currentUser}
+              currentUser={currentUser || undefined}
               onOpenAuthModal={() => setIsAuthModalOpen(true)}
               onNewReview={() => {
                 setActiveReviewForEdit(null);
@@ -415,7 +519,7 @@ export default function App() {
           {currentView === 'admin' && (
             isAdmin ? (
               <AdminPanelView
-                currentUser={currentUser}
+                currentUser={currentUser!}
                 settings={settings}
                 onSaveSettings={setSettings}
                 onOpenVideoManager={() => setCurrentView('tutorial')}
@@ -454,8 +558,8 @@ export default function App() {
                 setActiveReviewForEdit(null);
                 setCurrentView('create');
               }}
-              onOpenCalculator={() => setIsCalculatorOpen(true)}
-              currentUser={currentUser}
+              onOpenCalculator={() => setCurrentView('calculadora')}
+              currentUser={currentUser || undefined}
             />
           )}
 
@@ -542,7 +646,12 @@ export default function App() {
       {/* Commission Calculator Modal */}
       <CommissionCalculatorModal
         isOpen={isCalculatorOpen}
-        onClose={() => setIsCalculatorOpen(false)}
+        onClose={() => {
+          setIsCalculatorOpen(false);
+          if (currentView === 'calculadora') {
+            setCurrentView('dashboard');
+          }
+        }}
         onNewReview={(prod) => {
           if (prod) {
             handleUseChampionProduct(prod);
@@ -557,7 +666,7 @@ export default function App() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
-        currentUser={currentUser}
+        currentUser={currentUser || undefined}
         onUserChanged={handleUserChange}
       />
 

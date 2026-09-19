@@ -3,7 +3,7 @@ import { ShieldAlert, Lock, Crown, ArrowLeft, LogIn, CheckCircle2 } from 'lucide
 import { AuthUser, ADMIN_EMAIL } from '../types';
 
 interface AccessRestrictedViewProps {
-  currentUser: AuthUser;
+  currentUser: AuthUser | null;
   onOpenAuthModal: () => void;
   onGoToDashboard: () => void;
 }
@@ -46,13 +46,13 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
             </span>
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-white truncate">
-                {currentUser.name}
+                {currentUser?.name || 'Visitante Não Autenticado'}
               </span>
               <span className="text-[10px] bg-[#2563EB]/20 text-[#38BDF8] border border-[#2563EB]/30 font-bold px-2 py-0.5 rounded-full uppercase">
-                Usuário Comum (Grátis)
+                {currentUser ? 'Usuário Comum (Grátis)' : 'Sem Login'}
               </span>
             </div>
-            <p className="text-xs text-[#8E8E8E] truncate">{currentUser.email}</p>
+            <p className="text-xs text-[#8E8E8E] truncate">{currentUser?.email || 'Nenhum e-mail conectado'}</p>
           </div>
         </div>
 

@@ -308,6 +308,10 @@ async function startServer() {
           else if (type === 'popular') rawList = meliData.shortTailTrends;
 
           meliItems = formatMeliTrendItems(rawList);
+          if (!meliItems || meliItems.length === 0) {
+            console.log("[server] Scraping returned 0 live Mercado Livre trends, triggering fallback.");
+            meliItems = generateMeliFallbackProducts(category);
+          }
         } catch (meliErr) {
           console.warn("[server] Live Meli fetch error, fallback:", meliErr);
           meliItems = generateMeliFallbackProducts(category);
@@ -317,6 +321,10 @@ async function startServer() {
       if (platform === 'shopee' || platform === 'all') {
         try {
           shopeeItems = await fetchShopeeLiveTrends(category);
+          if (!shopeeItems || shopeeItems.length === 0) {
+            console.log("[server] Shopee fetched 0 trends, triggering fallback.");
+            shopeeItems = generateShopeeFallbackProducts(category);
+          }
         } catch (shopeeErr) {
           console.warn("[server] Live Shopee fetch error:", shopeeErr);
           shopeeItems = generateShopeeFallbackProducts(category);
@@ -1142,6 +1150,15 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // Catch-all 404 for any other API route
+  app.all("/api/*", (req, res) => {
+    res.status(404).json({
+      ok: false,
+      code: "API_ROUTE_NOT_FOUND",
+      message: `O endpoint '${req.originalUrl}' não existe neste servidor.`
+    });
+  });
+
   // Vite middleware for development or static serving for production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -1152,7 +1169,15 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*all', (req, res) => {
+    app.get('*', (req, res) => {
+      // Direct guard to never serve HTML on API paths
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({
+          ok: false,
+          code: "API_ROUTE_NOT_FOUND",
+          message: `O endpoint '${req.originalUrl}' não existe neste servidor.`
+        });
+      }
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
