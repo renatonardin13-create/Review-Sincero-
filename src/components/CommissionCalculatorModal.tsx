@@ -861,8 +861,8 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
   const currencySymbol = PLATFORMS[platform]?.moeda === 'USD' ? 'US$' : 'R$';
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl bg-[#090B0F] border border-[#1E2433] rounded-3xl p-6 md:p-8 shadow-2xl space-y-6">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl max-h-[95vh] bg-[#090B0F] border border-[#1E2433] rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl overflow-y-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#1E2433]">
           <div className="flex items-center gap-3">
