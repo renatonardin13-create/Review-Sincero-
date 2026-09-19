@@ -1,0 +1,276 @@
+import React, { useState, useEffect } from 'react';
+import { Review, AppSettings, TrendItem } from './types';
+import { SAMPLE_REVIEWS, DEFAULT_SETTINGS } from './data/initialData';
+import { Sidebar } from './components/Sidebar';
+import { Topbar } from './components/Topbar';
+import { Dashboard } from './components/Dashboard';
+import { ReviewsList } from './components/ReviewsList';
+import { TrendsView } from './components/TrendsView';
+import { TemplatesView } from './components/TemplatesView';
+import { SettingsView } from './components/SettingsView';
+import { CreateReviewWizard } from './components/CreateReviewWizard';
+import { ReviewRenderer } from './components/ReviewRenderer';
+import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
+
+export default function App() {
+  const [currentView, setCurrentView] = useState<string>('dashboard');
+  const [mobileOpen, setMobileOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // LocalStorage state for reviews & settings
+  const [reviews, setReviews] = useState<Review[]>(() => {
+    try {
+      const saved = localStorage.getItem('review_sincero_items');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return SAMPLE_REVIEWS;
+  });
+
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    try {
+      const saved = localStorage.getItem('review_sincero_settings');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return DEFAULT_SETTINGS;
+  });
+
+  const [activeReviewForEdit, setActiveReviewForEdit] = useState<Review | null>(null);
+  const [activeReviewForView, setActiveReviewForView] = useState<Review | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('review_sincero_items', JSON.stringify(reviews));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [reviews]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('review_sincero_settings', JSON.stringify(settings));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [settings]);
+
+  const handleSaveReview = (review: Review) => {
+    const exists = reviews.some((r) => r.id === review.id);
+    if (exists) {
+      setReviews(reviews.map((r) => (r.id === review.id ? { ...review, updatedAt: new Date().toISOString() } : r)));
+    } else {
+      setReviews([review, ...reviews]);
+    }
+    setCurrentView('reviews');
+    setActiveReviewForEdit(null);
+  };
+
+  const handleDeleteReview = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir esta review?')) {
+      setReviews(reviews.filter((r) => r.id !== id));
+    }
+  };
+
+  const handleDuplicateReview = (review: Review) => {
+    const duplicated: Review = {
+      ...review,
+      id: 'rev-' + Date.now(),
+      productName: `${review.productName} (Cópia)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    setReviews([duplicated, ...reviews]);
+  };
+
+  const handleUseTrend = (trend: TrendItem) => {
+    const trendPlatform = (trend as any).platform || 'Mercado Livre';
+    const trendImage = (trend as any).thumbnail || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80';
+    const trendAffiliateUrl = (trend as any).realUrl || '';
+
+    const newRevFromTrend: Review = {
+      id: 'rev-' + Date.now(),
+      siteName: settings.siteName,
+      author: settings.authorName,
+      productName: trend.title,
+      currentPrice: trend.suggestedPrice || 'R$ 199,90',
+      oldPrice: '',
+      affiliateUrl: trendAffiliateUrl,
+      category: trend.category,
+      platform: trendPlatform,
+      description: trend.suggestedDescription || `Review completo e sincero sobre ${trend.title}, produto campeão de vendas e buscas na plataforma ${trendPlatform}.`,
+      features: [
+        'Alta procura no mercado brasileiro',
+        `Tendência oficial e mais vendidos na ${trendPlatform}`,
+        'Garantia de entrega e compra segura'
+      ],
+      mainImage: trendImage,
+      images: [trendImage],
+      pros: [
+        'Produto em alta demanda com grande volume de buscas no Brasil',
+        'Excelente custo-benefício comparado a concorrentes',
+        `Disponibilidade imediata com entrega rápida na ${trendPlatform}`
+      ],
+      cons: [
+        'Alta procura pode gerar oscilação pontual de estoque'
+      ],
+      audience: ['Consumidores que buscam qualidade com preço justo em ' + trend.title],
+      experience: `Produto identificado e analisado através dos dados reais de tendências da plataforma ${trendPlatform}.`,
+      howItWorks: `Disponível na ${trendPlatform} com pagamento facilitado e proteção ao comprador.`,
+      faq: [
+        { id: 'f1', question: 'O produto é original?', answer: `Recomendamos adquirir através do link oficial na ${trendPlatform} com vendedores bem avaliados.` },
+        { id: 'f2', question: 'Como funciona a garantia e entrega?', answer: `Conta com garantia oficial da plataforma ${trendPlatform} com opção de devolução facilitada.` }
+      ],
+      scoreCriteria: { quality: 8.8, design: 8.6, practicality: 8.9, resources: 8.5, costBenefit: 9.2, experience: 8.8 },
+      overallScore: 8.8,
+      verdict: `Produto campeão na ${trendPlatform}, altamente recomendado para compra com excelente retorno em custo-benefício.`,
+      testimonials: [],
+      template: settings.defaultTemplate,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status: 'Rascunho'
+    };
+    setActiveReviewForEdit(newRevFromTrend);
+    setCurrentView('create');
+  };
+
+  return (
+    <div className="min-h-screen bg-[#080808] text-white flex font-sans selection:bg-[#F5C542] selection:text-[#080808]">
+      {/* Sidebar */}
+      <Sidebar
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        onNewReview={() => {
+          setActiveReviewForEdit(null);
+          setCurrentView('create');
+        }}
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
+      />
+
+      {/* Main Layout Area */}
+      <div className="flex-1 md:pl-64 flex flex-col min-h-screen">
+        <Topbar
+          onNewReview={() => {
+            setActiveReviewForEdit(null);
+            setCurrentView('create');
+          }}
+          onOpenMobile={() => setMobileOpen(true)}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          authorName={settings.authorName}
+        />
+
+        <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
+          {currentView === 'dashboard' && (
+            <Dashboard
+              reviews={reviews}
+              onNewReview={() => {
+                setActiveReviewForEdit(null);
+                setCurrentView('create');
+              }}
+              onEditReview={(rev) => {
+                setActiveReviewForEdit(rev);
+                setCurrentView('create');
+              }}
+              onViewReview={(rev) => setActiveReviewForView(rev)}
+              onDuplicateReview={handleDuplicateReview}
+              onDeleteReview={handleDeleteReview}
+              setCurrentView={setCurrentView}
+            />
+          )}
+
+          {currentView === 'reviews' && (
+            <ReviewsList
+              reviews={reviews}
+              onNewReview={() => {
+                setActiveReviewForEdit(null);
+                setCurrentView('create');
+              }}
+              onEditReview={(rev) => {
+                setActiveReviewForEdit(rev);
+                setCurrentView('create');
+              }}
+              onViewReview={(rev) => setActiveReviewForView(rev)}
+              onDuplicateReview={handleDuplicateReview}
+              onDeleteReview={handleDeleteReview}
+            />
+          )}
+
+          {currentView === 'create' && (
+            <CreateReviewWizard
+              initialReview={activeReviewForEdit}
+              onSave={handleSaveReview}
+              onCancel={() => {
+                setActiveReviewForEdit(null);
+                setCurrentView('dashboard');
+              }}
+              onSwitchToTrends={() => setCurrentView('trends')}
+            />
+          )}
+
+          {currentView === 'trends' && (
+            <TrendsView
+              onUseTrend={handleUseTrend}
+              onSwitchToGenerator={(platform) => {
+                setActiveReviewForEdit(null);
+                setCurrentView('create');
+              }}
+            />
+          )}
+
+          {currentView === 'templates' && (
+            <TemplatesView
+              defaultTemplate={settings.defaultTemplate}
+              onSelectDefaultTemplate={(tpl) => setSettings({ ...settings, defaultTemplate: tpl })}
+            />
+          )}
+
+          {currentView === 'settings' && (
+            <SettingsView settings={settings} onSaveSettings={setSettings} />
+          )}
+        </main>
+      </div>
+
+      {/* Full Review Modal Viewer */}
+      {activeReviewForView && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md overflow-y-auto">
+          <div className="sticky top-0 z-50 bg-[#0D0D0D] border-b border-[#2A2A2A] px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setActiveReviewForView(null)}
+                className="flex items-center gap-2 text-xs font-semibold text-[#A1A1A1] hover:text-white bg-[#151515] border border-[#2A2A2A] px-4 py-2 rounded-xl"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Fechar Preview</span>
+              </button>
+              <span className="text-xs text-[#F5C542] font-semibold bg-[#F5C542]/10 px-3 py-1 rounded-full border border-[#F5C542]/20">
+                Modo Visualização Oficial
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  const rev = activeReviewForView;
+                  setActiveReviewForView(null);
+                  setActiveReviewForEdit(rev);
+                  setCurrentView('create');
+                }}
+                className="bg-[#151515] hover:bg-[#1C1C1C] border border-[#2A2A2A] text-white font-bold px-4 py-2 rounded-xl text-xs"
+              >
+                Editar Review
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-[#080808]">
+            <ReviewRenderer review={activeReviewForView} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

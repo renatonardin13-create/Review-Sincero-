@@ -1,0 +1,6 @@
+{
+  "name": "Review Sincero",
+  "description": "Gere páginas de review profissionais com transparência, descubra tendências em alta do Mercado Livre e mais vendidos da Shopee.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
