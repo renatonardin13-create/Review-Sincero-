@@ -743,6 +743,72 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
               })}
             </div>
           </div>
+
+          {/* Guia de Ajuda - Variáveis de Ambiente do Google Ads */}
+          {errorCode === 'GOOGLE_ADS_NOT_CONFIGURED' && (
+            <div className="mt-4 border-t border-[#300E0E] pt-4 space-y-4">
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
+                <KeyRound className="w-4 h-4 text-amber-500 animate-pulse" />
+                <span>Guia de Configuração: Como Ativar o Planejador</span>
+              </div>
+              
+              <p className="text-xs text-[#AAA] leading-relaxed">
+                Para consultar volumes de busca e previsões reais do Google Ads, você precisa adicionar as seguintes variáveis de ambiente no painel de configurações (<strong>Settings</strong>) do seu projeto ou no arquivo <code className="font-mono text-amber-400 bg-amber-950/30 px-1 py-0.5 rounded text-[10px]">.env</code>:
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div className="bg-[#0D0707] border border-[#2D1414] rounded-xl p-3.5 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-[#F87171]">GOOGLE_ADS_DEVELOPER_TOKEN</span>
+                    <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 uppercase">Obrigatório</span>
+                  </div>
+                  <p className="text-[#94A3B8] text-[11px] leading-normal">
+                    Token obtido no painel de administração do Google Ads em <em>Ferramentas &gt; Central de APIs</em>. Identifica sua conta de desenvolvedor.
+                  </p>
+                </div>
+
+                <div className="bg-[#0D0707] border border-[#2D1414] rounded-xl p-3.5 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-[#F87171]">GOOGLE_ADS_CUSTOMER_ID</span>
+                    <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 uppercase">Obrigatório</span>
+                  </div>
+                  <p className="text-[#94A3B8] text-[11px] leading-normal">
+                    ID da sua conta de cliente do Google Ads. Deve conter exatamente <strong>10 dígitos numéricos</strong> sem hifens. Exemplo: <code className="font-mono text-white text-[10px] bg-red-950/20 px-1 py-0.5 rounded">1234567890</code>.
+                  </p>
+                </div>
+
+                <div className="bg-[#0D0707] border border-[#2D1414] rounded-xl p-3.5 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-[#F87171]">GOOGLE_ADS_CLIENT_ID</span>
+                    <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 uppercase">Obrigatório</span>
+                  </div>
+                  <p className="text-[#94A3B8] text-[11px] leading-normal">
+                    ID do cliente OAuth gerado na seção <em>Credenciais</em> da Console de Nuvem do Google (Google Cloud Platform).
+                  </p>
+                </div>
+
+                <div className="bg-[#0D0707] border border-[#2D1414] rounded-xl p-3.5 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-[#F87171]">GOOGLE_ADS_CLIENT_SECRET</span>
+                    <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 uppercase">Obrigatório</span>
+                  </div>
+                  <p className="text-[#94A3B8] text-[11px] leading-normal">
+                    Segredo do cliente (Client Secret) correspondente ao Client ID gerado para sua aplicação.
+                  </p>
+                </div>
+
+                <div className="bg-[#0D0707] border border-[#2D1414] rounded-xl p-3.5 space-y-1 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-[#F87171]">GOOGLE_ADS_REFRESH_TOKEN</span>
+                    <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 uppercase">Obrigatório</span>
+                  </div>
+                  <p className="text-[#94A3B8] text-[11px] leading-normal">
+                    O Token de atualização gerado após aprovar o consentimento da conta Google com o escopo de publicidade (<code className="font-mono text-[10px] bg-red-950/20 px-1 py-0.5 rounded text-amber-300">https://www.googleapis.com/auth/adwords</code>).
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
