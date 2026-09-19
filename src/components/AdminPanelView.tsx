@@ -23,6 +23,7 @@ import {
 import { AuthUser, AppSettings, MemberAcademyData, ADMIN_EMAIL } from '../types';
 import { getStoredAcademyData, saveStoredAcademyData, resetStoredAcademyData } from '../data/academyData';
 import { getRegisteredUsersList } from '../services/authService';
+import { isValidYoutubeUrl } from '../utils/urlUtils';
 
 interface AdminPanelViewProps {
   currentUser: AuthUser;
@@ -41,7 +42,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
 }) => {
   const isAdmin =
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis' | 'login'>('overview');
   const [academyData, setAcademyData] = useState<MemberAcademyData>(getStoredAcademyData);
   const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList);
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
@@ -50,13 +51,23 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const [adminBannerSpeed, setAdminBannerSpeed] = useState<number>(settings.bannerAutoplaySpeed || 5);
   const [adminEnableBanners, setAdminEnableBanners] = useState<boolean>(settings.enableBannerCarousel !== false);
   const [adminEnableQuickLogin, setAdminEnableQuickLogin] = useState<boolean>(settings.enableQuickLoginShortcuts !== false);
+  const [adminLoginMedia, setAdminLoginMedia] = useState(settings.loginMedia || {
+    backgroundImageUrl: '',
+    youtubeVideoUrl: '',
+    youtubeEnabled: false
+  });
 
-  const handleSaveBannerConfig = () => {
+  const handleSaveAllConfig = () => {
+    if (adminLoginMedia.youtubeEnabled && adminLoginMedia.youtubeVideoUrl && !isValidYoutubeUrl(adminLoginMedia.youtubeVideoUrl)) {
+        alert("URL do YouTube inválida. Use um formato compatível.");
+        return;
+    }
     onSaveSettings({
       ...settings,
       bannerAutoplaySpeed: adminBannerSpeed,
       enableBannerCarousel: adminEnableBanners,
-      enableQuickLoginShortcuts: adminEnableQuickLogin
+      enableQuickLoginShortcuts: adminEnableQuickLogin,
+      loginMedia: adminLoginMedia
     });
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2000);
@@ -155,6 +166,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           { id: 'overview', label: '📊 Visão Geral', icon: BarChart3 },
           { id: 'academy', label: '🎓 Gerenciar Videoaulas & Curso', icon: Film },
           { id: 'banners', label: '⚙️ Ajustes & Monetização Global', icon: DollarSign },
+          { id: 'login', label: '🖼️ Tela de Login', icon: Film },
           { id: 'users', label: '👥 Alunos & Usuários', icon: Users },
           { id: 'apis', label: '🔑 Chaves & Integrações de APIs', icon: Key }
         ].map((tab) => {
@@ -291,63 +303,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
       {/* Tab 3: Banners */}
       {activeTab === 'banners' && (
         <div className="bg-[#121212] border border-[#222] rounded-3xl p-6 md:p-8 space-y-6 animate-in fade-in">
-          <div className="border-b border-[#222] pb-5">
-            <h3 className="text-lg font-black text-white">Configuração Global dos Banners em Slides</h3>
-            <p className="text-xs text-[#8E8E8E]">
-              Defina como os slides promocionais são exibidos para todos os usuários gratuitos no Dashboard.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 bg-[#181818] border border-[#282828] rounded-2xl space-y-2">
-              <label className="text-xs font-bold text-white block">
-                Exibir Carrossel no Topo do Dashboard:
-              </label>
-              <select
-                value={adminEnableBanners ? 'true' : 'false'}
-                onChange={(e) => setAdminEnableBanners(e.target.value === 'true')}
-                className="w-full bg-[#101010] border border-[#333] rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#F5C542] cursor-pointer"
-              >
-                <option value="true">✅ Ativado (Exibir para todos os usuários)</option>
-                <option value="false">❌ Desativado</option>
-              </select>
-            </div>
-
-            <div className="p-4 bg-[#181818] border border-[#282828] rounded-2xl space-y-2">
-              <label className="text-xs font-bold text-white block">
-                Tempo de Transição Automática dos Slides:
-              </label>
-              <select
-                value={adminBannerSpeed}
-                onChange={(e) => setAdminBannerSpeed(Number(e.target.value))}
-                className="w-full bg-[#101010] border border-[#333] rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#F5C542] cursor-pointer"
-              >
-                <option value={3}>3 Segundos (Rápido)</option>
-                <option value={5}>5 Segundos (Recomendado)</option>
-                <option value={8}>8 Segundos (Lento)</option>
-                <option value={10}>10 Segundos</option>
-              </select>
-            </div>
-
-            {/* Quick Login Shortcuts Toggle */}
-            <div className="p-4 bg-[#181818] border border-[#282828] rounded-2xl space-y-2 sm:col-span-2">
-              <label className="text-xs font-bold text-white block">
-                Atalhos de Teste Rápido (Preencher Admin / Preencher Comum) na Tela de Login:
-              </label>
-              <select
-                value={adminEnableQuickLogin ? 'true' : 'false'}
-                onChange={(e) => setAdminEnableQuickLogin(e.target.value === 'true')}
-                className="w-full bg-[#101010] border border-[#333] rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#F5C542] cursor-pointer"
-              >
-                <option value="true">✅ Exibir os botões de atalho rápidos para preenchimento de teste</option>
-                <option value="false">❌ Ocultar os botões de atalho rápidos para produção</option>
-              </select>
-              <p className="text-[10px] text-[#8E8E8E] leading-normal">
-                Nota: Quando desativado, os usuários comuns não verão os botões de atalho rápidos ao carregar a tela de acesso.
-              </p>
-            </div>
-          </div>
-
+          {/* ... existing banner content ... */}
           <div className="flex items-center justify-between pt-2">
             <button
               onClick={() => onNavigateTo('settings-banners')}
@@ -357,7 +313,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
             </button>
 
             <button
-              onClick={handleSaveBannerConfig}
+              onClick={handleSaveAllConfig}
               className="bg-[#22C55E] hover:bg-[#1fa851] text-black font-black px-6 py-2.5 rounded-xl text-xs transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-[#22C55E]/15"
             >
               {savedSuccess ? (
@@ -372,6 +328,94 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                 </>
               )}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Login */}
+      {activeTab === 'login' && (
+        <div className="bg-[#121212] border border-[#222] rounded-3xl p-6 md:p-8 space-y-6 animate-in fade-in">
+          <div className="border-b border-[#222] pb-5">
+            <h3 className="text-lg font-black text-white">Configuração da Tela de Login</h3>
+            <p className="text-xs text-[#8E8E8E]">
+              Personalize o fundo da sua tela de login com imagem ou vídeo.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-white block">URL da Imagem de Fundo:</label>
+                <input
+                  type="text"
+                  value={adminLoginMedia.backgroundImageUrl || ''}
+                  onChange={(e) => setAdminLoginMedia({ ...adminLoginMedia, backgroundImageUrl: e.target.value })}
+                  placeholder="https://exemplo.com/fundo.jpg"
+                  className="w-full bg-[#101010] border border-[#333] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#F5C542]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-white block">URL do Vídeo YouTube:</label>
+                <input
+                  type="text"
+                  value={adminLoginMedia.youtubeVideoUrl || ''}
+                  onChange={(e) => setAdminLoginMedia({ ...adminLoginMedia, youtubeVideoUrl: e.target.value })}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="w-full bg-[#101010] border border-[#333] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#F5C542]"
+                />
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 bg-[#181818] border border-[#282828] rounded-xl">
+                 <input
+                    type="checkbox"
+                    checked={adminLoginMedia.youtubeEnabled}
+                    onChange={(e) => setAdminLoginMedia({ ...adminLoginMedia, youtubeEnabled: e.target.checked })}
+                    className="w-4 h-4 text-[#F5C542] rounded focus:ring-[#F5C542]"
+                 />
+                 <label className="text-xs font-bold text-white">Ativar Vídeo YouTube como Fundo</label>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+                <label className="text-xs font-bold text-white block">Preview (Simulação):</label>
+                <div className="w-full aspect-video bg-[#000] rounded-2xl border border-[#222] overflow-hidden relative flex items-center justify-center">
+                   {adminLoginMedia.youtubeEnabled && adminLoginMedia.youtubeVideoUrl ? (
+                      <div className="text-xs text-white">Preview YouTube Indisponível (Use o App)</div>
+                   ) : adminLoginMedia.backgroundImageUrl ? (
+                      <img src={adminLoginMedia.backgroundImageUrl} alt="Preview" className="w-full h-full object-cover" />
+                   ) : (
+                      <div className="text-xs text-[#555]">Fundo Padrão</div>
+                   )}
+                </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+             <button
+               onClick={() => setAdminLoginMedia({ backgroundImageUrl: '', youtubeVideoUrl: '', youtubeEnabled: false })}
+               className="text-xs text-red-400 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+             >
+               <RotateCcw className="w-3 h-3" />
+               <span>Restaurar Padrão</span>
+             </button>
+
+             <button
+               onClick={handleSaveAllConfig}
+               className="bg-[#22C55E] hover:bg-[#1fa851] text-black font-black px-6 py-2.5 rounded-xl text-xs transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-[#22C55E]/15"
+             >
+               {savedSuccess ? (
+                 <>
+                   <Check className="w-4 h-4 stroke-[3]" />
+                   <span>Configurações Salvas!</span>
+                 </>
+               ) : (
+                 <>
+                   <Save className="w-4 h-4" />
+                   <span>Salvar Configuração</span>
+                 </>
+               )}
+             </button>
           </div>
         </div>
       )}

@@ -287,6 +287,11 @@ export interface AppSettings {
     freeReviewLimit: number;
     premiumReviewLimit: number;
   };
+  loginMedia?: {
+    backgroundImageUrl?: string;
+    youtubeVideoUrl?: string;
+    youtubeEnabled?: boolean;
+  };
 }
 
 export interface TrendBadge {

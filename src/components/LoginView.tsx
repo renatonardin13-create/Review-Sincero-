@@ -20,6 +20,7 @@ import {
   loginWithGoogleAccount,
   recordUserInDirectory
 } from '../services/authService';
+import { getYoutubeId } from '../utils/urlUtils';
 
 interface LoginViewProps {
   onLoginSuccess: (user: AuthUser) => void;
@@ -34,6 +35,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
   currentUser,
   settings
 }) => {
+  const loginMedia = settings?.loginMedia;
+  const youtubeId = loginMedia?.youtubeEnabled && loginMedia?.youtubeVideoUrl ? getYoutubeId(loginMedia.youtubeVideoUrl) : null;
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -123,12 +126,21 @@ export const LoginView: React.FC<LoginViewProps> = ({
   return (
     <div className="relative min-h-screen w-full bg-[#07090E] text-white flex flex-col items-center justify-center p-4 sm:p-6 overflow-x-hidden select-none">
       {/* Background Architectural / Studio Moodboard Overlay */}
-      <div 
-        className="fixed inset-0 pointer-events-none opacity-25 bg-cover bg-center"
-        style={{
-          backgroundImage: `radial-gradient(circle at 50% 30%, rgba(245, 197, 66, 0.08) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(30, 41, 59, 0.4) 0%, transparent 50%), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80')`
-        }}
-      />
+      {loginMedia?.youtubeEnabled && youtubeId ? (
+        <iframe
+          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
+          className="fixed inset-0 w-full h-full pointer-events-none opacity-40 object-cover"
+          style={{ zIndex: 0 }}
+          title="YouTube Background"
+        />
+      ) : (
+        <div 
+          className="fixed inset-0 pointer-events-none opacity-25 bg-cover bg-center"
+          style={{
+            backgroundImage: `radial-gradient(circle at 50% 30%, rgba(245, 197, 66, 0.08) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(30, 41, 59, 0.4) 0%, transparent 50%), url('${loginMedia?.backgroundImageUrl || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80'}')`
+          }}
+        />
+      )}
 
       {/* Dark Ambient Grid & Blueprint Overlay */}
       <div className="fixed inset-0 pointer-events-none bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)]" />
