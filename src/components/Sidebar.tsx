@@ -59,8 +59,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const ferramentasItems = [
     { id: 'campeoes', label: 'Produtos Campeões', icon: Trophy, badge: 'TOP' },
-    { id: 'comparar', label: 'Comparar Produtos', icon: Scale },
-    { id: 'trends', label: 'Analisar Tendências', icon: TrendingUp },
     { id: 'settings', label: 'Perfil & Config', icon: User },
     {
       id: 'login',

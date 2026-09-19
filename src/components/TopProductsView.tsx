@@ -45,9 +45,12 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
   onUseProductForReview,
   onSwitchToComparator
 }) => {
-  const [selectedTab, setSelectedTab] = useState<'all' | 'meli' | 'shopee' | 'highticket'>('all');
+  const [selectedTab, setSelectedTab] = useState<'all' | 'meli' | 'shopee' | 'highticket' | 'trends' | 'highticket_only'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchFilter, setSearchFilter] = useState<string>('');
+  const [visibleCount, setVisibleCount] = useState<number>(24);
+  const [liveTrends, setLiveTrends] = useState<any[]>([]);
+  const [isLoadingTrends, setIsLoadingTrends] = useState<boolean>(false);
   
   // Reconciled products list
   const [rawProducts, setRawProducts] = useState<any[]>(() => Object.values(AUTHORITATIVE_MARKETPLACE_CATALOG));
@@ -78,6 +81,34 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
 
   useEffect(() => {
     fetchReconciledCatalogFromApi();
+    setIsLoadingTrends(true);
+    fetch('/api/trends/live?platform=all')
+      .then(res => res.json())
+      .then(data => {
+        if (data.items) {
+          const mappedTrends = data.items.map((t: any) => ({
+            productId: t.id || t.meliItemId,
+            id: t.id || t.meliItemId,
+            rank: t.rank,
+            title: t.title,
+            category: t.category,
+            platform: t.platform,
+            price: t.suggestedPrice,
+            rawPrice: parseFloat(t.suggestedPrice.replace('R$', '').replace('.', '').replace(',', '.')),
+            productImage: t.thumbnail,
+            image: t.thumbnail,
+            affiliateUrl: t.realUrl,
+            demandBadge: t.badges?.[0]?.label || 'Em alta',
+            technicalDescription: t.suggestedDescription,
+            soldQuantity: t.soldQuantity,
+            rating: t.rating || 4.8,
+            isHighTicket: (t.suggestedPrice.includes('R$ 2') || t.suggestedPrice.includes('R$ 899'))
+          }));
+          setLiveTrends(mappedTrends);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setIsLoadingTrends(false));
   }, [fetchReconciledCatalogFromApi]);
 
   /**
@@ -108,6 +139,15 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
     return null;
   }, []);
 
+  const categories = [
+    { id: 'all', label: 'Todas as Categorias' },
+    { id: 'Tech', label: 'Tech & Eletrônicos' },
+    { id: 'Casa e cozinha', label: 'Casa & Cozinha' },
+    { id: 'Beleza e skincare', label: 'Beleza & Skincare' },
+    { id: 'Suplementos e saúde', label: 'Suplementos & Saúde' },
+    { id: 'Esporte', label: 'Esporte & Moda' }
+  ];
+
   // Process and reconcile either live search results or curated catalogue
   const reconciledItemsList = useMemo<ReconciledChampionProduct[]>(() => {
     const sourceList = liveSearchResults.length > 0 ? liveSearchResults : rawProducts;
@@ -122,6 +162,16 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
 
     return validated;
   }, [liveSearchResults, rawProducts, validateAndMapProduct]);
+
+  // Combine and deduplicate
+  const allAvailableProducts = useMemo(() => {
+    const combined = [...reconciledItemsList, ...liveTrends];
+    const unique = new Map();
+    combined.forEach(p => {
+      if (!unique.has(p.productId)) unique.set(p.productId, p);
+    });
+    return Array.from(unique.values());
+  }, [reconciledItemsList, liveTrends]);
 
   // Function to search live in Mercado Livre API and reconcile items in real time
   const handlePerformLiveSearch = async () => {
@@ -177,10 +227,11 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
   };
 
   const filteredProducts = useMemo(() => {
-    return reconciledItemsList.filter((prod) => {
+    return allAvailableProducts.filter((prod) => {
       if (selectedTab === 'meli' && prod.platform !== 'Mercado Livre') return false;
       if (selectedTab === 'shopee' && prod.platform !== 'Shopee') return false;
       if (selectedTab === 'highticket' && !prod.isHighTicket && prod.rawPrice < 250) return false;
+      if (selectedTab === 'trends' && !liveTrends.find(t => t.productId === prod.productId)) return false;
       if (selectedCategory !== 'all' && prod.category !== selectedCategory) return false;
       if (
         liveSearchResults.length === 0 &&
@@ -191,16 +242,10 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
       }
       return true;
     });
-  }, [reconciledItemsList, selectedTab, selectedCategory, liveSearchResults.length, searchFilter]);
+  }, [allAvailableProducts, selectedTab, selectedCategory, liveSearchResults.length, searchFilter, liveTrends]);
 
-  const categories = [
-    { id: 'all', label: 'Todas as Categorias' },
-    { id: 'Tech', label: 'Tech & Eletrônicos' },
-    { id: 'Casa e cozinha', label: 'Casa & Cozinha' },
-    { id: 'Beleza e skincare', label: 'Beleza & Skincare' },
-    { id: 'Suplementos e saúde', label: 'Suplementos & Saúde' },
-    { id: 'Esporte', label: 'Esporte & Moda' }
-  ];
+  const pagedProducts = useMemo(() => filteredProducts.slice(0, visibleCount), [filteredProducts, visibleCount]);
+  const hasMore = filteredProducts.length > visibleCount;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -380,7 +425,7 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
 
       {/* Champion Products Grid with Strict Pre-Render Validation */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredProducts.map((prod) => (
+        {pagedProducts.map((prod) => (
           <div
             key={prod.productId}
             className="group relative rounded-3xl bg-[#121212] border border-[#242424] hover:border-[#F5C542]/60 p-5 space-y-4 flex flex-col justify-between transition-all duration-200 shadow-xl hover:shadow-[#F5C542]/5"
@@ -523,6 +568,17 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
           </div>
         ))}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center pt-8">
+          <button
+            onClick={() => setVisibleCount(prev => prev + 24)}
+            className="px-8 py-4 rounded-2xl bg-[#181818] hover:bg-[#222] border border-[#333] text-white font-bold text-sm transition-all cursor-pointer"
+          >
+            Carregar mais
+          </button>
+        </div>
+      )}
 
       {/* Reconciliation Detail Modal */}
       {selectedProductForModal && (
