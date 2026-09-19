@@ -603,14 +603,25 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                     <img src={loginMedia.backgroundImage} alt="Preview" className="w-full h-full object-cover" />
                   ) : <div className="flex items-center justify-center h-full text-[#555] text-xs">Sem imagem</div>}
                </div>
-               <input type="file" accept="image/*" onChange={(e) => {
+               <input type="file" accept="image/*" onChange={async (e) => {
                  if (e.target.files?.[0]) {
                    const formData = new FormData();
                    formData.append('media', e.target.files[0]);
                    formData.append('activeBackground', 'image');
-                   fetch('/api/admin/login-media', { method: 'POST', body: formData, headers: { 'x-admin-email': currentUser.email } })
-                    .then(r => r.json())
-                    .then(d => setLoginMedia(d.config));
+                   try {
+                     const response = await fetch('/api/admin/login-media', { 
+                        method: 'POST', 
+                        body: formData, 
+                        headers: { 'x-admin-email': currentUser.email } 
+                     });
+                     if (!response.ok) throw new Error('Falha no upload da imagem');
+                     const data = await response.json();
+                     setLoginMedia(data.config);
+                     alert('Imagem salva com sucesso!');
+                   } catch (err) {
+                     console.error(err);
+                     alert('Erro ao salvar imagem. Verifique se o bucket GCS está configurado.');
+                   }
                  }
                }} />
             </div>
@@ -622,14 +633,25 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                     <video src={loginMedia.backgroundVideo} className="w-full h-full object-cover" />
                   ) : <div className="flex items-center justify-center h-full text-[#555] text-xs">Sem vídeo</div>}
                </div>
-               <input type="file" accept="video/*" onChange={(e) => {
+               <input type="file" accept="video/*" onChange={async (e) => {
                  if (e.target.files?.[0]) {
                    const formData = new FormData();
                    formData.append('media', e.target.files[0]);
                    formData.append('activeBackground', 'video');
-                   fetch('/api/admin/login-media', { method: 'POST', body: formData, headers: { 'x-admin-email': currentUser.email } })
-                    .then(r => r.json())
-                    .then(d => setLoginMedia(d.config));
+                   try {
+                     const response = await fetch('/api/admin/login-media', { 
+                        method: 'POST', 
+                        body: formData, 
+                        headers: { 'x-admin-email': currentUser.email } 
+                     });
+                     if (!response.ok) throw new Error('Falha no upload do vídeo');
+                     const data = await response.json();
+                     setLoginMedia(data.config);
+                     alert('Vídeo salvo com sucesso!');
+                   } catch (err) {
+                     console.error(err);
+                     alert('Erro ao salvar vídeo. Verifique se o bucket GCS está configurado.');
+                   }
                  }
                }} />
             </div>

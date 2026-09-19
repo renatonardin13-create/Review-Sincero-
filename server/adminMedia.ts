@@ -34,17 +34,28 @@ const upload = multer({
 
 async function getConfig() {
   try {
+    console.log('Attempting to download config from:', `login-media/config.json`);
     const file = bucket.file('login-media/config.json');
     const [content] = await file.download();
-    return JSON.parse(content.toString());
+    const config = JSON.parse(content.toString());
+    console.log('Config loaded:', config);
+    return config;
   } catch (e) {
+    console.error('Error loading config:', e);
     return { activeBackground: 'default', backgroundImage: '', backgroundVideo: '' };
   }
 }
 
 async function saveConfig(config: any) {
-  const file = bucket.file('login-media/config.json');
-  await file.save(JSON.stringify(config), { contentType: 'application/json' });
+  try {
+    console.log('Attempting to save config:', config);
+    const file = bucket.file('login-media/config.json');
+    await file.save(JSON.stringify(config), { contentType: 'application/json' });
+    console.log('Config saved successfully');
+  } catch (e) {
+    console.error('Error saving config:', e);
+    throw e; // Propagar erro para o frontend ver
+  }
 }
 
 router.get("/login-media", async (req, res) => {
