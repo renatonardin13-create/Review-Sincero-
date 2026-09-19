@@ -654,6 +654,28 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                    }
                  }
                }} />
+               <div className="flex gap-2 mt-2">
+                 <input type="text" placeholder="Ou cole o link do YouTube aqui" className="flex-grow p-2 bg-[#222] rounded-lg text-xs text-white" id="youtubeUrlInput" />
+                 <button onClick={async () => {
+                    const urlInput = document.getElementById('youtubeUrlInput') as HTMLInputElement;
+                    if (urlInput && urlInput.value) {
+                        try {
+                             const response = await fetch('/api/admin/login-media', { 
+                                method: 'POST', 
+                                body: JSON.stringify({ activeBackground: 'video', youtubeUrl: urlInput.value }), 
+                                headers: { 'x-admin-email': currentUser.email, 'Content-Type': 'application/json' } 
+                             });
+                             if (!response.ok) throw new Error('Falha ao salvar link');
+                             const data = await response.json();
+                             setLoginMedia(data.config);
+                             alert('Link salvo com sucesso!');
+                        } catch (err) {
+                             console.error(err);
+                             alert('Erro ao salvar link.');
+                        }
+                    }
+                 }} className="p-2 bg-[#222] rounded-lg text-white">OK</button>
+               </div>
             </div>
           </div>
           

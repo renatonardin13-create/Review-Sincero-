@@ -76,7 +76,7 @@ router.get("/login-media", async (req, res) => {
 });
 
 router.post("/login-media", adminAuth, upload.single('media'), async (req, res) => {
-  const { activeBackground } = req.body;
+  const { activeBackground, youtubeUrl } = req.body;
   const file = req.file;
   const config = await getConfig();
   
@@ -90,7 +90,11 @@ router.post("/login-media", adminAuth, upload.single('media'), async (req, res) 
       config.backgroundImage = publicUrl;
     } else if (file.mimetype.startsWith('video')) {
       config.backgroundVideo = publicUrl;
+      config.youtubeUrl = ''; // Limpa YouTube se upload novo
     }
+  } else if (youtubeUrl) {
+    config.backgroundVideo = ''; // Limpa vídeo upload se youtube novo
+    config.youtubeUrl = youtubeUrl;
   }
   
   config.activeBackground = activeBackground;

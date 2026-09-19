@@ -133,21 +133,31 @@ export const LoginView: React.FC<LoginViewProps> = ({
   return (
     <div className="relative min-h-screen w-full bg-[#07090E] text-white flex flex-col items-center justify-center p-4 sm:p-6 overflow-x-hidden select-none">
       {/* Background Architectural / Studio Moodboard Overlay */}
-      {mediaConfig.activeBackground === 'video' && mediaConfig.backgroundVideo ? (
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="fixed inset-0 w-full h-full object-cover pointer-events-none opacity-25"
-          onError={(e) => {
-              // Fallback se vídeo falhar: o React tratará o próximo render com a imagem ou padrão.
-              // Como estamos em state, poderíamos forçar alteração aqui, mas vamos manter simples.
-              console.error('Video error', e);
-          }}
-        >
-          <source src={mediaConfig.backgroundVideo} type="video/mp4" />
-        </video>
+      {mediaConfig.activeBackground === 'video' ? (
+        mediaConfig.youtubeUrl ? (
+            <div className="fixed inset-0 w-full h-full pointer-events-none opacity-25">
+                <iframe
+                    className="w-full h-full"
+                    src={`https://www.youtube.com/embed/${mediaConfig.youtubeUrl.split('v=')[1]?.split('&')[0] || mediaConfig.youtubeUrl.split('/').pop()}?autoplay=1&mute=1&loop=1&playlist=${mediaConfig.youtubeUrl.split('v=')[1]?.split('&')[0] || mediaConfig.youtubeUrl.split('/').pop()}&controls=0&showinfo=0&modestbranding=1`}
+                    frameBorder="0"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                ></iframe>
+            </div>
+        ) : mediaConfig.backgroundVideo ? (
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="fixed inset-0 w-full h-full object-cover pointer-events-none opacity-25"
+              onError={(e) => {
+                  console.error('Video error', e);
+              }}
+            >
+              <source src={mediaConfig.backgroundVideo} type="video/mp4" />
+            </video>
+        ) : null
       ) : (
         <div 
           className="fixed inset-0 pointer-events-none opacity-25 bg-cover bg-center"
