@@ -47,7 +47,7 @@ const ERROR_TRANSLATIONS: Record<KeywordPlannerErrorCode, { title: string; frien
   },
   'GOOGLE_ADS_AUTH_ERROR': {
     title: 'Falha de Autenticação OAuth',
-    friendlyMessage: 'Não foi possível autenticar com o Google Ads.',
+    friendlyMessage: 'Falha de autenticação Google Ads',
     hint: 'Verifique se o GOOGLE_ADS_REFRESH_TOKEN, CLIENT_ID e CLIENT_SECRET são válidos e se o escopo https://www.googleapis.com/auth/adwords foi concedido.'
   },
   'GOOGLE_ADS_PERMISSION_ERROR': {
@@ -67,8 +67,13 @@ const ERROR_TRANSLATIONS: Record<KeywordPlannerErrorCode, { title: string; frien
   },
   'GOOGLE_ADS_API_ERROR': {
     title: 'Recusa da Google Ads API',
-    friendlyMessage: 'A Google Ads API recusou a consulta.',
+    friendlyMessage: 'Google Ads retornou um erro',
     hint: 'A requisição foi recusada pela API do Google Ads. Verifique os logs do servidor para inspecionar os detalhes retornados.'
+  },
+  'METHOD_NOT_ALLOWED': {
+    title: 'Método Não Permitido',
+    friendlyMessage: 'Erro de configuração da rota do servidor',
+    hint: 'A rota de Palavras-chave só aceita requisições via POST. Verifique as configurações de rede ou servidor.'
   },
   'UNKNOWN_ERROR': {
     title: 'Erro na Consulta',

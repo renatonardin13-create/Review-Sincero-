@@ -76,6 +76,7 @@ export type KeywordPlannerErrorCode =
   | 'GOOGLE_ADS_CUSTOMER_ERROR'
   | 'GOOGLE_ADS_DEVELOPER_TOKEN_ERROR'
   | 'GOOGLE_ADS_API_ERROR'
+  | 'METHOD_NOT_ALLOWED'
   | 'UNKNOWN_ERROR';
 
 export interface EnvVarDiagnosticItem {
