@@ -18,6 +18,7 @@ import { CommissionCalculatorModal } from './components/CommissionCalculatorModa
 import { AdminPanelView } from './components/AdminPanelView';
 import { AccessRestrictedView } from './components/AccessRestrictedView';
 import { AuthModal } from './components/AuthModal';
+import { LoginView } from './components/LoginView';
 import { getStoredUser, saveStoredUser } from './services/authService';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 
@@ -300,6 +301,19 @@ export default function App() {
     setActiveReviewForEdit(newDraft);
     setCurrentView('create');
   };
+
+  if (currentView === 'login') {
+    return (
+      <LoginView
+        currentUser={currentUser}
+        onLoginSuccess={(user) => {
+          handleUserChange(user);
+          setCurrentView('dashboard');
+        }}
+        onCancel={() => setCurrentView('dashboard')}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#080808] text-white flex font-sans selection:bg-[#F5C542] selection:text-[#080808]">

@@ -140,7 +140,7 @@ export function getRegisteredUsersList(): AuthUser[] {
   return [DEFAULT_ADMIN_USER, DEFAULT_FREE_USER];
 }
 
-function recordUserInDirectory(user: AuthUser): void {
+export function recordUserInDirectory(user: AuthUser): void {
   try {
     const list = getRegisteredUsersList();
     const existingIdx = list.findIndex((u) => u.email.toLowerCase() === user.email.toLowerCase());

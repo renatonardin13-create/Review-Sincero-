@@ -19,7 +19,8 @@ import {
   Crown,
   User,
   Users,
-  Film
+  Film,
+  LogIn
 } from 'lucide-react';
 import { AuthUser, ADMIN_EMAIL } from '../types';
 
@@ -74,7 +75,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Calculator,
       action: onOpenCalculator ? onOpenCalculator : () => setCurrentView('comissoes')
     },
-    { id: 'settings', label: 'Perfil & Config', icon: User }
+    { id: 'settings', label: 'Perfil & Config', icon: User },
+    {
+      id: 'login',
+      label: 'Tela de Login',
+      icon: LogIn,
+      badge: 'NOVA',
+      action: () => setCurrentView('login')
+    }
   ];
 
   const handleNavClick = (item: { id: string; action?: () => void }) => {
@@ -273,6 +281,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {currentUser?.email || ADMIN_EMAIL}
               </p>
             </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCurrentView('login')}
+            className="w-full py-1.5 px-3 rounded-xl bg-[#141414] hover:bg-[#1C1C1C] border border-[#222] hover:border-[#F5C542]/30 text-[10px] font-semibold text-[#A1A1A1] hover:text-[#F5C542] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <LogIn className="w-3 h-3" />
+            <span>Abrir Tela de Login / Trocar Conta</span>
           </button>
         </div>
       </aside>
