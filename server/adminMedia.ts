@@ -4,8 +4,15 @@ import { Storage } from '@google-cloud/storage';
 
 const router = Router();
 const storageClient = new Storage();
-const bucketName = process.env.GCS_BUCKET || 'review-sincero-media';
-const bucket = storageClient.bucket(bucketName);
+const bucketName = process.env.GCS_BUCKET;
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (!bucketName && isProduction) {
+  console.error('ERRO: GCS_BUCKET_NOT_CONFIGURED');
+  throw new Error('GCS_BUCKET_NOT_CONFIGURED');
+}
+
+const bucket = bucketName ? storageClient.bucket(bucketName) : null;
 
 // Middleware de autenticação básica para admin
 const adminAuth = (req: Request, res: Response, next: NextFunction) => {
@@ -33,6 +40,7 @@ const upload = multer({
 });
 
 async function getConfig() {
+  if (!bucket) return { activeBackground: 'default', backgroundImage: '', backgroundVideo: '' };
   try {
     console.log('Attempting to download config from:', `login-media/config.json`);
     const file = bucket.file('login-media/config.json');
@@ -47,6 +55,10 @@ async function getConfig() {
 }
 
 async function saveConfig(config: any) {
+  if (!bucket) {
+    console.warn('GCS não configurado, salvamento ignorado.');
+    return;
+  }
   try {
     console.log('Attempting to save config:', config);
     const file = bucket.file('login-media/config.json');
@@ -68,7 +80,7 @@ router.post("/login-media", adminAuth, upload.single('media'), async (req, res) 
   const file = req.file;
   const config = await getConfig();
   
-  if (file) {
+  if (file && bucket) {
     const fileName = `login-media/${file.mimetype.startsWith('image') ? 'images' : 'videos'}/${Date.now()}-${file.originalname}`;
     const blob = bucket.file(fileName);
     await blob.save(file.buffer, { contentType: file.mimetype });
