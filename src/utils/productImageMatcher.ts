@@ -27,15 +27,37 @@ const PRODUCT_DATABASE: Array<{
       'https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&w=900&q=80'
     ]
   },
+  // Frigideira Antiaderente / Panela / Utensílios de Cozinha
+  {
+    keywords: ['frigideira', 'panela', 'antiaderente', 'starflon', 'flavorstone', 'polishop', 'tramontina', 'omeleteira', 'waffer', 'grelha'],
+    category: 'Casa e cozinha',
+    mainImage: 'https://http2.mlstatic.com/D_NQ_NP_677598-MLB70438767980_072023-O.webp',
+    gallery: [
+      'https://http2.mlstatic.com/D_NQ_NP_677598-MLB70438767980_072023-O.webp',
+      'https://http2.mlstatic.com/D_NQ_NP_753198-MLB70438768012_072023-O.webp',
+      'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?auto=format&fit=crop&w=900&q=80'
+    ]
+  },
+  // Liquidificador / Processador / Mixer
+  {
+    keywords: ['liquidificador', 'blender', 'mixer', 'triturador', 'problend', 'mondial turbo', 'walita', 'osterizer', 'copo de vidro'],
+    category: 'Casa e cozinha',
+    mainImage: 'https://http2.mlstatic.com/D_NQ_NP_948625-MLA48440784944_122021-O.webp',
+    gallery: [
+      'https://http2.mlstatic.com/D_NQ_NP_948625-MLA48440784944_122021-O.webp',
+      'https://http2.mlstatic.com/D_NQ_NP_839120-MLA48440784955_122021-O.webp',
+      'https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=900&q=80'
+    ]
+  },
   // Air Fryer / Fritadeira Sem Óleo
   {
-    keywords: ['air fryer', 'airfryer', 'fritadeira', 'sem oleo', 'mondial', 'philips', 'walita', 'oster', 'britania', 'eletrolux', 'gafan'],
+    keywords: ['air fryer', 'airfryer', 'fritadeira', 'sem oleo', 'fritadeira eletrica', 'afn-40', 'afn-50', 'family 4l', 'family 5l', 'rapidaire'],
     category: 'Casa e cozinha',
-    mainImage: 'https://images.unsplash.com/photo-1584269600519-112d071b35e6?auto=format&fit=crop&w=900&q=80',
+    mainImage: 'https://http2.mlstatic.com/D_NQ_NP_602127-MLA48873739712_012022-O.webp',
     gallery: [
-      'https://images.unsplash.com/photo-1584269600519-112d071b35e6?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=900&q=80'
+      'https://http2.mlstatic.com/D_NQ_NP_602127-MLA48873739712_012022-O.webp',
+      'https://http2.mlstatic.com/D_NQ_NP_906938-MLA48873739811_012022-O.webp',
+      'https://images.unsplash.com/photo-1584269600519-112d071b35e6?auto=format&fit=crop&w=900&q=80'
     ]
   },
   // Robô Aspirador

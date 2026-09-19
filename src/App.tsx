@@ -341,6 +341,7 @@ export default function App() {
 
           {currentView === 'comparar' && (
             <CompareProductsView
+              onUseProductForReview={handleUseChampionProduct}
               onSwitchToGenerator={() => {
                 setActiveReviewForEdit(null);
                 setCurrentView('create');
