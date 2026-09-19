@@ -75,7 +75,12 @@ router.get("/login-media", async (req, res) => {
   res.json(config);
 });
 
-router.post("/login-media", adminAuth, upload.single('media'), async (req, res) => {
+router.post("/login-media", adminAuth, (req, res, next) => {
+  if (req.is('multipart/form-data')) {
+    return upload.single('media')(req, res, next);
+  }
+  next();
+}, async (req, res) => {
   const { activeBackground, youtubeUrl } = req.body;
   const file = req.file;
   const config = await getConfig();
