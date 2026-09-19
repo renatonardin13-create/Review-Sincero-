@@ -74,7 +74,7 @@ const POPULAR_NICHES = [
     ctaText: 'QUERO O MEU POR R$ 59.90 →',
     slug: 'fone-de-ouvido-bluetooth-tws-sem-fio-bateria-de-longa-duracao',
     siteName: 'ReviewFísico',
-    author: 'Thais Monteiro',
+    author: 'Carlos Mendonça',
     seoTitle: 'Fone de Ouvido Bluetooth TWS Sem Fio Bateria de Longa Duração - Review Sincero e Vale a Pena? (Análise 2026)',
     seoDescription: 'Descubra se Fone de Ouvido Bluetooth TWS Sem Fio Bateria de Longa Duração é bom, vale a pena e confira prós, contras, veredito e onde comprar com o melhor preço e garantia.',
     keywords: [
@@ -121,7 +121,7 @@ const POPULAR_NICHES = [
     ctaText: 'QUERO O MEU POR R$ 449.90 →',
     slug: 'robo-aspirador-inteligente-mop-sensor',
     siteName: 'ReviewFísico',
-    author: 'Thais Monteiro',
+    author: 'Carlos Mendonça',
     seoTitle: 'Robô Aspirador de Pó com Mop - Vale a Pena? Resenha Completa e Teste',
     seoDescription: 'Testamos na prática o Robô Aspirador Inteligente: potência de sucção, autonomia da bateria e se realmente limpa pelos de pets e poeira.',
     keywords: [
@@ -143,7 +143,7 @@ const POPULAR_NICHES = [
     ctaText: 'COMPRAR COM FRETE GRÁTIS POR R$ 89.90 →',
     slug: 'smartwatch-relogio-inteligente-monitor-cardiaco',
     siteName: 'ReviewFísico',
-    author: 'Thais Monteiro',
+    author: 'Carlos Mendonça',
     seoTitle: 'Smartwatch Relógio Inteligente - Análise Sincera e Prós e Contras',
     seoDescription: 'Avaliação detalhada sobre bateria, precisão dos sensores e compatibilidade com Android e iPhone.',
     keywords: [
@@ -186,7 +186,7 @@ const POPULAR_NICHES = [
     ctaText: 'QUERO A MINHA POR R$ 549.90 →',
     slug: 'cadeira-ergonomica-presidente-escritorio',
     siteName: 'ReviewFísico',
-    author: 'Thais Monteiro',
+    author: 'Carlos Mendonça',
     seoTitle: 'Cadeira Ergonômica Presidente - Acaba com as Dores nas Costas? Review 2026',
     seoDescription: 'Testamos a cadeira presidente ergonômica durante 30 dias de trabalho intenso. Confira durabilidade e conforto.',
     keywords: [
@@ -252,7 +252,7 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     return {
       id: 'rev-' + Date.now(),
       siteName: 'ReviewFísico',
-      author: 'Thais Monteiro',
+      author: 'Carlos Mendonça',
       productName: defaultNiche.name,
       headline: defaultNiche.headline,
       ctaButtonText: defaultNiche.ctaText,
@@ -750,7 +750,7 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     if (prod.includes('cadeira') || prod.includes('ergon') || prod.includes('escrit') || prod.includes('office')) {
       setFormData((prev) => ({
         ...prev,
-        author: prev.author || 'Thais Monteiro',
+        author: prev.author || 'Carlos Mendonça',
         overallScore: 9.2,
         guaranteeDays: 30,
         verifiedReviewsCount: 2184,
@@ -787,7 +787,7 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     } else if (prod.includes('fone') || prod.includes('airpod') || prod.includes('head') || prod.includes('bluetooth')) {
       setFormData((prev) => ({
         ...prev,
-        author: prev.author || 'Thais Monteiro',
+        author: prev.author || 'Carlos Mendonça',
         overallScore: 9.0,
         guaranteeDays: 30,
         verifiedReviewsCount: 1840,
@@ -936,7 +936,7 @@ ${formData.oldPrice ? `- Preço Anterior / Sem Desconto: R$ ${formData.oldPrice}
 - Plataforma: ${formData.platform}
 - Categoria: ${formData.category}
 - Nome do Portal de Avaliação: ${formData.siteName || 'ReviewFísico'}
-- Avaliador / Especialista: ${formData.author || 'Thais Monteiro'}
+- Avaliador / Especialista: ${formData.author || 'Carlos Mendonça'}
 - Nota do Especialista: ${formData.overallScore || 9.2} / 10
 - Garantia Incondicional: ${formData.guaranteeDays || 30} dias
 - Total de Avaliações Verificadas: ${formData.verifiedReviewsCount || 2184} compradores
@@ -987,7 +987,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
 3. Card de preço com destaque para economia e botão de compra direcionando para ${formData.affiliateUrl || 'https://www.mercadolivre.com.br/'}.
 4. Seção de identificação com checks azuis para o público-alvo e caixa de aviso para a frase anti-persona.
 5. Grid de Prós & Contras em cartões contrastantes.
-6. Selo com foto e assinatura de ${formData.author || 'Thais Monteiro'} com nota ${formData.overallScore || 9.2}/10.
+6. Selo com foto e assinatura de ${formData.author || 'Carlos Mendonça'} com nota ${formData.overallScore || 9.2}/10.
 7. Depoimentos com estrelas e avatares reais.
 8. FAQ em sanfona/accordion.
 9. Botão flutuante no rodapé com CTA de compra garantida.`;
@@ -2258,7 +2258,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                 <div className="col-span-8">
                   <input
                     type="text"
-                    value={formData.author || 'Thais Monteiro'}
+                    value={formData.author || 'Carlos Mendonça'}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
