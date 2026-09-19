@@ -1,14 +1,14 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import { Storage } from '@google-cloud/storage';
 
 const router = Router();
+const storageClient = new Storage();
+const bucketName = process.env.GCS_BUCKET || 'review-sincero-media';
+const bucket = storageClient.bucket(bucketName);
 
 // Middleware de autenticação básica para admin
 const adminAuth = (req: Request, res: Response, next: NextFunction) => {
-  // Em uma implementação real, validaríamos o token do usuário.
-  // Como o usuário é passado no contexto pelo frontend, aqui validamos via header.
   const authEmail = req.headers['x-admin-email'] as string;
   const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'renatonardin13@gmail.com';
   
@@ -19,16 +19,8 @@ const adminAuth = (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const storage = multer.diskStorage({
-  destination: 'public/uploads/',
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
 const upload = multer({ 
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
   fileFilter: (req, file, cb) => {
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm'];
@@ -40,47 +32,60 @@ const upload = multer({
   }
 });
 
-const CONFIG_FILE = 'public/uploads/config.json';
-
-router.get("/login-media", (req, res) => {
-  if (fs.existsSync(CONFIG_FILE)) {
-    const config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
-    res.json(config);
-  } else {
-    res.json({ activeBackground: 'default', backgroundImage: '', backgroundVideo: '' });
+async function getConfig() {
+  try {
+    const file = bucket.file('login-media/config.json');
+    const [content] = await file.download();
+    return JSON.parse(content.toString());
+  } catch (e) {
+    return { activeBackground: 'default', backgroundImage: '', backgroundVideo: '' };
   }
+}
+
+async function saveConfig(config: any) {
+  const file = bucket.file('login-media/config.json');
+  await file.save(JSON.stringify(config), { contentType: 'application/json' });
+}
+
+router.get("/login-media", async (req, res) => {
+  const config = await getConfig();
+  res.json(config);
 });
 
-router.post("/login-media", adminAuth, upload.single('media'), (req, res) => {
+router.post("/login-media", adminAuth, upload.single('media'), async (req, res) => {
   const { activeBackground } = req.body;
   const file = req.file;
-  const config = fs.existsSync(CONFIG_FILE) ? JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8')) : {};
+  const config = await getConfig();
   
   if (file) {
+    const fileName = `login-media/${file.mimetype.startsWith('image') ? 'images' : 'videos'}/${Date.now()}-${file.originalname}`;
+    const blob = bucket.file(fileName);
+    await blob.save(file.buffer, { contentType: file.mimetype });
+    const publicUrl = `https://storage.googleapis.com/${bucketName}/${fileName}`;
+    
     if (file.mimetype.startsWith('image')) {
-      config.backgroundImage = `/uploads/${file.filename}`;
+      config.backgroundImage = publicUrl;
     } else if (file.mimetype.startsWith('video')) {
-      config.backgroundVideo = `/uploads/${file.filename}`;
+      config.backgroundVideo = publicUrl;
     }
   }
   
   config.activeBackground = activeBackground;
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config));
+  await saveConfig(config);
   res.json({ success: true, config });
 });
 
-router.delete("/login-media", adminAuth, (req, res) => {
+router.delete("/login-media", adminAuth, async (req, res) => {
   const { type } = req.body;
-  const config = fs.existsSync(CONFIG_FILE) ? JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8')) : {};
+  const config = await getConfig();
   
   if (type === 'image' && config.backgroundImage) {
-      // Opcional: remover o arquivo físico
       config.backgroundImage = '';
   } else if (type === 'video' && config.backgroundVideo) {
       config.backgroundVideo = '';
   }
   
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config));
+  await saveConfig(config);
   res.json({ success: true, config });
 });
 
