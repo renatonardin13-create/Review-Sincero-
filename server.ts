@@ -1067,6 +1067,72 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     }
   });
 
+  // API Route: Generate SEO Titles with Gemini
+  app.post("/api/gemini/generate-titles", async (req, res) => {
+    try {
+      const { productName } = req.body;
+      if (!productName) {
+        return res.status(400).json({ error: "Nome do produto não fornecido." });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(400).json({ error: "GEMINI_API_KEY não configurada." });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
+
+      const prompt = `Sugira 3 títulos de alta conversão para um produto chamado: ${productName}. Responda em um formato de lista JSON simples de strings: ["titulo1", "titulo2", "titulo3"].`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: prompt
+      });
+
+      const titles = JSON.parse(response.text || "[]");
+      res.json({ titles });
+    } catch (err: any) {
+      console.error("Erro ao gerar títulos:", err);
+      res.status(500).json({ error: "Erro ao gerar títulos com IA.", details: err.message });
+    }
+  });
+
+  // API Route: Generate SEO Tips with Gemini
+  app.post("/api/gemini/generate-seo-tips", async (req, res) => {
+    try {
+      const { productName } = req.body;
+      if (!productName) {
+        return res.status(400).json({ error: "Nome do produto não fornecido." });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(400).json({ error: "GEMINI_API_KEY não configurada." });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
+
+      const prompt = `Sugira 3 dicas de SEO acionáveis para um produto chamado: ${productName}, visando melhorar a conversão da página de review. Responda em um formato de lista JSON simples de strings: ["dica1", "dica2", "dica3"].`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: prompt
+      });
+
+      const tips = JSON.parse(response.text || "[]");
+      res.json({ tips });
+    } catch (err: any) {
+      console.error("Erro ao gerar dicas de SEO:", err);
+      res.status(500).json({ error: "Erro ao gerar dicas de SEO com IA.", details: err.message });
+    }
+  });
+
   // API Route: Real Keyword Planner Diagnostics (Safe metadata check without credentials)
   app.get("/api/keyword-planner/diagnostics", (req, res) => {
     try {

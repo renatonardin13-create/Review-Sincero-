@@ -222,6 +222,10 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   const [batchPhotosText, setBatchPhotosText] = useState<string>('');
   const [copiedPrompt, setCopiedPrompt] = useState<boolean>(false);
   const [copiedTarget, setCopiedTarget] = useState<string | null>(null);
+  const [generatingTitles, setGeneratingTitles] = useState<boolean>(false);
+  const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
+  const [generatingSeoTips, setGeneratingSeoTips] = useState<boolean>(false);
+  const [suggestedSeoTips, setSuggestedSeoTips] = useState<string[]>([]);
   const [toastMessage, setToastMessage] = useState<{
     title: string;
     desc: string;
@@ -467,6 +471,46 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
         metaDescription: niche.seoDescription
       }
     }));
+  };
+
+  const handleGenerateTitles = async () => {
+    if (!formData.productName) return;
+    setGeneratingTitles(true);
+    try {
+      const response = await fetch("/api/gemini/generate-titles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productName: formData.productName })
+      });
+      const data = await response.json();
+      if (data.titles) {
+        setSuggestedTitles(data.titles);
+      }
+    } catch (err) {
+      console.error("Erro ao gerar títulos:", err);
+    } finally {
+      setGeneratingTitles(false);
+    }
+  };
+
+  const handleGenerateSeoTips = async () => {
+    if (!formData.productName) return;
+    setGeneratingSeoTips(true);
+    try {
+      const response = await fetch("/api/gemini/generate-seo-tips", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productName: formData.productName })
+      });
+      const data = await response.json();
+      if (data.tips) {
+        setSuggestedSeoTips(data.tips);
+      }
+    } catch (err) {
+      console.error("Erro ao gerar dicas de SEO:", err);
+    } finally {
+      setGeneratingSeoTips(false);
+    }
   };
 
   // Toggle Keyword Selection
@@ -1828,10 +1872,39 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                   <label className="text-[11px] font-bold text-[#A1A1A1] uppercase tracking-wider">
                     SEO META TITLE (TÍTULO DA PÁGINA NO GOOGLE)
                   </label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateTitles}
+                    disabled={generatingTitles || !formData.productName}
+                    className="text-[10px] font-bold text-[#3B82F6] hover:text-[#2563EB] disabled:text-[#555] transition-colors"
+                  >
+                    {generatingTitles ? "Gerando..." : "Gerar título com IA"}
+                  </button>
                   <span className="text-[10px] text-[#8E8E8E] font-mono">
                     {formData.seoSettings?.metaTitle?.length || 0}/60 caracteres (recomendado)
                   </span>
                 </div>
+                {suggestedTitles.length > 0 && (
+                  <div className="mt-2 space-y-2 bg-[#1E293B] p-3 rounded-xl">
+                    <p className="text-[10px] font-bold text-[#A1A1A1]">Sugestões:</p>
+                    {suggestedTitles.map((title, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ 
+                          ...prev, 
+                          seoSettings: { 
+                            metaTitle: title, 
+                            metaDescription: prev.seoSettings?.metaDescription || '' 
+                          } 
+                        }))}
+                        className="block w-full text-left text-xs text-white p-2 hover:bg-[#334155] rounded-lg transition-colors"
+                      >
+                        {title}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <input
                   type="text"
                   value={formData.seoSettings?.metaTitle || ''}
@@ -3284,6 +3357,38 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                   <ExternalLink className="w-3 h-3 text-[#94A3B8]" />
                 </button>
               </div>
+            </div>
+
+            {/* SEO TIPS SECTION */}
+            <div className="space-y-3 pt-4 border-t border-[#1E293B] mt-4">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
+                  DICAS DE SEO PARA O SEU PRODUTO
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGenerateSeoTips}
+                  disabled={generatingSeoTips || !formData.productName}
+                  className="text-[10px] font-bold text-[#3B82F6] hover:text-[#2563EB] disabled:text-[#555] transition-colors cursor-pointer"
+                >
+                  {generatingSeoTips ? "Gerando..." : "Gerar dicas com IA"}
+                </button>
+              </div>
+
+              {suggestedSeoTips.length > 0 ? (
+                <div className="space-y-2 bg-[#0F1420] border border-[#1E293B] p-3 rounded-xl">
+                  {suggestedSeoTips.map((tip, idx) => (
+                    <p key={idx} className="text-xs text-[#CBD5E1] leading-relaxed flex gap-2">
+                      <span className="text-[#3B82F6] font-bold">💡</span>
+                      {tip}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-[10px] text-[#64748B] italic">
+                  Clique no botão para gerar sugestões baseadas no seu produto.
+                </div>
+              )}
             </div>
 
             {/* PROMPT PREVIEW BOX */}
