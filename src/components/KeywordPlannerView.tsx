@@ -399,18 +399,54 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[
-                { name: 'GOOGLE_ADS_CLIENT_ID', label: 'Client ID (OAuth)', status: diagnostics?.googleAds.clientId, required: true },
-                { name: 'GOOGLE_ADS_CLIENT_SECRET', label: 'Client Secret (OAuth)', status: diagnostics?.googleAds.clientSecret, required: true },
-                { name: 'GOOGLE_ADS_REFRESH_TOKEN', label: 'Refresh Token (OAuth)', status: diagnostics?.googleAds.refreshToken, required: true },
-                { name: 'GOOGLE_ADS_DEVELOPER_TOKEN', label: 'Developer Token', status: diagnostics?.googleAds.developerToken, required: true },
-                { name: 'GOOGLE_ADS_CUSTOMER_ID', label: 'Customer ID (10 dígitos)', status: diagnostics?.googleAds.customerId, required: true },
-                { name: 'GOOGLE_ADS_LOGIN_CUSTOMER_ID', label: 'Login Customer ID (MCC)', status: diagnostics?.googleAds.loginCustomerId, required: false }
+                { 
+                  name: 'GOOGLE_ADS_CLIENT_ID', 
+                  label: 'Client ID (OAuth)', 
+                  status: diagnostics?.googleAds.clientId, 
+                  detail: diagnostics?.envDetails?.GOOGLE_ADS_CLIENT_ID,
+                  required: true 
+                },
+                { 
+                  name: 'GOOGLE_ADS_CLIENT_SECRET', 
+                  label: 'Client Secret (OAuth)', 
+                  status: diagnostics?.googleAds.clientSecret, 
+                  detail: diagnostics?.envDetails?.GOOGLE_ADS_CLIENT_SECRET,
+                  required: true 
+                },
+                { 
+                  name: 'GOOGLE_ADS_REFRESH_TOKEN', 
+                  label: 'Refresh Token (OAuth)', 
+                  status: diagnostics?.googleAds.refreshToken, 
+                  detail: diagnostics?.envDetails?.GOOGLE_ADS_REFRESH_TOKEN,
+                  required: true 
+                },
+                { 
+                  name: 'GOOGLE_ADS_DEVELOPER_TOKEN', 
+                  label: 'Developer Token', 
+                  status: diagnostics?.googleAds.developerToken, 
+                  detail: diagnostics?.envDetails?.GOOGLE_ADS_DEVELOPER_TOKEN,
+                  required: true 
+                },
+                { 
+                  name: 'GOOGLE_ADS_CUSTOMER_ID', 
+                  label: 'Customer ID (10 dígitos)', 
+                  status: diagnostics?.googleAds.customerId, 
+                  detail: diagnostics?.envDetails?.GOOGLE_ADS_CUSTOMER_ID,
+                  required: true 
+                },
+                { 
+                  name: 'GOOGLE_ADS_LOGIN_CUSTOMER_ID', 
+                  label: 'Login Customer ID (MCC)', 
+                  status: diagnostics?.googleAds.loginCustomerId, 
+                  detail: diagnostics?.envDetails?.GOOGLE_ADS_LOGIN_CUSTOMER_ID,
+                  required: false 
+                }
               ].map((item, idx) => {
                 const isConfigured = item.status === 'configured';
                 return (
                   <div
                     key={idx}
-                    className={`p-3 rounded-xl border flex items-center justify-between ${
+                    className={`p-3 rounded-xl border flex flex-col justify-between gap-2 ${
                       isConfigured
                         ? 'bg-[#0E1A16] border-[#10B981]/30'
                         : item.required
@@ -418,31 +454,43 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
                         : 'bg-[#131B2A] border-[#24334A]'
                     }`}
                   >
-                    <div className="space-y-0.5">
-                      <span className="text-[11px] font-mono font-bold text-white block">
-                        {item.name}
-                      </span>
-                      <span className="text-[10px] text-[#94A3B8] block">
-                        {item.label} {!item.required && '(opcional)'}
-                      </span>
-                    </div>
-                    <div>
-                      {isConfigured ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#10B981]/20 text-[#34D399] border border-[#10B981]/40">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>CONFIGURADO</span>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-0.5">
+                        <span className="text-[11px] font-mono font-bold text-white block">
+                          {item.name}
                         </span>
-                      ) : (
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                          item.required
-                            ? 'bg-[#EF4444]/20 text-[#F87171] border border-[#EF4444]/40'
-                            : 'bg-[#334155]/30 text-[#94A3B8] border border-[#475569]'
-                        }`}>
-                          <XCircle className="w-3 h-3" />
-                          <span>{item.required ? 'AUSENTE' : 'NÃO CONFIGURADO'}</span>
+                        <span className="text-[10px] text-[#94A3B8] block">
+                          {item.label} {!item.required && '(opcional)'}
                         </span>
-                      )}
+                      </div>
+                      <div>
+                        {isConfigured ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#10B981]/20 text-[#34D399] border border-[#10B981]/40 shrink-0">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>CONFIGURADO</span>
+                          </span>
+                        ) : (
+                          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${
+                            item.required
+                              ? 'bg-[#EF4444]/20 text-[#F87171] border border-[#EF4444]/40'
+                              : 'bg-[#334155]/30 text-[#94A3B8] border border-[#475569]'
+                          }`}>
+                            <XCircle className="w-3 h-3" />
+                            <span>{item.required ? 'AUSENTE' : 'NÃO CONFIGURADO'}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
+                    {item.detail && item.detail.preview && (
+                      <div className="pt-1.5 border-t border-white/5 text-[10px] flex items-center justify-between font-mono text-[#94A3B8]">
+                        <span className="truncate max-w-[170px]">{item.detail.preview}</span>
+                        {item.detail.formatValid ? (
+                          <span className="text-[#34D399] text-[9px] font-sans font-semibold">Formato OK</span>
+                        ) : (
+                          <span className="text-[#F87171] text-[9px] font-sans font-semibold">Verificar</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}

@@ -1063,9 +1063,27 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
   app.get("/api/keyword-planner/diagnostics", (req, res) => {
     try {
       const diagnostics = getKeywordPlannerDiagnostics();
+      console.log("\n================================================================================");
+      console.log("🩺 [API DIAGNOSTICS REQUEST: /api/keyword-planner/diagnostics]");
+      console.log("--------------------------------------------------------------------------------");
+      console.log(`• Status Geral:             ${diagnostics.systemStatus}`);
+      console.log(`• Todas Obrigatórias Prontas: ${diagnostics.allRequiredConfigured ? 'SIM ✅' : 'NÃO ⚠️'}`);
+      if (diagnostics.missingRequired && diagnostics.missingRequired.length > 0) {
+        console.log(`• Variáveis Ausentes:       ${diagnostics.missingRequired.join(', ')}`);
+      }
+      if (diagnostics.envDetails) {
+        console.log(`• GOOGLE_ADS_CLIENT_ID:      ${diagnostics.envDetails.GOOGLE_ADS_CLIENT_ID.status} (${diagnostics.envDetails.GOOGLE_ADS_CLIENT_ID.preview})`);
+        console.log(`• GOOGLE_ADS_CLIENT_SECRET:  ${diagnostics.envDetails.GOOGLE_ADS_CLIENT_SECRET.status}`);
+        console.log(`• GOOGLE_ADS_REFRESH_TOKEN:  ${diagnostics.envDetails.GOOGLE_ADS_REFRESH_TOKEN.status} (${diagnostics.envDetails.GOOGLE_ADS_REFRESH_TOKEN.preview})`);
+        console.log(`• GOOGLE_ADS_DEVELOPER_TOKEN:${diagnostics.envDetails.GOOGLE_ADS_DEVELOPER_TOKEN.status} (${diagnostics.envDetails.GOOGLE_ADS_DEVELOPER_TOKEN.preview})`);
+        console.log(`• GOOGLE_ADS_CUSTOMER_ID:    ${diagnostics.envDetails.GOOGLE_ADS_CUSTOMER_ID.status} (${diagnostics.envDetails.GOOGLE_ADS_CUSTOMER_ID.preview})`);
+      }
+      console.log("================================================================================\n");
+
       res.json(diagnostics);
     } catch (err: any) {
-      res.status(500).json({ error: "Erro ao consultar diagnósticos do Google Ads." });
+      console.error("[server] Erro ao consultar diagnósticos do Google Ads:", err);
+      res.status(500).json({ error: "Erro ao consultar diagnósticos do Google Ads.", details: err.message });
     }
   });
 

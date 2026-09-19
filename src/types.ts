@@ -78,7 +78,21 @@ export type KeywordPlannerErrorCode =
   | 'GOOGLE_ADS_API_ERROR'
   | 'UNKNOWN_ERROR';
 
+export interface EnvVarDiagnosticItem {
+  configured: boolean;
+  status: 'configured' | 'missing';
+  length: number;
+  preview: string;
+  formatValid: boolean;
+  formatNote?: string;
+}
+
 export interface KeywordPlannerDiagnostics {
+  success?: boolean;
+  timestamp?: string;
+  allRequiredConfigured?: boolean;
+  missingRequired?: string[];
+  systemStatus?: string;
   googleAds: {
     clientId: 'configured' | 'missing';
     clientSecret: 'configured' | 'missing';
@@ -86,6 +100,15 @@ export interface KeywordPlannerDiagnostics {
     developerToken: 'configured' | 'missing';
     customerId: 'configured' | 'missing';
     loginCustomerId: 'configured' | 'missing';
+  };
+  envDetails?: {
+    GOOGLE_ADS_CLIENT_ID: EnvVarDiagnosticItem;
+    GOOGLE_ADS_CLIENT_SECRET: EnvVarDiagnosticItem;
+    GOOGLE_ADS_REFRESH_TOKEN: EnvVarDiagnosticItem;
+    GOOGLE_ADS_DEVELOPER_TOKEN: EnvVarDiagnosticItem;
+    GOOGLE_ADS_CUSTOMER_ID: EnvVarDiagnosticItem;
+    GOOGLE_ADS_LOGIN_CUSTOMER_ID?: EnvVarDiagnosticItem;
+    GEMINI_API_KEY?: EnvVarDiagnosticItem;
   };
 }
 
