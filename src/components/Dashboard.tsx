@@ -114,11 +114,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </button>
 
           <button
-            onClick={() => setCurrentView('trends')}
+            onClick={() => setCurrentView('campeoes')}
+            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#1C180C] text-[#F5C542] border border-[#F5C542]/40 hover:bg-[#F5C542]/10 transition-all cursor-pointer"
+          >
+            <span className="text-sm">🏆</span>
+            <span>Produtos Campeões</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('comparar')}
             className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white hover:border-[#F5C542]/40 transition-all cursor-pointer"
           >
-            <span className="text-sm">🔥</span>
-            <span>Meli & Shopee Trends</span>
+            <span className="text-sm">⚖️</span>
+            <span>Comparar Produtos</span>
           </button>
 
           <button
@@ -127,6 +135,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
           >
             <span className="text-sm">🔍</span>
             <span>Palavras-chave</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('trends')}
+            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white hover:border-[#F5C542]/40 transition-all cursor-pointer"
+          >
+            <span className="text-sm">🔥</span>
+            <span>Meli & Shopee Trends</span>
           </button>
 
           <button

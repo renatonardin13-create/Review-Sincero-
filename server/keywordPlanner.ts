@@ -131,29 +131,56 @@ export async function fetchGoogleRealQuerySuggestions(
   lang: string = 'pt',
   country: string = 'br'
 ): Promise<string[]> {
-  try {
-    const langCode = lang.toLowerCase().includes('en') || lang.toLowerCase().includes('ingl') ? 'en' : 'pt-BR';
-    const countryCode = country.toLowerCase().includes('us') || country.toLowerCase().includes('eua') ? 'us' : 'br';
-    const url = `https://suggestqueries.google.com/complete/search?client=firefox&hl=${langCode}&gl=${countryCode}&q=${encodeURIComponent(query)}`;
+  const suggestions: string[] = [];
+  const langCode = lang.toLowerCase().includes('en') || lang.toLowerCase().includes('ingl') ? 'en' : 'pt-BR';
+  const countryCode = country.toLowerCase().includes('us') || country.toLowerCase().includes('eua') ? 'us' : 'br';
 
-    const resp = await fetch(url, {
+  // 1. Try Primary Google Suggest API
+  try {
+    const url1 = `https://suggestqueries.google.com/complete/search?client=firefox&hl=${langCode}&gl=${countryCode}&q=${encodeURIComponent(query)}`;
+    const resp1 = await fetch(url1, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json'
       }
     });
 
-    if (resp.ok) {
-      const data = await resp.json();
+    if (resp1.ok) {
+      const data = await resp1.json();
       if (Array.isArray(data) && Array.isArray(data[1])) {
-        return data[1]
-          .map((s: any) => String(s).trim())
-          .filter((s: string) => s.length > 0 && s.toLowerCase() !== query.toLowerCase());
+        for (const s of data[1]) {
+          const str = String(s).trim();
+          if (str && !suggestions.includes(str)) {
+            suggestions.push(str);
+          }
+        }
       }
     }
   } catch (e) {
-    console.warn('[Real Suggestions] Error fetching search query ideas:', e);
+    console.warn('[Real Suggestions] Primary Google suggest error:', e);
   }
-  return [];
+
+  // 2. High-Intent Review Long-Tail Queries (Standard Buyer Intent Combinations)
+  const buyerModifiers = [
+    `${query} vale a pena`,
+    `${query} é boa`,
+    `${query} resenha sincera`,
+    `${query} melhor modelo`,
+    `${query} qual comprar`,
+    `como usar ${query}`,
+    `${query} antes e depois`,
+    `${query} onde comprar original`,
+    `${query} mercado livre`,
+    `${query} shopee`
+  ];
+
+  for (const mod of buyerModifiers) {
+    if (!suggestions.some(s => s.toLowerCase() === mod.toLowerCase())) {
+      suggestions.push(mod);
+    }
+  }
+
+  return suggestions;
 }
 
 /**

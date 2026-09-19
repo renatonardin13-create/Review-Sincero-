@@ -12,12 +12,16 @@ import { CreateReviewWizard } from './components/CreateReviewWizard';
 import { ReviewRenderer } from './components/ReviewRenderer';
 import { KeywordPlannerView } from './components/KeywordPlannerView';
 import { TutorialView } from './components/TutorialView';
+import { CompareProductsView } from './components/CompareProductsView';
+import { TopProductsView } from './components/TopProductsView';
+import { CommissionCalculatorModal } from './components/CommissionCalculatorModal';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<string>('dashboard');
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState<boolean>(false);
 
   // LocalStorage state for reviews & settings
   const [reviews, setReviews] = useState<Review[]>(() => {
@@ -209,6 +213,77 @@ export default function App() {
     setCurrentView('create');
   };
 
+  const handleUseChampionProduct = (product: {
+    productName: string;
+    productPrice: string;
+    productImage: string;
+    productCategory: any;
+    productDescription: string;
+    affiliateLink: string;
+  }) => {
+    const newDraft: Review = {
+      id: 'rev-' + Date.now(),
+      siteName: settings.siteName,
+      author: settings.authorName,
+      productName: product.productName,
+      headline: `${product.productName} Vale a Pena? Análise Sincera & Teste Real`,
+      currentPrice: product.productPrice,
+      oldPrice: '',
+      affiliateUrl: product.affiliateLink,
+      category: product.productCategory,
+      platform: 'Mercado Livre',
+      description: `${product.productDescription} Analisamos em detalhes o desempenho, durabilidade, satisfação de compradores e se vale cada centavo.`,
+      features: [
+        'Líder absoluto de vendas comprovado no Brasil',
+        'Avaliações verificadas de compradores reais',
+        'Envio rápido com garantia de satisfação e compra protegida'
+      ],
+      mainImage: product.productImage,
+      images: [product.productImage],
+      pros: [
+        'Excelente custo-benefício comprovado por milhares de usuários',
+        'Alta durabilidade e acabamento confiável',
+        'Facilidade de uso no dia a dia'
+      ],
+      cons: [
+        'Devido à alta procura, o estoque promocional pode esgotar rapidamente'
+      ],
+      audience: ['Consumidores exigentes que buscam a melhor opção do mercado sem arriscar o dinheiro'],
+      experience: `Nossa equipe analisou os feedbacks e especificações técnicas de ${product.productName} para produzir este veredito sincero.`,
+      howItWorks: 'Produto oficial disponível nas principais plataformas com entrega rápida e nota fiscal.',
+      faq: [
+        {
+          id: 'f1',
+          question: `O ${product.productName} é original e confiável?`,
+          answer: `Sim, recomendamos adquirir apenas através do link oficial de vendedores certificados para garantir a garantia de fábrica e nota fiscal.`
+        },
+        {
+          id: 'f2',
+          question: 'Em quanto tempo recebo o produto?',
+          answer: 'O envio é realizado com rastreamento oficial e entrega rápida para todo o território nacional.'
+        }
+      ],
+      scoreCriteria: {
+        quality: 9.3,
+        design: 9.0,
+        practicality: 9.4,
+        resources: 9.1,
+        costBenefit: 9.6,
+        experience: 9.3
+      },
+      overallScore: 9.4,
+      verdict: `O ${product.productName} é o produto campeão da categoria e entrega tudo o que promete com nota máxima dos compradores.`,
+      testimonials: [],
+      template: settings.defaultTemplate,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status: 'Rascunho'
+    };
+
+    setActiveReviewForEdit(newDraft);
+    setCurrentView('create');
+  };
+
   return (
     <div className="min-h-screen bg-[#080808] text-white flex font-sans selection:bg-[#F5C542] selection:text-[#080808]">
       {/* Sidebar */}
@@ -219,6 +294,7 @@ export default function App() {
           setActiveReviewForEdit(null);
           setCurrentView('create');
         }}
+        onOpenCalculator={() => setIsCalculatorOpen(true)}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
       />
@@ -253,6 +329,22 @@ export default function App() {
               onDuplicateReview={handleDuplicateReview}
               onDeleteReview={handleDeleteReview}
               setCurrentView={setCurrentView}
+            />
+          )}
+
+          {currentView === 'campeoes' && (
+            <TopProductsView
+              onUseProductForReview={handleUseChampionProduct}
+              onSwitchToComparator={(title) => setCurrentView('comparar')}
+            />
+          )}
+
+          {currentView === 'comparar' && (
+            <CompareProductsView
+              onSwitchToGenerator={() => {
+                setActiveReviewForEdit(null);
+                setCurrentView('create');
+              }}
             />
           )}
 
@@ -327,6 +419,16 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* Commission Calculator Modal */}
+      <CommissionCalculatorModal
+        isOpen={isCalculatorOpen}
+        onClose={() => setIsCalculatorOpen(false)}
+        onNewReview={() => {
+          setActiveReviewForEdit(null);
+          setCurrentView('create');
+        }}
+      />
 
       {/* Full Review Modal Viewer */}
       {activeReviewForView && (

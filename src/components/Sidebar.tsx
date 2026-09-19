@@ -21,13 +21,16 @@ import {
   Package,
   User,
   Rocket,
-  BookOpen
+  BookOpen,
+  Trophy,
+  Calculator
 } from 'lucide-react';
 
 interface SidebarProps {
   currentView: string;
   setCurrentView: (view: string) => void;
   onNewReview: () => void;
+  onOpenCalculator?: () => void;
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
 }
@@ -36,27 +39,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentView,
   setCurrentView,
   onNewReview,
+  onOpenCalculator,
   mobileOpen,
   setMobileOpen
 }) => {
   const principalItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'campeoes', label: 'Produtos Campeões', icon: Trophy, badge: 'TOP' },
+    { id: 'comparar', label: 'Comparar Produtos', icon: Scale, badge: 'NOVO' },
     { id: 'tutorial', label: 'Tutorial & Guia', icon: BookOpen, badge: 'GRÁTIS' },
     { id: 'reviews', label: 'Meus Reviews', icon: FileText },
     { id: 'create', label: 'Criar Review', icon: PlusCircle, action: onNewReview },
     { id: 'keyword-planner', label: 'Planejador Palavras', icon: Search },
     { id: 'trends', label: 'Categorias & Trends', icon: Layers },
-    { id: 'templates', label: 'Templates', icon: LayoutTemplate },
-    { id: 'settings', label: 'Exportar & Lojinha', icon: Download }
+    { id: 'templates', label: 'Templates', icon: LayoutTemplate }
   ];
 
   const ferramentasItems = [
+    { id: 'campeoes', label: 'Produtos Campeões', icon: Trophy, badge: 'TOP' },
+    { id: 'comparar', label: 'Comparar Produtos', icon: Scale },
     { id: 'settings-banners', label: 'Banners em Slides', icon: DollarSign, badge: 'NOVO', action: () => setCurrentView('settings-banners') },
     { id: 'keyword-planner', label: 'Planejador de Palavras', icon: Search },
     { id: 'trends', label: 'Analisar Tendências', icon: TrendingUp },
-    { id: 'comparar', label: 'Comparar Produtos', icon: Scale, action: () => setCurrentView('trends') },
-    { id: 'comissoes', label: 'Calculadora Comissão', icon: Percent, action: () => setCurrentView('settings') },
-    { id: 'trends', label: 'Produtos Campeões', icon: Package },
+    { id: 'comissoes', label: 'Calculadora Comissão', icon: Calculator, action: onOpenCalculator ? onOpenCalculator : () => setCurrentView('comissoes') },
     { id: 'settings', label: 'Perfil & Config', icon: User }
   ];
 
