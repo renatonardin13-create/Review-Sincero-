@@ -39,8 +39,8 @@ export function getStoredUser(): AuthUser {
   } catch (e) {
     console.error('[authService] Error parsing user:', e);
   }
-  // Default to Admin in development so user can test everything immediately
-  return DEFAULT_ADMIN_USER;
+  // Default to Free User so new sessions are safe, and the admin can log in using their credentials
+  return DEFAULT_FREE_USER;
 }
 
 export function saveStoredUser(user: AuthUser): void {

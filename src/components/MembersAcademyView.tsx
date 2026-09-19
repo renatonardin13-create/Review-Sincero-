@@ -763,15 +763,17 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
                     </button>
 
                     {/* Edit this lesson button */}
-                    <button
-                      type="button"
-                      onClick={() => handleStartEditLesson(activeLesson)}
-                      className="flex items-center gap-1.5 bg-[#131B2A] hover:bg-[#1E293B] text-[#94A3B8] hover:text-white px-3 py-2 rounded-xl text-xs font-semibold border border-[#24334A] transition-colors cursor-pointer"
-                      title="Editar link ou detalhes desta aula"
-                    >
-                      <Edit3 className="w-3.5 h-3.5 text-[#38BDF8]" />
-                      <span className="hidden sm:inline">Editar Vídeo</span>
-                    </button>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => handleStartEditLesson(activeLesson)}
+                        className="flex items-center gap-1.5 bg-[#131B2A] hover:bg-[#1E293B] text-[#94A3B8] hover:text-white px-3 py-2 rounded-xl text-xs font-semibold border border-[#24334A] transition-colors cursor-pointer"
+                        title="Editar link ou detalhes desta aula"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-[#38BDF8]" />
+                        <span className="hidden sm:inline">Editar Vídeo</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Previous / Next Lesson Buttons */}
@@ -1245,20 +1247,22 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
             </div>
 
             {/* Quick Add Lesson CTA */}
-            <div className="pt-2 border-t border-[#1E293B]">
-              <button
-                type="button"
-                onClick={() => {
-                  resetLessonForm();
-                  setManageTab('add_lesson');
-                  setIsManageModalOpen(true);
-                }}
-                className="w-full py-2.5 bg-[#131B2A] hover:bg-[#1E293B] text-[#CBD5E1] hover:text-white rounded-xl text-xs font-bold border border-[#24334A] transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <PlusCircle className="w-3.5 h-3.5 text-[#F5C542]" />
-                <span>Adicionar Nova Videoaula</span>
-              </button>
-            </div>
+            {isAdmin && (
+              <div className="pt-2 border-t border-[#1E293B]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetLessonForm();
+                    setManageTab('add_lesson');
+                    setIsManageModalOpen(true);
+                  }}
+                  className="w-full py-2.5 bg-[#131B2A] hover:bg-[#1E293B] text-[#CBD5E1] hover:text-white rounded-xl text-xs font-bold border border-[#24334A] transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <PlusCircle className="w-3.5 h-3.5 text-[#F5C542]" />
+                  <span>Adicionar Nova Videoaula</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1266,7 +1270,7 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
       {/* =========================================================================
           MODAL: GERENCIAR & SUBIR VIDEOAULAS (ADMIN / INSTRUCTOR PANEL)
          ========================================================================= */}
-      {isManageModalOpen && (
+      {isManageModalOpen && isAdmin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
           <div className="bg-[#0D111A] border border-[#1E293B] rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl my-8">
             {/* Modal Header */}

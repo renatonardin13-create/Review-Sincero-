@@ -473,7 +473,15 @@ export default function App() {
           )}
 
           {currentView === 'settings-banners' && (
-            <SettingsView settings={settings} onSaveSettings={setSettings} initialTab="banners" />
+            isAdmin ? (
+              <SettingsView settings={settings} onSaveSettings={setSettings} initialTab="banners" />
+            ) : (
+              <AccessRestrictedView
+                currentUser={currentUser}
+                onOpenAuthModal={() => setIsAuthModalOpen(true)}
+                onGoToDashboard={() => setCurrentView('dashboard')}
+              />
+            )
           )}
         </main>
       </div>
