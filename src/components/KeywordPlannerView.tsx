@@ -153,6 +153,8 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
 
   useEffect(() => {
     fetchDiagnostics();
+    // Auto-search on initial load so user immediately sees live metrics
+    handleSearch('escova secadora');
   }, []);
 
   const handleSearch = async (overrideKeywords?: string) => {
@@ -357,7 +359,11 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
             {responseMeta && responseMeta.success && (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#131B2A] border border-[#24334A] text-xs">
                 <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-                <span className="text-[#E2E8F0] font-medium">Google Ads API Conectada</span>
+                <span className="text-[#E2E8F0] font-medium">
+                  {responseMeta.source === 'google_ads_api'
+                    ? 'Google Ads API Conectada'
+                    : 'Inteligência de Mercado & Busca Sincronizada'}
+                </span>
                 {responseMeta.cached && (
                   <span className="text-[10px] bg-[#1E293B] text-[#94A3B8] px-1.5 py-0.5 rounded font-mono">
                     cache
