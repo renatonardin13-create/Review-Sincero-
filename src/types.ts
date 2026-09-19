@@ -200,6 +200,19 @@ export interface Review {
   status: 'Rascunho' | 'Publicado' | 'Arquivado';
 }
 
+export interface PromoBannerSlide {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  affiliateUrl: string;
+  ctaText: string;
+  badgeText?: string;
+  badgeColor?: 'gold' | 'red' | 'green' | 'blue' | 'purple';
+  active: boolean;
+  targetBlank?: boolean;
+}
+
 export interface AppSettings {
   siteName: string;
   logoUrl: string;
@@ -213,6 +226,9 @@ export interface AppSettings {
   };
   contactEmail: string;
   exportWithSeoTags: boolean;
+  promoBanners?: PromoBannerSlide[];
+  bannerAutoplaySpeed?: number; // em segundos (ex: 5)
+  enableBannerCarousel?: boolean; // exibir carrossel no dashboard
 }
 
 export interface TrendBadge {

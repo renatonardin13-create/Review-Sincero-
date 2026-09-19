@@ -20,7 +20,8 @@ import {
   Percent,
   Package,
   User,
-  Rocket
+  Rocket,
+  BookOpen
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -40,6 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const principalItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'tutorial', label: 'Tutorial & Guia', icon: BookOpen, badge: 'GRÁTIS' },
     { id: 'reviews', label: 'Meus Reviews', icon: FileText },
     { id: 'create', label: 'Criar Review', icon: PlusCircle, action: onNewReview },
     { id: 'keyword-planner', label: 'Planejador Palavras', icon: Search },
@@ -49,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const ferramentasItems = [
+    { id: 'settings-banners', label: 'Banners em Slides', icon: DollarSign, badge: 'NOVO', action: () => setCurrentView('settings-banners') },
     { id: 'keyword-planner', label: 'Planejador de Palavras', icon: Search },
     { id: 'trends', label: 'Analisar Tendências', icon: TrendingUp },
     { id: 'comparar', label: 'Comparar Produtos', icon: Scale, action: () => setCurrentView('trends') },
@@ -136,7 +139,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }`}
                     />
                     <span className="truncate">{item.label}</span>
-                    {item.id === 'create' && (
+                    {item.badge && (
+                      <span className="ml-auto text-[9px] bg-[#F5C542]/20 text-[#F5C542] font-black px-1.5 py-0.5 rounded uppercase">
+                        {item.badge}
+                      </span>
+                    )}
+                    {item.id === 'create' && !item.badge && (
                       <span className="ml-auto text-[9px] bg-[#F5C542]/20 text-[#F5C542] font-bold px-1.5 py-0.5 rounded">
                         IA
                       </span>
@@ -155,14 +163,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="space-y-0.5 pt-1">
               {ferramentasItems.map((item, idx) => {
                 const Icon = item.icon;
+                const isActive = currentView === item.id;
                 return (
                   <button
                     key={idx}
                     onClick={() => handleNavClick(item)}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-[#9A9A9A] hover:text-white hover:bg-[#121212] transition-all group cursor-pointer"
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group cursor-pointer ${
+                      isActive
+                        ? 'bg-[#181818] text-white border border-[#2E2E2E]'
+                        : 'text-[#9A9A9A] hover:text-white hover:bg-[#121212]'
+                    }`}
                   >
                     <Icon className="w-4 h-4 text-[#777] group-hover:text-[#F5C542] transition-colors" />
                     <span className="truncate">{item.label}</span>
+                    {item.badge && (
+                      <span className="ml-auto text-[9px] bg-[#22C55E]/20 text-[#22C55E] font-black px-1.5 py-0.5 rounded uppercase">
+                        {item.badge}
+                      </span>
+                    )}
                   </button>
                 );
               })}

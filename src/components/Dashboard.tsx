@@ -1,5 +1,5 @@
 import React from 'react';
-import { Review } from '../types';
+import { Review, AppSettings } from '../types';
 import {
   Plus,
   FileText,
@@ -12,11 +12,15 @@ import {
   Trash2,
   ExternalLink,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  BookOpen,
+  DollarSign
 } from 'lucide-react';
+import { PromoBannerCarousel } from './PromoBannerCarousel';
 
 interface DashboardProps {
   reviews: Review[];
+  settings?: AppSettings;
   onNewReview: () => void;
   onEditReview: (review: Review) => void;
   onViewReview: (review: Review) => void;
@@ -27,6 +31,7 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({
   reviews,
+  settings,
   onNewReview,
   onEditReview,
   onViewReview,
@@ -44,6 +49,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
+      {/* =========================================================================
+          PROMOTIONAL BANNER SLIDES CAROUSEL (Requested for monetization)
+         ========================================================================= */}
+      {settings?.promoBanners && settings.promoBanners.length > 0 && (
+        <PromoBannerCarousel
+          banners={settings.promoBanners}
+          autoplaySpeed={settings.bannerAutoplaySpeed || 6}
+          enabled={settings.enableBannerCarousel !== false}
+          onManageClick={() => setCurrentView('settings-banners')}
+        />
+      )}
+
       {/* Hero Banner inside Dashboard - Matching PageAI (Screenshot 7) */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#121212] via-[#0E0E0E] to-[#080808] border border-[#222222] p-8 md:p-14 text-center space-y-8 shadow-2xl">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#F5C542]/5 rounded-full blur-3xl pointer-events-none" />
@@ -78,7 +95,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
           <div className="bg-[#141414] border border-[#222222] rounded-2xl p-4 text-center">
             <div className="text-2xl md:text-3xl font-black text-[#F5C542]">IA</div>
-            <div className="text-xs text-[#8E8E8E] mt-0.5">Claude gratuito</div>
+            <div className="text-xs text-[#8E8E8E] mt-0.5">Inteligência Real</div>
           </div>
           <div className="bg-[#141414] border border-[#222222] rounded-2xl p-4 text-center">
             <div className="text-2xl md:text-3xl font-black text-white">∞</div>
@@ -90,45 +107,42 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <button
             onClick={onNewReview}
-            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold bg-[#F5C542] text-[#080808] shadow-lg shadow-[#F5C542]/20 hover:scale-105 active:scale-95 transition-all"
+            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold bg-[#F5C542] text-[#080808] shadow-lg shadow-[#F5C542]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             <span className="text-sm">⚡</span>
-            <span>Gerador Meli</span>
+            <span>Gerador com IA</span>
           </button>
 
           <button
             onClick={() => setCurrentView('trends')}
-            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white hover:border-[#F5C542]/40 transition-all"
+            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white hover:border-[#F5C542]/40 transition-all cursor-pointer"
           >
             <span className="text-sm">🔥</span>
-            <span>Meli Trends</span>
+            <span>Meli & Shopee Trends</span>
           </button>
 
           <button
             onClick={() => setCurrentView('keyword-planner')}
-            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#131B2A] text-[#38BDF8] border border-[#24334A] hover:text-white hover:border-[#38BDF8]/60 transition-all"
+            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#131B2A] text-[#38BDF8] border border-[#24334A] hover:text-white hover:border-[#38BDF8]/60 transition-all cursor-pointer"
           >
             <span className="text-sm">🔍</span>
             <span>Palavras-chave</span>
           </button>
 
           <button
-            onClick={onNewReview}
-            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-medium bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white transition-all"
+            onClick={() => setCurrentView('tutorial')}
+            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#1C1C1C] text-[#22C55E] border border-[#22C55E]/30 hover:bg-[#22C55E]/10 transition-all cursor-pointer"
           >
-            <span className="w-2 h-2 rounded-full bg-[#EE4D2D]"></span>
-            <span>Gerador Shopee</span>
-            <span className="text-[9px] uppercase tracking-wider bg-[#2A2A2A] px-1.5 py-0.5 rounded text-[#8E8E8E] font-semibold">
-              EM BREVE
-            </span>
+            <BookOpen className="w-3.5 h-3.5 text-[#22C55E]" />
+            <span>Tutorial & Como Usar</span>
           </button>
 
           <button
-            onClick={onNewReview}
-            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-medium bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white transition-all"
+            onClick={() => setCurrentView('settings-banners')}
+            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white transition-all cursor-pointer"
           >
-            <span>📦</span>
-            <span>Gerador PF</span>
+            <DollarSign className="w-3.5 h-3.5 text-[#F5C542]" />
+            <span>Banners em Slides</span>
           </button>
         </div>
       </div>

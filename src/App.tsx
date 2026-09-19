@@ -11,6 +11,7 @@ import { SettingsView } from './components/SettingsView';
 import { CreateReviewWizard } from './components/CreateReviewWizard';
 import { ReviewRenderer } from './components/ReviewRenderer';
 import { KeywordPlannerView } from './components/KeywordPlannerView';
+import { TutorialView } from './components/TutorialView';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 
 export default function App() {
@@ -239,6 +240,7 @@ export default function App() {
           {currentView === 'dashboard' && (
             <Dashboard
               reviews={reviews}
+              settings={settings}
               onNewReview={() => {
                 setActiveReviewForEdit(null);
                 setCurrentView('create');
@@ -251,6 +253,16 @@ export default function App() {
               onDuplicateReview={handleDuplicateReview}
               onDeleteReview={handleDeleteReview}
               setCurrentView={setCurrentView}
+            />
+          )}
+
+          {currentView === 'tutorial' && (
+            <TutorialView
+              onNavigateTo={(viewId) => setCurrentView(viewId)}
+              onNewReview={() => {
+                setActiveReviewForEdit(null);
+                setCurrentView('create');
+              }}
             />
           )}
 
@@ -307,7 +319,11 @@ export default function App() {
           )}
 
           {currentView === 'settings' && (
-            <SettingsView settings={settings} onSaveSettings={setSettings} />
+            <SettingsView settings={settings} onSaveSettings={setSettings} initialTab="general" />
+          )}
+
+          {currentView === 'settings-banners' && (
+            <SettingsView settings={settings} onSaveSettings={setSettings} initialTab="banners" />
           )}
         </main>
       </div>
