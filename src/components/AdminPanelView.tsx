@@ -86,17 +86,26 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("Upload triggered");
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+        console.log("No file selected");
+        return;
+    }
+
+    console.log("File selected: ", file.name);
 
     const storageRef = ref(storage, `login-backgrounds/${file.name}`);
     try {
+        console.log("Uploading...");
         const snapshot = await uploadBytes(storageRef, file);
+        console.log("Upload successful, getting URL...");
         const downloadURL = await getDownloadURL(snapshot.ref);
+        console.log("Download URL: ", downloadURL);
         setAdminLoginMedia({ ...adminLoginMedia, backgroundImageUrl: downloadURL });
     } catch (error) {
         console.error("Error uploading image: ", error);
-        alert("Erro ao fazer upload da imagem.");
+        alert("Erro ao fazer upload da imagem: " + (error instanceof Error ? error.message : String(error)));
     }
   };
 
