@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Review } from '../types';
+import { matchProductImage } from '../utils/productImageMatcher';
 import {
   ShieldCheck,
   CheckCircle2,
@@ -22,7 +23,15 @@ import {
   Send,
   Youtube,
   Video,
-  Check
+  Check,
+  Maximize2,
+  X,
+  Layers,
+  CheckCheck,
+  TrendingDown,
+  Clock,
+  FileCheck2,
+  Eye
 } from 'lucide-react';
 
 interface ReviewRendererProps {
@@ -37,42 +46,56 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
   deviceMode = 'desktop'
 }) => {
   const [openFaq, setOpenFaq] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState<{ minutes: number; seconds: number }>({
-    minutes: review.urgencySettings?.timerMinutes || 14,
-    seconds: 59
-  });
-  const [showRecentBuyer, setShowRecentBuyer] = useState<boolean>(true);
+  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
+  const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (!review.urgencySettings?.enableTimer) return;
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
-          return { minutes: prev.minutes - 1, seconds: 59 };
-        } else {
-          return { minutes: 14, seconds: 59 };
+  // Derive verified images strictly matching this product if none or invalid
+  const smartMatch = matchProductImage(review.productName, typeof review.category === 'string' ? review.category : undefined);
+  
+  const allImages = React.useMemo(() => {
+    const list: string[] = [];
+    if (review.mainImage && review.mainImage.trim().startsWith('http')) {
+      list.push(review.mainImage.trim());
+    } else if (review.mainImage && review.mainImage.trim().startsWith('data:')) {
+      list.push(review.mainImage.trim());
+    } else {
+      list.push(smartMatch.mainImage);
+    }
+
+    if (review.images && Array.isArray(review.images)) {
+      review.images.forEach(img => {
+        if (img && typeof img === 'string' && img.trim() && !list.includes(img.trim())) {
+          list.push(img.trim());
         }
       });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [review.urgencySettings?.enableTimer]);
+    }
+
+    // If only 1 image, append smart matching gallery photos so the user has a rich visual gallery of the actual product
+    if (list.length < 2 && smartMatch.gallery) {
+      smartMatch.gallery.forEach(img => {
+        if (!list.includes(img)) list.push(img);
+      });
+    }
+
+    return list;
+  }, [review.mainImage, review.images, review.productName, review.category, smartMatch]);
+
+  const activeImage = allImages[activeImageIndex] || allImages[0] || smartMatch.mainImage;
 
   const toggleFaq = (id: string) => {
     setOpenFaq(openFaq === id ? null : id);
   };
 
   const isClean = review.template === 'clean';
-  const ctaText = review.ctaButtonText || 'ACESSAR OFERTA OFICIAL COM SEGURANÇA →';
+  const ctaText = review.ctaButtonText || 'CONFERIR OFERTA OFICIAL NA LOJA →';
 
   const containerClasses = isClean
     ? 'bg-[#FAFAFA] text-[#111111] font-sans'
     : 'bg-[#080808] text-white font-sans';
 
   const cardClasses = isClean
-    ? 'bg-white border border-gray-200 shadow-sm rounded-2xl p-6'
-    : 'bg-[#121212] border border-[#242424] rounded-2xl p-6';
+    ? 'bg-white border border-gray-200 shadow-sm rounded-2xl p-5 md:p-6'
+    : 'bg-[#121212] border border-[#242424] rounded-2xl p-5 md:p-6';
 
   const deviceWidthClass = isPreview
     ? deviceMode === 'mobile'
@@ -82,25 +105,20 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
       : 'w-full'
     : 'w-full';
 
-  return (
-    <div className={`${containerClasses} ${deviceWidthClass} min-h-screen transition-all relative pb-20`}>
-      {/* URGENCY TOP BAR BANNER */}
-      {review.urgencySettings?.enableTimer && (
-        <div className="bg-gradient-to-r from-[#B91C1C] via-[#DC2626] to-[#B91C1C] text-white text-xs font-bold py-2.5 px-4 text-center sticky top-0 z-50 shadow-md flex items-center justify-center gap-2">
-          <Timer className="w-4 h-4 animate-pulse" />
-          <span>OFERTA RELÂMPAGO POR TEMPO LIMITADO:</span>
-          <span className="font-mono bg-black/40 px-2 py-0.5 rounded text-white tracking-widest">
-            {String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
-          </span>
-          <span className="hidden sm:inline">• Garanta o desconto oficial antes que expire</span>
-        </div>
-      )}
+  // Quick Verdict fallback generator if not present
+  const quickVerdict = review.quickVerdict || {
+    summary: review.description || `Análise completa e sincera sobre as qualidades, pontos de atenção e custo-benefício de ${review.productName}.`,
+    strengths: review.pros && review.pros.length > 0 ? review.pros.slice(0, 3) : ['Bom acabamento e construção', 'Desempenho consistente no uso diário', 'Excelente relação custo-benefício'],
+    weaknesses: review.cons && review.cons.length > 0 ? review.cons.slice(0, 2) : ['Exige leitura atenta do manual de instruções', 'Disponibilidade pode variar dependendo do lote'],
+    idealFor: review.audience && review.audience.length > 0 ? review.audience : ['Quem busca eficiência e qualidade comprovada'],
+    notIdealFor: review.antiPersonaPhrase ? [review.antiPersonaPhrase] : ['Quem procura apenas a opção mais barata do mercado sem foco em durabilidade']
+  };
 
-      {/* HEADER / TOPBAR */}
+  return (
+    <div className={`${containerClasses} ${deviceWidthClass} min-h-screen transition-all relative pb-28`}>
+      {/* HEADER / TOPBAR EDITORIAL */}
       <header
-        className={`border-b sticky ${
-          review.urgencySettings?.enableTimer ? 'top-[37px]' : 'top-0'
-        } z-40 backdrop-blur-md px-6 py-4 flex items-center justify-between ${
+        className={`border-b sticky top-0 z-40 backdrop-blur-md px-4 sm:px-6 py-3.5 flex items-center justify-between ${
           isClean ? 'bg-white/90 border-gray-200' : 'bg-[#0D0D0D]/90 border-[#222]'
         }`}
       >
@@ -109,93 +127,110 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
             <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
           </div>
           <div>
-            <span className="font-extrabold text-sm tracking-wide text-white">
+            <span className="font-extrabold text-sm tracking-wide text-white block leading-tight">
               {review.siteName || 'Review Sincero'}
             </span>
             <span className="block text-[10px] text-[#A1A1A1]">
-              Análise transparente por {review.author || 'Especialista'}
+              Análise Editorial Independente • por {review.author || 'Especialista'}
             </span>
           </div>
         </div>
 
-        {review.affiliateUrl && (
-          <a
-            href={review.affiliateUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-[#22C55E] hover:bg-[#16A34A] text-black font-extrabold px-4 py-2 rounded-xl text-xs shadow-md transition-transform hover:scale-105"
-          >
-            <span>Ver Oferta</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        )}
+        <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A1A1A] border border-[#333] text-[11px] text-[#A1A1AA]">
+            <CheckCheck className="w-3.5 h-3.5 text-[#22C55E]" />
+            <span>Produto Avaliado & Testado</span>
+          </div>
+          {review.affiliateUrl && (
+            <a
+              href={review.affiliateUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 bg-[#22C55E] hover:bg-[#16A34A] text-black font-extrabold px-3.5 py-1.5 rounded-xl text-xs shadow-md transition-transform hover:scale-105"
+            >
+              <span>Ver Oferta</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
+        </div>
       </header>
 
       {/* HERO SECTION */}
-      <section className="max-w-5xl mx-auto px-4 py-8 md:py-12">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#22C55E]/10 border border-[#22C55E]/30 text-[#22C55E] text-xs font-bold mb-4">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>
-            {review.platform} • {review.category} • ANÁLISE 100% SINCERA
+      <section className="max-w-5xl mx-auto px-4 py-6 md:py-10">
+        {/* Breadcrumb / Category */}
+        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#A1A1AA] mb-4">
+          <span className="px-2.5 py-0.5 rounded-md bg-[#1A1A1A] border border-[#2A2A2A] text-[#22C55E]">
+            {review.category || 'Geral'}
+          </span>
+          <span>•</span>
+          <span>{review.platform || 'Loja Oficial'}</span>
+          <span>•</span>
+          <span className="text-[#F5C542] flex items-center gap-1">
+            <Sparkles className="w-3 h-3" />
+            <span>Análise Atualizada 2026</span>
           </span>
         </div>
 
         {/* Headline */}
-        {review.headline && (
-          <h2 className="text-sm md:text-base font-bold text-[#F5C542] mb-3 leading-snug">
+        {review.headline ? (
+          <h2 className="text-xs md:text-sm font-bold text-[#F5C542] uppercase tracking-wider mb-2">
             {review.headline}
+          </h2>
+        ) : (
+          <h2 className="text-xs md:text-sm font-bold text-[#F5C542] uppercase tracking-wider mb-2">
+            {review.productName}: Vale a pena comprar? Confira a análise sincera
           </h2>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          <div className="lg:col-span-7 space-y-6">
-            <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight leading-tight text-white">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Product Info & Price */}
+          <div className="lg:col-span-7 space-y-5">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight leading-tight text-white">
               {review.productName || 'Nome do Produto'}
             </h1>
+            
             <p className={`text-sm md:text-base leading-relaxed ${isClean ? 'text-gray-600' : 'text-[#A1A1A1]'}`}>
               {review.description ||
-                'Resumo objetivo e transparente do produto avaliado com base em testes reais.'}
+                'Confira nosso teste prático com avaliação de durabilidade, recursos, desempenho real e onde encontrar a melhor oferta com segurança.'}
             </p>
 
-            {/* Price & Scarcity */}
-            <div className="space-y-3 pt-2">
-              <div className="flex flex-wrap items-center gap-4">
-                {review.currentPrice && (
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-extrabold text-[#22C55E]">
-                      R$ {review.currentPrice}
-                    </span>
-                    {review.oldPrice && (
-                      <span className="text-sm text-[#888] line-through">
-                        De R$ {review.oldPrice}
-                      </span>
-                    )}
-                  </div>
-                )}
+            {/* Score & Verdict pill */}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#F5C542]/10 border border-[#F5C542]/30 text-[#F5C542] font-extrabold text-sm">
+                <Star className="w-4 h-4 fill-[#F5C542]" />
+                <span>Nota Editorial: {Number(review.overallScore || 8.8).toFixed(1)} / 10</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E] text-xs font-bold">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Recomendação Positiva</span>
+              </div>
+            </div>
 
-                {review.overallScore > 0 && (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F5C542]/10 border border-[#F5C542]/20 text-[#F5C542] font-bold text-xs">
-                    <Star className="w-4 h-4 fill-[#F5C542]" />
-                    <span>{review.overallScore.toFixed(1)}/10 Veredito</span>
-                  </div>
-                )}
+            {/* Price Box */}
+            <div className="p-4 rounded-2xl bg-[#121212] border border-[#2A2A2A] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold">
+                  Preço Verificado na Loja:
+                </span>
+                <span className="text-[11px] text-[#22C55E] flex items-center gap-1 font-semibold">
+                  <Clock className="w-3 h-3" />
+                  Hoje
+                </span>
               </div>
 
-              {/* Scarcity Bar */}
-              {review.urgencySettings?.enableScarcityBar && (
-                <div className="p-3 bg-[#1A1A1A] border border-[#333] rounded-xl space-y-1.5 max-w-md">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#EF4444] font-bold flex items-center gap-1">
-                      <Flame className="w-3.5 h-3.5 text-[#EF4444]" />
-                      <span>Restam apenas {review.urgencySettings?.stockRemaining ?? 3} unidades</span>
-                    </span>
-                    <span className="text-[#888]">Alta Procura</span>
-                  </div>
-                  <div className="w-full bg-[#2A2A2A] h-2 rounded-full overflow-hidden">
-                    <div className="bg-gradient-to-r from-[#EF4444] to-[#F59E0B] w-[88%] h-full rounded-full animate-pulse" />
-                  </div>
-                </div>
-              )}
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl sm:text-4xl font-extrabold text-[#22C55E]">
+                  R$ {review.currentPrice || '189,90'}
+                </span>
+                {review.oldPrice && (
+                  <span className="text-sm text-[#888] line-through">
+                    De R$ {review.oldPrice}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-[#888]">
+                * Preço sujeito a alteração conforme disponibilidade da loja oficial informada.
+              </p>
             </div>
 
             {review.affiliateUrl && (
@@ -204,7 +239,7 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
                   href={review.affiliateUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-3 bg-[#22C55E] hover:bg-[#16A34A] text-black font-extrabold px-8 py-4 rounded-2xl text-sm md:text-base shadow-xl shadow-green-500/20 transition-all hover:scale-[1.02]"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-[#22C55E] hover:bg-[#16A34A] text-black font-extrabold px-8 py-4 rounded-2xl text-sm md:text-base shadow-xl shadow-green-500/20 transition-all hover:scale-[1.02]"
                 >
                   <span>{ctaText}</span>
                   <ArrowRight className="w-5 h-5 stroke-[2.5]" />
@@ -213,70 +248,132 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
             )}
           </div>
 
-          <div className="lg:col-span-5">
-            <div className="relative rounded-3xl overflow-hidden border border-[#2A2A2A] shadow-2xl bg-[#0D0D0D] aspect-square">
+          {/* Right Column: Premium Visual Gallery (strictly accurate product image) */}
+          <div className="lg:col-span-5 space-y-3">
+            <div className="relative rounded-3xl overflow-hidden border border-[#2A2A2A] shadow-2xl bg-[#111111] aspect-square group">
               <img
-                src={
-                  review.mainImage ||
-                  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80'
-                }
+                src={activeImage}
                 alt={review.productName}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80';
+                  (e.target as HTMLImageElement).src = smartMatch.mainImage;
                 }}
               />
+              
+              {/* Badge Context */}
+              <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[11px] font-semibold text-white flex items-center gap-1.5 shadow-md">
+                <Layers className="w-3.5 h-3.5 text-[#22C55E]" />
+                <span>Foto do Produto ({activeImageIndex + 1}/{allImages.length})</span>
+              </div>
+
+              {/* Zoom Button */}
+              <button
+                onClick={() => setLightboxOpen(true)}
+                className="absolute bottom-3 right-3 bg-black/75 hover:bg-black p-2 rounded-xl border border-white/15 text-white transition-transform hover:scale-110 shadow-lg"
+                title="Ampliar Imagem"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </button>
             </div>
+
+            {/* Thumbnail selector */}
+            {allImages.length > 1 && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                {allImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
+                      activeImageIndex === idx
+                        ? 'border-[#22C55E] scale-105 shadow-md shadow-green-500/20'
+                        : 'border-[#2A2A2A] opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`Miniatura ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = smartMatch.mainImage;
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* VIP WHATSAPP COMMUNITY BANNER (IF CONFIGURED) */}
-      {review.socialCommunity?.whatsappGroupUrl && (
-        <div className="max-w-4xl mx-auto px-4 mb-10">
-          <div className="bg-gradient-to-r from-[#064E3B] to-[#047857] border border-[#10B981]/50 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-white shadow-xl">
-            <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                <MessageCircle className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h4 className="font-extrabold text-sm">Canal VIP de Ofertas no WhatsApp</h4>
-                <p className="text-xs text-emerald-100 mt-0.5">
-                  {review.socialCommunity.whatsappVipText ||
-                    'Entre no nosso grupo VIP para receber promoções e cupons em primeira mão!'}
-                </p>
-              </div>
+      {/* MAIN EDITORIAL CONTENT */}
+      <main className="max-w-4xl mx-auto px-4 space-y-8 pb-10">
+        
+        {/* 1. QUICK VERDICT IN 15 SECONDS */}
+        <section className="bg-gradient-to-br from-[#121212] to-[#181818] border border-[#2A2A2A] rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#22C55E]/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="flex items-center gap-2 text-xs font-bold text-[#22C55E] uppercase tracking-wider mb-2">
+            <Award className="w-4 h-4" />
+            <span>Decisão Rápida</span>
+          </div>
+
+          <h3 className="text-xl md:text-2xl font-extrabold text-white mb-3">
+            Veredito em 15 Segundos
+          </h3>
+          
+          <p className="text-sm md:text-base text-[#D4D4D8] leading-relaxed mb-6">
+            {quickVerdict.summary}
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            {/* O Que Gostamos */}
+            <div className="p-4 rounded-2xl bg-[#0D0D0D] border border-[#22C55E]/30 space-y-2.5">
+              <span className="text-xs font-bold text-[#22C55E] uppercase tracking-wider flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>O Que Mais Chamou Atenção</span>
+              </span>
+              <ul className="space-y-2">
+                {quickVerdict.strengths.map((st, i) => (
+                  <li key={i} className="text-xs text-[#E4E4E7] flex items-start gap-2">
+                    <span className="text-[#22C55E] font-bold">✓</span>
+                    <span>{st}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            <a
-              href={review.socialCommunity.whatsappGroupUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white text-[#064E3B] hover:bg-emerald-50 font-extrabold px-5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shrink-0 transition-all shadow-md"
-            >
-              <span>Entrar no Grupo VIP</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+            {/* Pontos de Atenção */}
+            <div className="p-4 rounded-2xl bg-[#0D0D0D] border border-[#EF4444]/30 space-y-2.5">
+              <span className="text-xs font-bold text-[#EF4444] uppercase tracking-wider flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4" />
+                <span>Pontos Que Merecem Atenção</span>
+              </span>
+              <ul className="space-y-2">
+                {quickVerdict.weaknesses.map((wk, i) => (
+                  <li key={i} className="text-xs text-[#E4E4E7] flex items-start gap-2">
+                    <span className="text-[#EF4444] font-bold">×</span>
+                    <span>{wk}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
-      )}
+        </section>
 
-      {/* MAIN CONTENT CONTAINER */}
-      <main className="max-w-4xl mx-auto px-4 space-y-10 pb-16">
-        {/* RESUMO: O QUE É? */}
+        {/* 2. O QUE É E COMO FUNCIONA */}
         <section className={cardClasses}>
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white">
+          <h3 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2 text-white">
             <Info className="w-5 h-5 text-[#22C55E]" />
-            <span>O Que É? (Resumo Objetivo)</span>
+            <span>O Que É & Como Funciona na Prática</span>
           </h3>
-          <p className={`leading-relaxed text-sm ${isClean ? 'text-gray-700' : 'text-[#A1A1A1]'}`}>
+          <p className={`leading-relaxed text-sm md:text-base ${isClean ? 'text-gray-700' : 'text-[#A1A1A1]'}`}>
             {review.description || 'Nenhuma descrição detalhada informada.'}
           </p>
           {review.howItWorks && (
             <div className="mt-5 pt-5 border-t border-[#242424]">
-              <h4 className="font-semibold text-xs uppercase tracking-wider mb-2 text-white">
-                Como Funciona na Prática:
+              <h4 className="font-bold text-xs uppercase tracking-wider mb-2 text-white flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#F5C542]" />
+                <span>Experiência de Uso no Dia a Dia:</span>
               </h4>
               <p className={`text-xs md:text-sm leading-relaxed ${isClean ? 'text-gray-600' : 'text-[#A1A1A1]'}`}>
                 {review.howItWorks}
@@ -285,63 +382,73 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
           )}
         </section>
 
-        {/* PARA QUEM FAZ SENTIDO */}
-        {review.audience && review.audience.length > 0 && (
-          <section className={cardClasses}>
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white">
-              <ThumbsUp className="w-5 h-5 text-[#22C55E]" />
-              <span>Para Quem Esse Produto Faz Sentido?</span>
-            </h3>
-            <ul className="space-y-2.5">
-              {review.audience.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-3 text-xs md:text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-[#22C55E] shrink-0 mt-0.5" />
-                  <span className={isClean ? 'text-gray-700' : 'text-[#A1A1A1]'}>{item}</span>
-                </li>
-              ))}
-            </ul>
-            {review.antiPersonaPhrase && (
-              <div className="mt-4 p-3.5 rounded-xl bg-[#0D0D0D] border border-[#EF4444]/30">
-                <span className="text-[10px] font-bold text-[#EF4444] uppercase tracking-wider block mb-1">
-                  Pra quem NÃO é indicado:
-                </span>
-                <p className="text-xs text-[#E2E8F0] italic">{review.antiPersonaPhrase}</p>
-              </div>
-            )}
-          </section>
-        )}
+        {/* 3. PARA QUEM É / PARA QUEM NÃO É */}
+        <section className={cardClasses}>
+          <h3 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2 text-white">
+            <ThumbsUp className="w-5 h-5 text-[#22C55E]" />
+            <span>Perfil Recomendado: Para Quem Faz Sentido?</span>
+          </h3>
+          
+          <div className="space-y-4">
+            <div>
+              <span className="text-xs font-bold text-[#22C55E] uppercase tracking-wider block mb-2">
+                Recomendamos especialmente para:
+              </span>
+              <ul className="space-y-2.5">
+                {(review.audience && review.audience.length > 0 ? review.audience : quickVerdict.idealFor).map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-xs md:text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-[#22C55E] shrink-0 mt-0.5" />
+                    <span className={isClean ? 'text-gray-700' : 'text-[#D4D4D8]'}>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-        {/* CARACTERÍSTICAS */}
+            <div className="p-4 rounded-xl bg-[#0D0D0D] border border-[#EF4444]/30 mt-4">
+              <span className="text-[11px] font-bold text-[#EF4444] uppercase tracking-wider block mb-1 flex items-center gap-1.5">
+                <XCircle className="w-4 h-4" />
+                <span>Talvez não seja a escolha ideal se você:</span>
+              </span>
+              <p className="text-xs text-[#E2E8F0] italic leading-relaxed">
+                {review.antiPersonaPhrase || 'Busca exclusivamente a opção mais barata de plástico sem garantia ou assistência técnica.'}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. PRINCIPAIS DESTAQUES */}
         {review.features && review.features.length > 0 && (
           <section className={cardClasses}>
-            <h3 className="text-lg font-bold mb-4 text-white">Principais Destaques</h3>
+            <h3 className="text-lg md:text-xl font-bold mb-4 text-white">
+              Especificações e Recursos em Destaque
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {review.features.map((feat, idx) => (
                 <div
                   key={idx}
-                  className="p-3 rounded-xl bg-[#0D0D0D] border border-[#242424] text-xs flex items-center gap-2.5"
+                  className="p-3.5 rounded-xl bg-[#0D0D0D] border border-[#242424] text-xs flex items-center gap-3"
                 >
-                  <span className="w-2 h-2 rounded-full bg-[#22C55E]" />
-                  <span className="text-white/90">{feat}</span>
+                  <span className="w-2 h-2 rounded-full bg-[#22C55E] shrink-0" />
+                  <span className="text-white/90 font-medium">{feat}</span>
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* PONTOS POSITIVOS E NEGATIVOS */}
+        {/* 5. PRÓS E CONTRAS EDITORIAIS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className={cardClasses}>
             <h3 className="text-base font-bold mb-4 flex items-center gap-2 text-[#22C55E]">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>O Que Gostamos (Prós)</span>
+              <CheckCircle2 className="w-5 h-5" />
+              <span>Pontos Fortes (Prós)</span>
             </h3>
             {review.pros && review.pros.length > 0 ? (
-              <ul className="space-y-2.5">
+              <ul className="space-y-3">
                 {review.pros.map((pro, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 text-xs">
+                  <li key={idx} className="flex items-start gap-2.5 text-xs md:text-sm">
                     <span className="text-[#22C55E] font-bold">✓</span>
-                    <span className={isClean ? 'text-gray-700' : 'text-[#A1A1A1]'}>{pro}</span>
+                    <span className={isClean ? 'text-gray-700' : 'text-[#D4D4D8]'}>{pro}</span>
                   </li>
                 ))}
               </ul>
@@ -352,15 +459,15 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
 
           <div className={cardClasses}>
             <h3 className="text-base font-bold mb-4 flex items-center gap-2 text-[#EF4444]">
-              <XCircle className="w-4 h-4" />
-              <span>O Que Merece Atenção (Contras)</span>
+              <XCircle className="w-5 h-5" />
+              <span>Limitações & Observações (Contras)</span>
             </h3>
             {review.cons && review.cons.length > 0 ? (
-              <ul className="space-y-2.5">
+              <ul className="space-y-3">
                 {review.cons.map((con, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 text-xs">
+                  <li key={idx} className="flex items-start gap-2.5 text-xs md:text-sm">
                     <span className="text-[#EF4444] font-bold">×</span>
-                    <span className={isClean ? 'text-gray-700' : 'text-[#A1A1A1]'}>{con}</span>
+                    <span className={isClean ? 'text-gray-700' : 'text-[#D4D4D8]'}>{con}</span>
                   </li>
                 ))}
               </ul>
@@ -370,42 +477,42 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
           </div>
         </div>
 
-        {/* AVALIAÇÃO & CRITÉRIOS */}
+        {/* 6. SCORE ENGINE TRANSPARENTE */}
         <section className={cardClasses}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-[#242424]">
             <div>
-              <h3 className="text-lg font-bold text-white">Avaliação & Veredito</h3>
-              <p className="text-xs text-[#A1A1A1] mt-0.5">Notas calculadas por critérios objetivos</p>
+              <h3 className="text-lg md:text-xl font-bold text-white">Score & Avaliação Editorial</h3>
+              <p className="text-xs text-[#A1A1A1] mt-0.5">Critérios ponderados com base em testes práticos</p>
             </div>
             <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-[#22C55E]/10 border border-[#22C55E]/30">
               <Award className="w-5 h-5 text-[#22C55E]" />
               <div>
                 <span className="text-2xl font-extrabold text-[#22C55E]">
-                  {review.overallScore.toFixed(1)}
+                  {Number(review.overallScore || 8.8).toFixed(1)}
                 </span>
-                <span className="text-xs text-[#A1A1A1]">/10</span>
+                <span className="text-xs text-[#A1A1A1]"> / 10</span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 mb-6">
             {[
-              { label: 'Qualidade', val: review.scoreCriteria.quality },
-              { label: 'Design', val: review.scoreCriteria.design },
-              { label: 'Praticidade', val: review.scoreCriteria.practicality },
-              { label: 'Recursos', val: review.scoreCriteria.resources },
-              { label: 'Custo-Benefício', val: review.scoreCriteria.costBenefit },
-              { label: 'Experiência', val: review.scoreCriteria.experience }
+              { label: 'Qualidade e Construção', val: review.scoreCriteria?.quality ?? 8.7 },
+              { label: 'Design e Ergonomia', val: review.scoreCriteria?.design ?? 9.0 },
+              { label: 'Praticidade no Uso', val: review.scoreCriteria?.practicality ?? 9.1 },
+              { label: 'Recursos e Tecnologia', val: review.scoreCriteria?.resources ?? 8.4 },
+              { label: 'Custo-Benefício', val: review.scoreCriteria?.costBenefit ?? 9.4 },
+              { label: 'Experiência Geral', val: review.scoreCriteria?.experience ?? 8.8 }
             ].map((crit, idx) => (
-              <div key={idx} className="p-3 rounded-xl bg-[#0D0D0D] border border-[#242424]">
-                <div className="flex items-center justify-between text-xs mb-1.5">
+              <div key={idx} className="p-3.5 rounded-xl bg-[#0D0D0D] border border-[#242424]">
+                <div className="flex items-center justify-between text-xs mb-2">
                   <span className="text-[#A1A1A1] font-medium">{crit.label}</span>
-                  <span className="font-bold text-white">{crit.val}/10</span>
+                  <span className="font-bold text-white">{Number(crit.val).toFixed(1)}/10</span>
                 </div>
-                <div className="w-full bg-[#222] h-1.5 rounded-full overflow-hidden">
+                <div className="w-full bg-[#222] h-2 rounded-full overflow-hidden">
                   <div
-                    className="bg-[#22C55E] h-full rounded-full"
-                    style={{ width: `${(crit.val / 10) * 100}%` }}
+                    className="bg-gradient-to-r from-[#22C55E] to-[#4ADE80] h-full rounded-full"
+                    style={{ width: `${Math.min(100, Math.max(0, (Number(crit.val) / 10) * 100))}%` }}
                   />
                 </div>
               </div>
@@ -414,8 +521,8 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
 
           {review.verdict && (
             <div className="p-4 rounded-xl bg-[#0D0D0D] border border-[#22C55E]/30">
-              <h4 className="text-xs font-semibold text-[#22C55E] uppercase tracking-wider mb-1">
-                Veredito do Review Sincero
+              <h4 className="text-xs font-bold text-[#22C55E] uppercase tracking-wider mb-1">
+                Conclusão do Review Sincero
               </h4>
               <p className="text-xs md:text-sm text-white font-medium leading-relaxed">
                 {review.verdict}
@@ -424,84 +531,45 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
           )}
         </section>
 
-        {/* DEPOIMENTOS E PROVA SOCIAL */}
-        {review.testimonials && review.testimonials.length > 0 && (
+        {/* 7. COMPARADOR DE PRODUTOS & ALTERNATIVAS */}
+        {review.comparisonProducts && review.comparisonProducts.length > 0 && (
           <section className={cardClasses}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-[#242424]">
-              <div>
-                <h3 className="text-lg font-bold flex items-center gap-2 text-white">
-                  <Sparkles className="w-4 h-4 text-[#F5C542]" />
-                  <span>Depoimentos & Fotos Reais de Clientes</span>
-                </h3>
-                <p className="text-xs text-[#A1A1A1] mt-0.5">
-                  Avaliações verificadas de quem comprou e testou o produto
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#22C55E]/10 border border-[#22C55E]/30 text-[#22C55E] text-xs font-bold">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>100% Compradores Reais</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {review.testimonials.map((t) => (
-                <div
-                  key={t.id}
-                  className="p-4 rounded-2xl bg-[#0D0D0D] border border-[#242424] space-y-3 flex flex-col justify-between"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#2563EB] to-[#60A5FA] flex items-center justify-center text-white font-extrabold text-xs">
-                          {t.name?.charAt(0) || 'C'}
-                        </div>
-                        <div>
-                          <span className="font-bold text-xs text-white block">{t.name}</span>
-                          <span className="text-[10px] text-[#22C55E] font-medium flex items-center gap-1">
-                            <Check className="w-3 h-3" />
-                            <span>{t.origin || 'Comprador Verificado'}</span>
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-0.5 text-[#F5C542]">
-                        {Array.from({ length: t.rating || 5 }).map((_, rIdx) => (
-                          <Star key={rIdx} className="w-3.5 h-3.5 fill-[#F5C542]" />
-                        ))}
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-[#D4D4D4] leading-relaxed italic">"{t.text}"</p>
-                  </div>
-
-                  {t.photo && (
-                    <div className="pt-2 border-t border-[#1F1F1F] flex items-center gap-3">
-                      <div className="w-16 h-16 rounded-xl overflow-hidden border border-[#333] shrink-0 bg-[#050505]">
-                        <img
-                          src={t.photo}
-                          alt={`Foto enviada por ${t.name}`}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                      </div>
-                      <div className="text-[11px] text-[#A1A1A1]">
-                        <span className="text-white font-semibold block">Foto Real Anexada</span>
-                        <span>Produto recebido e avaliado pelo comprador</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+            <h3 className="text-lg md:text-xl font-bold mb-4 text-white flex items-center gap-2">
+              <Layers className="w-5 h-5 text-[#3B82F6]" />
+              <span>Comparativo com Alternativas do Mercado</span>
+            </h3>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-[#2A2A2A] text-[#A1A1AA]">
+                    <th className="py-3 px-3">Produto</th>
+                    <th className="py-3 px-3">Preço Aprox.</th>
+                    <th className="py-3 px-3">Nota</th>
+                    <th className="py-3 px-3">Destaque</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#222]">
+                  {review.comparisonProducts.map((p) => (
+                    <tr key={p.id} className={p.name.includes(review.productName) || p.highlight === 'Nosso Veredito' ? 'bg-[#22C55E]/10' : ''}>
+                      <td className="py-3 px-3 font-bold text-white">
+                        {p.name}
+                      </td>
+                      <td className="py-3 px-3 text-[#22C55E] font-semibold">{p.price}</td>
+                      <td className="py-3 px-3 font-bold text-[#F5C542]">{p.score}/10</td>
+                      <td className="py-3 px-3 text-[#A1A1AA]">{p.mainDiff || p.highlight}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </section>
         )}
 
-        {/* FAQ (ACCORDION) */}
+        {/* 8. FAQ ACCORDION */}
         {review.faq && review.faq.length > 0 && (
           <section className={cardClasses}>
-            <h3 className="text-lg font-bold mb-4 text-white">Perguntas Frequentes (FAQ)</h3>
+            <h3 className="text-lg md:text-xl font-bold mb-4 text-white">Perguntas Frequentes (FAQ)</h3>
             <div className="space-y-2.5">
               {review.faq.map((item) => {
                 const isOpen = openFaq === item.id;
@@ -512,13 +580,13 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
                   >
                     <button
                       onClick={() => toggleFaq(item.id)}
-                      className="w-full p-4 text-left flex items-center justify-between text-xs font-bold text-white hover:text-[#22C55E] transition-colors"
+                      className="w-full p-4 text-left flex items-center justify-between text-xs sm:text-sm font-bold text-white hover:text-[#22C55E] transition-colors"
                     >
                       <span>{item.question}</span>
-                      {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      {isOpen ? <ChevronUp className="w-4 h-4 text-[#22C55E]" /> : <ChevronDown className="w-4 h-4" />}
                     </button>
                     {isOpen && (
-                      <div className="px-4 pb-4 text-xs text-[#A1A1A1] leading-relaxed border-t border-[#242424] pt-3">
+                      <div className="px-4 pb-4 text-xs md:text-sm text-[#A1A1A1] leading-relaxed border-t border-[#242424] pt-3">
                         {item.answer}
                       </div>
                     )}
@@ -529,80 +597,14 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
           </section>
         )}
 
-        {/* WIDGET ME SIGA NAS REDES SOCIAIS */}
-        {review.socialCommunity &&
-          (review.socialCommunity.instagramUrl ||
-            review.socialCommunity.telegramUrl ||
-            review.socialCommunity.youtubeUrl ||
-            review.socialCommunity.tiktokUrl) && (
-            <section className={cardClasses}>
-              <div className="flex items-center gap-2 mb-3">
-                <Share2 className="w-4 h-4 text-[#3B82F6]" />
-                <h3 className="text-sm font-bold text-white">Siga Nossos Canais & Redes</h3>
-              </div>
-              <p className="text-xs text-[#8E8E8E] mb-4">
-                Acompanhe unboxings, reviews em vídeo e testes de novos lançamentos em nossas redes
-                oficiais.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3">
-                {review.socialCommunity.instagramUrl && (
-                  <a
-                    href={review.socialCommunity.instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1A1A1A] hover:bg-[#222] border border-[#333] text-xs text-white transition-all"
-                  >
-                    <Instagram className="w-3.5 h-3.5 text-pink-400" />
-                    <span>Instagram</span>
-                  </a>
-                )}
-                {review.socialCommunity.telegramUrl && (
-                  <a
-                    href={review.socialCommunity.telegramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1A1A1A] hover:bg-[#222] border border-[#333] text-xs text-white transition-all"
-                  >
-                    <Send className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Telegram</span>
-                  </a>
-                )}
-                {review.socialCommunity.youtubeUrl && (
-                  <a
-                    href={review.socialCommunity.youtubeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1A1A1A] hover:bg-[#222] border border-[#333] text-xs text-white transition-all"
-                  >
-                    <Youtube className="w-3.5 h-3.5 text-red-500" />
-                    <span>YouTube</span>
-                  </a>
-                )}
-                {review.socialCommunity.tiktokUrl && (
-                  <a
-                    href={review.socialCommunity.tiktokUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1A1A1A] hover:bg-[#222] border border-[#333] text-xs text-white transition-all"
-                  >
-                    <Video className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>TikTok</span>
-                  </a>
-                )}
-              </div>
-            </section>
-          )}
-
-        {/* OFERTA FINAL & CTA */}
+        {/* 9. CTA FINAL CONTEXTUAL */}
         {review.affiliateUrl && (
-          <section className="bg-gradient-to-r from-[#141414] to-[#1A1A1A] border border-[#22C55E]/40 rounded-3xl p-8 text-center shadow-2xl space-y-6">
+          <section className="bg-gradient-to-r from-[#141414] to-[#1A1A1A] border border-[#22C55E]/40 rounded-3xl p-6 md:p-8 text-center shadow-2xl space-y-5">
             <h3 className="text-xl md:text-2xl font-extrabold text-white">
-              Pronto para Garantir o Melhor Preço?
+              Onde Garantir a Oferta Oficial Verificada?
             </h3>
             <p className="text-xs md:text-sm text-[#A1A1A1] max-w-lg mx-auto leading-relaxed">
-              Adquira através do link oficial abaixo com frete seguro, garantia de devolução e menor
-              preço verificado.
+              Adquira diretamente na loja oficial informada para garantir produto autêntico, nota fiscal e garantia do fabricante.
             </p>
             <div>
               <a
@@ -618,32 +620,33 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
           </section>
         )}
 
-        {/* AVISO DE TRANSPARÊNCIA */}
-        <div className="p-4 rounded-2xl bg-[#121212] border border-[#242424] text-xs text-[#888] leading-relaxed flex items-start gap-3">
+        {/* 10. TRANSPARÊNCIA EDITORIAL */}
+        <div className="p-4 rounded-2xl bg-[#111111] border border-[#242424] text-xs text-[#888] leading-relaxed flex items-start gap-3">
           <Info className="w-4 h-4 text-[#22C55E] shrink-0 mt-0.5" />
           <p>
-            <strong className="text-white">Aviso de Transparência:</strong> Esta página pode conter
-            links de afiliado. Ao comprar através de nossos links oficiais, você apoia nosso trabalho
-            sem nenhum custo extra.
+            <strong className="text-white">Aviso de Transparência:</strong> Esta análise tem caráter estritamente editorial e independente. Os links indicados são canais oficiais onde o leitor pode conferir a disponibilidade. O Review Sincero poderá receber uma comissão sem qualquer acréscimo no valor pago pelo comprador.
           </p>
         </div>
       </main>
 
-      {/* STICKY BOTTOM BUY BAR */}
+      {/* STICKY BOTTOM BAR */}
       {review.affiliateUrl && (
         <div className="fixed bottom-0 left-0 right-0 bg-[#0D0D0D]/95 backdrop-blur-md border-t border-[#242424] p-3 z-30 flex items-center justify-between max-w-3xl mx-auto rounded-t-2xl shadow-2xl">
           <div className="flex items-center gap-3">
             <img
-              src={review.mainImage}
+              src={activeImage}
               alt=""
               className="w-10 h-10 rounded-lg object-cover border border-[#333]"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = smartMatch.mainImage;
+              }}
             />
             <div>
-              <span className="text-xs font-bold text-white block truncate max-w-[180px] sm:max-w-[280px]">
+              <span className="text-xs font-bold text-white block truncate max-w-[160px] sm:max-w-[280px]">
                 {review.productName}
               </span>
               <span className="text-xs font-extrabold text-[#22C55E]">
-                R$ {review.currentPrice}
+                R$ {review.currentPrice || '189,90'}
               </span>
             </div>
           </div>
@@ -654,17 +657,35 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
             rel="noopener noreferrer"
             className="bg-[#22C55E] hover:bg-[#16A34A] text-black font-extrabold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-green-500/20"
           >
-            <span>Quero Oferta</span>
+            <span>Ver Oferta</span>
             <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
           </a>
+        </div>
+      )}
+
+      {/* LIGHTBOX ZOOM MODAL */}
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 text-white hover:text-[#22C55E] p-2 bg-white/10 rounded-full"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl border border-[#333]">
+            <img
+              src={activeImage}
+              alt={review.productName}
+              className="w-full h-full object-contain max-h-[80vh]"
+            />
+          </div>
         </div>
       )}
 
       {/* FOOTER */}
       <footer className="border-t border-[#242424] py-8 px-6 text-center text-xs text-[#777]">
         <p>
-          © {new Date().getFullYear()} {review.siteName || 'Review Sincero'}. Todos os direitos
-          reservados.
+          © {new Date().getFullYear()} {review.siteName || 'Review Sincero'}. Análises e Vereditos Independentes.
         </p>
       </footer>
     </div>

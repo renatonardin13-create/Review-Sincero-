@@ -81,11 +81,45 @@ export interface SeoSettingsData {
 }
 
 export interface UrgencySettingsData {
-  enableTimer: boolean;
-  timerMinutes: number;
-  enableScarcityBar: boolean;
-  stockRemaining: number;
-  enableFakeAlerts: boolean;
+  enableTimer?: boolean;
+  timerMinutes?: number;
+  enableScarcityBar?: boolean;
+  stockRemaining?: number;
+  enableFakeAlerts?: boolean;
+  urgencyMode?: 'none' | 'verified_offer' | 'verified_deadline' | 'verified_stock';
+  verifiedSource?: string;
+  expiresAt?: string;
+}
+
+export interface QuickVerdictData {
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  idealFor: string[];
+  notIdealFor: string[];
+}
+
+export interface ComparisonProductItem {
+  id: string;
+  name: string;
+  price: string;
+  score: number;
+  batteryOrPower?: string;
+  mainDiff?: string;
+  highlight?: string;
+}
+
+export interface PriceHistoryItem {
+  date: string;
+  price: number;
+  source: string;
+}
+
+export interface ReviewFactItem {
+  id: string;
+  text: string;
+  verification: 'verified' | 'claimed' | 'editorial' | 'unverified';
+  source?: string;
 }
 
 export interface Review {
@@ -121,6 +155,11 @@ export interface Review {
   verdict: string;
   testimonials: TestimonialItem[];
   template: TemplateType;
+  quickVerdict?: QuickVerdictData;
+  comparisonProducts?: ComparisonProductItem[];
+  priceHistory?: PriceHistoryItem[];
+  facts?: ReviewFactItem[];
+  transparencyNotice?: string;
   keywordPlanner?: KeywordPlannerData;
   socialCommunity?: SocialCommunityData;
   seoSettings?: SeoSettingsData;

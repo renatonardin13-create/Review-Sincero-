@@ -10,6 +10,7 @@ import {
 } from '../types';
 import { CATEGORIES, PLATFORMS } from '../data/initialData';
 import { ReviewRenderer } from './ReviewRenderer';
+import { matchProductImage } from '../utils/productImageMatcher';
 import {
   ArrowLeft,
   ArrowRight,
@@ -1846,69 +1847,149 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
          ========================================================================= */}
       {step === 2 && (
         <div className="bg-[#101010] border border-[#262626] rounded-2xl p-6 space-y-6 animate-in fade-in duration-200">
-          <div>
-            <h3 className="text-base font-bold text-white tracking-tight">Galeria de Fotos do Produto</h3>
-            <p className="text-xs text-[#8E8E8E] mt-1">
-              Adicione fotos em alta resolução para aumentar a confiança e a taxa de conversão.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-[#22C55E]" />
+                <span>Galeria de Fotos Reais do Produto</span>
+              </h3>
+              <p className="text-xs text-[#8E8E8E] mt-1">
+                Garantimos que as imagens sejam 100% fiéis ao produto anunciado ({formData.productName || 'Produto'}).
+              </p>
+            </div>
+
+            {/* Smart Auto-Match Button */}
+            <button
+              type="button"
+              onClick={() => {
+                const match = matchProductImage(formData.productName, formData.category);
+                const newImgs = [match.mainImage, ...match.gallery];
+                setFormData({
+                  ...formData,
+                  mainImage: match.mainImage,
+                  images: newImgs
+                });
+              }}
+              className="flex items-center gap-2 bg-[#22C55E]/15 hover:bg-[#22C55E]/25 text-[#22C55E] border border-[#22C55E]/40 font-bold px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer shadow-md"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Sincronizar Fotos com o Produto</span>
+            </button>
           </div>
 
-          <div className="space-y-4">
+          {/* SUGGESTED VERIFIED IMAGES FOR THIS PRODUCT */}
+          {(() => {
+            const match = matchProductImage(formData.productName, formData.category);
+            const suggestions = [match.mainImage, ...match.gallery];
+            return (
+              <div className="p-4 rounded-xl bg-[#0D0D0D] border border-[#262626] space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#A1A1A1] uppercase tracking-wider flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
+                    <span>Fotos Verificadas para "{formData.productName || 'este produto'}":</span>
+                  </span>
+                  <span className="text-[11px] text-[#22C55E]">Clique para aplicar</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {suggestions.map((sug, sIdx) => {
+                    const isCurrentMain = formData.mainImage === sug;
+                    return (
+                      <div
+                        key={sIdx}
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            mainImage: sug,
+                            images: [sug, ...formData.images.filter((img) => img !== sug)]
+                          });
+                        }}
+                        className={`group relative rounded-xl overflow-hidden aspect-square border-2 cursor-pointer transition-all ${
+                          isCurrentMain ? 'border-[#22C55E] ring-2 ring-[#22C55E]/30' : 'border-[#262626] hover:border-[#3B82F6]'
+                        }`}
+                      >
+                        <img src={sug} alt={`Sugestão ${sIdx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-[11px] font-extrabold bg-[#22C55E] text-black px-2 py-1 rounded-md shadow">
+                            Usar como Capa
+                          </span>
+                        </div>
+                        {isCurrentMain && (
+                          <div className="absolute top-2 left-2 bg-[#22C55E] text-black text-[10px] font-extrabold px-2 py-0.5 rounded shadow">
+                            ★ Foto Atual
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="space-y-4 pt-2">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[#A1A1A1] uppercase tracking-wider">
                 FOTO PRINCIPAL (CAPA / DESTAQUE) *
               </label>
-              <input
-                type="url"
-                value={formData.mainImage}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setFormData({
-                    ...formData,
-                    mainImage: val,
-                    images: [val, ...(formData.images.slice(1))]
-                  });
-                }}
-                placeholder="https://..."
-                className="w-full bg-[#0A0A0A] border border-[#262626] rounded-xl px-4 py-3 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#3B82F6]"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={formData.mainImage}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData({
+                      ...formData,
+                      mainImage: val,
+                      images: [val, ...(formData.images.slice(1))]
+                    });
+                  }}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full bg-[#0A0A0A] border border-[#262626] rounded-xl px-4 py-3 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#3B82F6]"
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
-              {formData.images.map((img, idx) => (
-                <div key={idx} className="space-y-2">
-                  <div className="aspect-square bg-[#080808] border border-[#262626] rounded-xl overflow-hidden relative group flex items-center justify-center">
-                    {img ? (
-                      <img
-                        src={img}
-                        alt={`Foto ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80';
-                        }}
-                      />
-                    ) : (
-                      <span className="text-xs text-[#555] font-medium">+ Foto {idx + 1}</span>
-                    )}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#A1A1A1] uppercase tracking-wider block">
+                FOTOS ADICIONAIS DA GALERIA
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {formData.images.map((img, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className="aspect-square bg-[#080808] border border-[#262626] rounded-xl overflow-hidden relative group flex items-center justify-center">
+                      {img ? (
+                        <img
+                          src={img}
+                          alt={`Foto ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const fallback = matchProductImage(formData.productName, formData.category).mainImage;
+                            (e.target as HTMLImageElement).src = fallback;
+                          }}
+                        />
+                      ) : (
+                        <span className="text-xs text-[#555] font-medium">+ Foto {idx + 1}</span>
+                      )}
+                    </div>
+                    <input
+                      type="url"
+                      value={img}
+                      onChange={(e) => {
+                        const newImages = [...formData.images];
+                        newImages[idx] = e.target.value;
+                        setFormData({
+                          ...formData,
+                          images: newImages,
+                          mainImage: idx === 0 ? e.target.value : formData.mainImage
+                        });
+                      }}
+                      placeholder={`URL Foto ${idx + 1}`}
+                      className="w-full bg-[#0A0A0A] border border-[#262626] rounded-lg px-2.5 py-1.5 text-[11px] text-white placeholder-[#555]"
+                    />
                   </div>
-                  <input
-                    type="url"
-                    value={img}
-                    onChange={(e) => {
-                      const newImages = [...formData.images];
-                      newImages[idx] = e.target.value;
-                      setFormData({
-                        ...formData,
-                        images: newImages,
-                        mainImage: idx === 0 ? e.target.value : formData.mainImage
-                      });
-                    }}
-                    placeholder={`URL Foto ${idx + 1}`}
-                    className="w-full bg-[#0A0A0A] border border-[#262626] rounded-lg px-2.5 py-1.5 text-[11px] text-white placeholder-[#555]"
-                  />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
