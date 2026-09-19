@@ -90,6 +90,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
   const [location, setLocation] = useState<string>('Brasil');
   const [language, setLanguage] = useState<string>('Português');
   const [includeIdeas, setIncludeIdeas] = useState<boolean>(true);
+  const [useFreeAiMode, setUseFreeAiMode] = useState<boolean>(true);
 
   // Request State
   const [status, setStatus] = useState<'default' | 'loading' | 'success' | 'empty' | 'error'>('default');
@@ -184,7 +185,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
     setExpandedTrendKw(null);
 
     try {
-      const data = await keywordService.fetchKeywords(cleanKw, location, language, includeIdeas);
+      const data = await keywordService.fetchKeywords(cleanKw, location, language, includeIdeas, useFreeAiMode);
 
       setResponseMeta(data);
 
@@ -554,8 +555,33 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
         </div>
 
         {/* Options & Action Row */}
-        <div className="pt-2 border-t border-[#1E293B] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="pt-2 border-t border-[#1E293B] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-1.5 bg-[#07090F] border border-[#1E293B] p-1 rounded-xl self-start">
+              <button
+                type="button"
+                onClick={() => setUseFreeAiMode(true)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  useFreeAiMode
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/30'
+                    : 'text-[#94A3B8] hover:text-white'
+                }`}
+              >
+                Modo Gratuito (IA)
+              </button>
+              <button
+                type="button"
+                onClick={() => setUseFreeAiMode(false)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  !useFreeAiMode
+                    ? 'bg-[#2563EB] text-white shadow-md shadow-blue-900/30'
+                    : 'text-[#94A3B8] hover:text-white'
+                }`}
+              >
+                Oficial (Google Ads)
+              </button>
+            </div>
+
             <label className="flex items-center gap-2 text-xs text-[#CBD5E1] cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -563,7 +589,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
                 onChange={(e) => setIncludeIdeas(e.target.checked)}
                 className="w-4 h-4 rounded bg-[#07090F] border-[#1E293B] text-[#2563EB] focus:ring-0 cursor-pointer"
               />
-              <span>Gerar ideias e termos relacionados (Google Ads API)</span>
+              <span>Gerar ideias e termos relacionados</span>
             </label>
           </div>
 
@@ -571,17 +597,21 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
             type="button"
             onClick={() => handleSearch()}
             disabled={status === 'loading'}
-            className="flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white font-extrabold px-6 py-3 rounded-xl text-xs md:text-sm shadow-lg shadow-blue-500/20 transition-all cursor-pointer hover:scale-[1.01] active:scale-95"
+            className={`flex items-center justify-center gap-2 text-white font-extrabold px-6 py-3 rounded-xl text-xs md:text-sm shadow-lg transition-all cursor-pointer hover:scale-[1.01] active:scale-95 ${
+              useFreeAiMode
+                ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/10'
+                : 'bg-[#2563EB] hover:bg-[#1D4ED8] shadow-blue-500/10'
+            }`}
           >
             {status === 'loading' ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Consultando Google Ads API...</span>
+                <span>{useFreeAiMode ? 'Analisando com Inteligência Artificial...' : 'Consultando Google Ads API...'}</span>
               </>
             ) : (
               <>
                 <Search className="w-4 h-4" />
-                <span>Pesquisar palavras-chave</span>
+                <span>{useFreeAiMode ? 'Análise Gratuita (IA)' : 'Pesquisa Oficial (Google Ads)'}</span>
               </>
             )}
           </button>
@@ -807,6 +837,30 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
                   </p>
                 </div>
               </div>
+
+              <div className="bg-[#0B150F] border border-emerald-900/60 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-emerald-400" />
+                    Quer testar agora sem configurar?
+                  </h4>
+                  <p className="text-[#94A3B8] text-xs">
+                    Ative o <strong>Modo Gratuito (IA)</strong> para obter sugestões e previsões geradas pelo modelo Gemini do Google instantaneamente.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseFreeAiMode(true);
+                    setStatus('default');
+                    setErrorCode(null);
+                    setErrorMessage('');
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs whitespace-nowrap shadow-md shadow-emerald-900/20 cursor-pointer transition-all hover:scale-105 active:scale-95 animate-bounce"
+                >
+                  Ativar Modo Gratuito (IA)
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -828,6 +882,27 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
       {/* STATE: SUCCESS WITH RESULTS TABLE */}
       {status === 'success' && (
         <div className="space-y-4">
+          {responseMeta?.source === 'gemini_ai_free' && (
+            <div className="bg-[#0B150F] border border-emerald-900/60 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-950/50 border border-emerald-800/40 flex items-center justify-center text-emerald-400 shrink-0">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-emerald-400">Exibindo Métricas do Modo Gratuito (Gemini AI)</h4>
+                  <p className="text-xs text-[#94A3B8] leading-relaxed">
+                    Estas estimativas e tendências de palavras-chave foram geradas utilizando inteligência artificial, pois a API oficial do Google Ads não está configurada ou você optou pelo modo gratuito.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-900/50 font-mono">
+                  Gemini Ativo
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* FILTERS & STATS BAR */}
           <div className="bg-[#0D111A] border border-[#1E293B] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3 flex-1">

@@ -14,7 +14,8 @@ export const keywordService = {
     keywords: string,
     location: string = 'Brasil',
     language: string = 'Português',
-    includeIdeas: boolean = true
+    includeIdeas: boolean = true,
+    useFreeAiMode: boolean = false
   ): Promise<KeywordPlannerResponse> {
     try {
       const response = await fetch('/api/keyword-planner', {
@@ -26,7 +27,8 @@ export const keywordService = {
           keywords,
           location,
           language,
-          includeIdeas
+          includeIdeas,
+          useFreeAiMode
         })
       });
 

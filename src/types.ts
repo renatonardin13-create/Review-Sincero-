@@ -118,7 +118,7 @@ export interface KeywordPlannerResponse {
   ok?: boolean;
   code?: KeywordPlannerErrorCode;
   step?: string;
-  source?: 'google_ads_api' | 'google_suggest_real' | 'cache';
+  source?: 'google_ads_api' | 'google_suggest_real' | 'cache' | 'gemini_ai_free';
   isRealApiConfigured?: boolean;
   queryKeywords?: string[];
   location?: string;

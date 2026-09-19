@@ -1127,10 +1127,10 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
         });
       }
 
-      const { keywords, location = "Brasil", language = "Português", includeIdeas } = req.body;
+      const { keywords, location = "Brasil", language = "Português", includeIdeas, useFreeAiMode = false } = req.body;
 
       // → payload validado
-      console.log(`  → payload validado: keywords=${JSON.stringify(keywords)}, location=${location}, language=${language}, includeIdeas=${includeIdeas}`);
+      console.log(`  → payload validado: keywords=${JSON.stringify(keywords)}, location=${location}, language=${language}, includeIdeas=${includeIdeas}, useFreeAiMode=${useFreeAiMode}`);
 
       if (!keywords || (typeof keywords === 'string' && !keywords.trim()) || (Array.isArray(keywords) && keywords.length === 0)) {
         return res.status(400).json({
@@ -1141,6 +1141,19 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
           message: "Informe ao menos uma palavra-chave válida para consulta.",
           details: "O campo de palavras-chave está vazio."
         });
+      }
+
+      // If user requests free AI mode, bypass Google Ads check
+      if (useFreeAiMode) {
+        console.log(`  → chamada de Planejador no modo gratuito (IA)`);
+        const plannerResult = await handleKeywordPlannerRequest({
+          keywords,
+          location,
+          language,
+          includeIdeas: includeIdeas !== false,
+          useFreeAiMode: true
+        });
+        return res.json(plannerResult);
       }
 
       // Check credentials before calling the planner

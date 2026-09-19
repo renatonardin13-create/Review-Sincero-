@@ -364,6 +364,84 @@ Responda ESTRITAMENTE em formato JSON puro, sem markdown extra:
   return results;
 }
 
+async function generateFreeAiKeywords(
+  keywordList: string[],
+  location: string,
+  language: string,
+  includeIdeas: boolean
+): Promise<RealKeywordMetric[]> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY não está configurada no servidor.');
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+  const modelName = 'gemini-2.5-flash';
+
+  const prompt = `Você é um analista especialista em tráfego, SEO e Google Ads.
+Analise as seguintes palavras-chave sementes: ${JSON.stringify(keywordList)}
+Localização: ${location}
+Idioma: ${language}
+
+Gere uma lista de palavras-chave altamente relevantes relacionadas a estas sementes, incluindo as próprias sementes.
+${includeIdeas ? 'Sugira também ideias adicionais de palavras-chave relacionadas de alta relevância.' : 'Forneça métricas estritamente para as palavras-chave sementes informadas.'}
+
+Para cada palavra-chave, forneça estimativas realistas de:
+1. Média de pesquisas mensais (avgMonthlySearches) - número inteiro (ex: de 10 a 500000).
+2. Nível de concorrência (competition) - deve ser estritamente "HIGH", "MEDIUM" ou "LOW".
+3. Índice de concorrência (competitionIndex) - número inteiro de 0 a 100.
+4. Lance na parte superior da página, menores valores (lowTopPageBid) - número em reais (ex: 0.50 a 15.00) ou nulo se indisponível.
+5. Lance na parte superior da página, maiores valores (highTopPageBid) - número em reais (ex: 1.50 a 45.00) ou nulo se indisponível.
+
+Retorne EXATAMENTE um array em formato JSON puro (sem markdown ou texto extra), contendo objetos com esta estrutura exata:
+[
+  {
+    "keyword": "palavra-chave",
+    "avgMonthlySearches": 4500,
+    "competition": "MEDIUM",
+    "competitionIndex": 45,
+    "lowTopPageBid": 1.25,
+    "highTopPageBid": 4.50
+  }
+]
+`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }]
+    });
+
+    const text = response.text || '[]';
+    const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const items = JSON.parse(cleaned);
+
+    if (!Array.isArray(items)) return [];
+
+    return items.map((item: any) => {
+      const apiComp = String(item.competition || '').toUpperCase();
+      let finalComp: 'BAIXA' | 'MÉDIA' | 'ALTA' | 'DESCONHECIDA' = 'MÉDIA';
+      if (apiComp === 'LOW' || apiComp === 'BAIXA') finalComp = 'BAIXA';
+      else if (apiComp === 'HIGH' || apiComp === 'ALTA') finalComp = 'ALTA';
+
+      return {
+        keyword: String(item.keyword || '').trim(),
+        avgMonthlySearches: Number(item.avgMonthlySearches || 10),
+        competition: finalComp,
+        competitionIndex: Math.min(100, Math.max(0, Number(item.competitionIndex || 50))),
+        lowTopPageBid: item.lowTopPageBid ? Number(item.lowTopPageBid) : undefined,
+        highTopPageBid: item.highTopPageBid ? Number(item.highTopPageBid) : undefined,
+        monthlySearchVolumes: generateRealisticMonthlyTrend(Number(item.avgMonthlySearches || 10)),
+        currency: 'BRL',
+        isIdea: !keywordList.some(k => k.toLowerCase() === String(item.keyword).toLowerCase().trim())
+      };
+    });
+  } catch (err) {
+    console.error('Erro na geração gratuita de palavras-chave com Gemini:', err);
+    return [];
+  }
+}
+
 /**
  * Main Controller Handler for Keyword Planning
  */
@@ -372,8 +450,9 @@ export async function handleKeywordPlannerRequest(reqBody: {
   location?: string;
   language?: string;
   includeIdeas?: boolean;
+  useFreeAiMode?: boolean;
 }): Promise<KeywordPlannerResponse> {
-  const { location = 'Brasil', language = 'Português', includeIdeas = true } = reqBody;
+  const { location = 'Brasil', language = 'Português', includeIdeas = true, useFreeAiMode = false } = reqBody;
 
   let keywordList: string[] = [];
   if (Array.isArray(reqBody.keywords)) {
@@ -402,13 +481,46 @@ export async function handleKeywordPlannerRequest(reqBody: {
     keywordList = keywordList.slice(0, 20);
   }
 
-  const cacheKey = `kw_${keywordList.slice().sort().join('|')}_${location.toLowerCase()}_${language.toLowerCase()}_${includeIdeas}`;
+  const cacheKey = `kw_${keywordList.slice().sort().join('|')}_${location.toLowerCase()}_${language.toLowerCase()}_${includeIdeas}_${useFreeAiMode}`;
   const cached = searchCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return {
       ...cached.data,
       cached: true
     };
+  }
+
+  // Handle Free AI Mode using Gemini
+  if (useFreeAiMode) {
+    try {
+      console.log(`🤖 Executando Modo Gratuito (Gemini AI) para: ${JSON.stringify(keywordList)}`);
+      const aiResults = await generateFreeAiKeywords(keywordList, location, language, includeIdeas);
+      
+      const responsePayload: KeywordPlannerResponse = {
+        success: true,
+        ok: true,
+        source: 'gemini_ai_free',
+        isRealApiConfigured: false,
+        queryKeywords: keywordList,
+        location,
+        language,
+        results: aiResults,
+        diagnostics: getKeywordPlannerDiagnostics()
+      };
+
+      searchCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
+      return responsePayload;
+    } catch (aiErr: any) {
+      console.error('Erro no Modo Gratuito IA:', aiErr);
+      return {
+        success: false,
+        ok: false,
+        code: 'UNKNOWN_ERROR',
+        step: 'free_ai_mode_execution',
+        message: 'Não foi possível gerar palavras-chave no modo gratuito.',
+        details: aiErr.message || 'Erro inesperado no servidor.'
+      };
+    }
   }
 
   // Check if Google Ads credentials are fully configured in .env
