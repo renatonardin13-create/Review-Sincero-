@@ -763,17 +763,17 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
                     <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 uppercase">Obrigatório</span>
                   </div>
                   <p className="text-[#94A3B8] text-[11px] leading-normal">
-                    Token obtido no painel de administração do Google Ads em <em>Ferramentas &gt; Central de APIs</em>. Identifica sua conta de desenvolvedor.
+                    Token de desenvolvedor obtido na Central de APIs do console Google Ads.
                   </p>
                 </div>
 
                 <div className="bg-[#0D0707] border border-[#2D1414] rounded-xl p-3.5 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-[#F87171]">GOOGLE_ADS_CUSTOMER_ID</span>
+                    <span className="font-mono font-bold text-[#F87171]">CUSTOMER_ID / GOOGLE_ADS_CUSTOMER_ID</span>
                     <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 uppercase">Obrigatório</span>
                   </div>
                   <p className="text-[#94A3B8] text-[11px] leading-normal">
-                    ID da sua conta de cliente do Google Ads. Deve conter exatamente <strong>10 dígitos numéricos</strong> sem hifens. Exemplo: <code className="font-mono text-white text-[10px] bg-red-950/20 px-1 py-0.5 rounded">1234567890</code>.
+                    ID da sua conta de cliente do Google Ads. Deve conter exatamente <strong>10 dígitos numéricos</strong> sem hifens.
                   </p>
                 </div>
 
@@ -783,7 +783,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
                     <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 uppercase">Obrigatório</span>
                   </div>
                   <p className="text-[#94A3B8] text-[11px] leading-normal">
-                    ID do cliente OAuth gerado na seção <em>Credenciais</em> da Console de Nuvem do Google (Google Cloud Platform).
+                    ID de cliente OAuth da console de nuvem do Google (Google Cloud Console).
                   </p>
                 </div>
 
@@ -793,7 +793,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
                     <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 uppercase">Obrigatório</span>
                   </div>
                   <p className="text-[#94A3B8] text-[11px] leading-normal">
-                    Segredo do cliente (Client Secret) correspondente ao Client ID gerado para sua aplicação.
+                    Segredo de cliente OAuth correspondente gerado no Google Cloud Console.
                   </p>
                 </div>
 
@@ -803,7 +803,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
                     <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 uppercase">Obrigatório</span>
                   </div>
                   <p className="text-[#94A3B8] text-[11px] leading-normal">
-                    O Token de atualização gerado após aprovar o consentimento da conta Google com o escopo de publicidade (<code className="font-mono text-[10px] bg-red-950/20 px-1 py-0.5 rounded text-amber-300">https://www.googleapis.com/auth/adwords</code>).
+                    Token de atualização de longa duração gerado após autorização da conta com escopo de publicidade do Google Ads.
                   </p>
                 </div>
               </div>
