@@ -3,7 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
-import { handleKeywordPlannerRequest, checkRateLimit } from "./server/keywordPlanner";
+import { handleKeywordPlannerRequest, checkRateLimit, getKeywordPlannerDiagnostics } from "./server/keywordPlanner";
 import {
   fetchMeliLiveTrends,
   formatMeliTrendItems,
@@ -1059,13 +1059,26 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     }
   });
 
+  // API Route: Real Keyword Planner Diagnostics (Safe metadata check without credentials)
+  app.get("/api/keyword-planner/diagnostics", (req, res) => {
+    try {
+      const diagnostics = getKeywordPlannerDiagnostics();
+      res.json(diagnostics);
+    } catch (err: any) {
+      res.status(500).json({ error: "Erro ao consultar diagnósticos do Google Ads." });
+    }
+  });
+
   // API Route: Real Keyword Planner (Google Ads API & Real Query Discovery)
   app.post("/api/keyword-planner", async (req, res) => {
     try {
       const clientIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
       if (!checkRateLimit(clientIp)) {
         return res.status(429).json({
-          error: "Limite de requisições excedido. Aguarde alguns instantes antes de realizar nova pesquisa."
+          success: false,
+          code: "UNKNOWN_ERROR",
+          message: "Limite de requisições excedido. Aguarde alguns instantes antes de realizar nova pesquisa.",
+          details: "Rate limit ativo (máximo de requisições por minuto atingido)."
         });
       }
 
@@ -1073,7 +1086,11 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
 
       if (!keywords || (typeof keywords === 'string' && !keywords.trim()) || (Array.isArray(keywords) && keywords.length === 0)) {
         return res.status(400).json({
-          error: "Informe ao menos uma palavra-chave válida para consulta."
+          success: false,
+          code: "UNKNOWN_ERROR",
+          step: "0_input_validation",
+          message: "Informe ao menos uma palavra-chave válida para consulta.",
+          details: "O campo de palavras-chave está vazio."
         });
       }
 
@@ -1084,12 +1101,21 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
         includeIdeas: includeIdeas !== false
       });
 
+      // If backend reports an explicit failure (e.g. not configured, permission, token error)
+      if (!plannerResult.success) {
+        return res.status(200).json(plannerResult);
+      }
+
       res.json(plannerResult);
     } catch (err: any) {
-      console.error("Erro no Planejador de Palavras-chave:", err);
+      console.error("[server] Erro não tratado no Planejador de Palavras-chave:", err);
       res.status(500).json({
-        error: "Não foi possível consultar os dados. Verifique a configuração da integração e tente novamente.",
-        details: err.message
+        success: false,
+        code: "UNKNOWN_ERROR",
+        step: "unhandled_server_exception",
+        message: "Não foi possível consultar os dados. Consulte os logs do servidor para identificar a causa.",
+        details: err.message || "Exceção inesperada no servidor.",
+        diagnostics: getKeywordPlannerDiagnostics()
       });
     }
   });

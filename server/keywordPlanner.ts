@@ -1,20 +1,22 @@
 /**
  * Backend Service for Real Keyword Planning (Planejador de Palavras-chave)
- * Integrates with Google Ads API (generateKeywordHistoricalMetrics & generateKeywordIdeas)
- * and authentic search queries for real query discovery.
+ * Integrates directly with Google Ads API (generateKeywordHistoricalMetrics & generateKeywordIdeas)
  * 
- * STRICT RULES:
- * - NO mock numbers or Gemini hallucinations for search volumes.
- * - NO artificial random numbers.
- * - Never leak developer tokens or client secrets to frontend.
+ * STRICT AUDIT & COMPLIANCE RULES:
+ * - NO mock numbers, random numbers, or Gemini hallucinations for search volumes.
+ * - Granular 10-step exception diagnosis with exact error codes.
+ * - NEVER log or return access tokens, refresh tokens, client secrets, developer tokens, or credentials.
+ * - Return only CONFIGURED / MISSING status in diagnostic info.
  */
+
+import { KeywordPlannerResponse, KeywordPlannerErrorCode, RealKeywordMetric, MonthlySearchVolume } from '../src/types';
 
 interface CacheEntry {
   timestamp: number;
-  data: any;
+  data: KeywordPlannerResponse;
 }
 
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour cache
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes cache for successful queries
 const searchCache = new Map<string, CacheEntry>();
 
 // Rate limiter: Max 30 requests per minute per IP
@@ -37,7 +39,7 @@ export function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-// Geo target mapping for Google Ads API
+// Geo target mapping for Google Ads API (Geo Target Constants)
 export const GEO_TARGET_MAP: Record<string, string> = {
   'br': 'geoTargetConstants/2076',       // Brasil
   'brasil': 'geoTargetConstants/2076',
@@ -57,7 +59,7 @@ export const GEO_TARGET_MAP: Record<string, string> = {
   'mexico': 'geoTargetConstants/2484'
 };
 
-// Language mapping for Google Ads API
+// Language mapping for Google Ads API (Language Constants)
 export const LANGUAGE_TARGET_MAP: Record<string, string> = {
   'pt': 'languageConstants/1014',        // Português
   'portugues': 'languageConstants/1014',
@@ -73,213 +75,48 @@ export const LANGUAGE_TARGET_MAP: Record<string, string> = {
   'alemao': 'languageConstants/1001'
 };
 
-// Google OAuth Access Token Cache
+// Token cache in memory
 let cachedAccessToken: { token: string; expiresAt: number } | null = null;
 
-async function getGoogleAdsAccessToken(): Promise<string | null> {
-  const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
-  const refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN;
-
-  if (!clientId || !clientSecret || !refreshToken) {
-    return null;
-  }
-
-  // Check cached token
-  if (cachedAccessToken && Date.now() < cachedAccessToken.expiresAt - 60000) {
-    return cachedAccessToken.token;
-  }
-
-  try {
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        client_id: clientId,
-        client_secret: clientSecret,
-        refresh_token: refreshToken
-      })
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('[Google Ads OAuth] Failed to refresh token:', errText);
-      return null;
+/**
+ * Diagnostic helper: Returns only 'configured' or 'missing' status.
+ * NEVER returns values, tokens, or credentials.
+ */
+export function getKeywordPlannerDiagnostics() {
+  return {
+    googleAds: {
+      clientId: Boolean(process.env.GOOGLE_ADS_CLIENT_ID?.trim()) ? 'configured' as const : 'missing' as const,
+      clientSecret: Boolean(process.env.GOOGLE_ADS_CLIENT_SECRET?.trim()) ? 'configured' as const : 'missing' as const,
+      refreshToken: Boolean(process.env.GOOGLE_ADS_REFRESH_TOKEN?.trim()) ? 'configured' as const : 'missing' as const,
+      developerToken: Boolean(process.env.GOOGLE_ADS_DEVELOPER_TOKEN?.trim()) ? 'configured' as const : 'missing' as const,
+      customerId: Boolean(process.env.GOOGLE_ADS_CUSTOMER_ID?.trim()) ? 'configured' as const : 'missing' as const,
+      loginCustomerId: Boolean(process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID?.trim()) ? 'configured' as const : 'missing' as const
     }
-
-    const data = (await response.json()) as { access_token: string; expires_in: number };
-    cachedAccessToken = {
-      token: data.access_token,
-      expiresAt: Date.now() + (data.expires_in || 3600) * 1000
-    };
-
-    return cachedAccessToken.token;
-  } catch (err) {
-    console.error('[Google Ads OAuth] Error refreshing token:', err);
-    return null;
-  }
+  };
 }
 
 /**
- * Fetch real autocomplete search query ideas from Google Search
+ * Safe structured logger for server diagnostics.
+ * NEVER logs tokens, secrets, or credential values.
  */
-export async function fetchGoogleRealQuerySuggestions(
-  query: string,
-  lang: string = 'pt',
-  country: string = 'br'
-): Promise<string[]> {
-  const suggestions: string[] = [];
-  const langCode = lang.toLowerCase().includes('en') || lang.toLowerCase().includes('ingl') ? 'en' : 'pt-BR';
-  const countryCode = country.toLowerCase().includes('us') || country.toLowerCase().includes('eua') ? 'us' : 'br';
-
-  // 1. Try Primary Google Suggest API
-  try {
-    const url1 = `https://suggestqueries.google.com/complete/search?client=firefox&hl=${langCode}&gl=${countryCode}&q=${encodeURIComponent(query)}`;
-    const resp1 = await fetch(url1, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json'
-      }
-    });
-
-    if (resp1.ok) {
-      const data = await resp1.json();
-      if (Array.isArray(data) && Array.isArray(data[1])) {
-        for (const s of data[1]) {
-          const str = String(s).trim();
-          if (str && !suggestions.includes(str)) {
-            suggestions.push(str);
-          }
-        }
-      }
-    }
-  } catch (e) {
-    console.warn('[Real Suggestions] Primary Google suggest error:', e);
-  }
-
-  // 2. High-Intent Review Long-Tail Queries (Standard Buyer Intent Combinations)
-  const buyerModifiers = [
-    `${query} vale a pena`,
-    `${query} é boa`,
-    `${query} resenha sincera`,
-    `${query} melhor modelo`,
-    `${query} qual comprar`,
-    `como usar ${query}`,
-    `${query} antes e depois`,
-    `${query} onde comprar original`,
-    `${query} mercado livre`,
-    `${query} shopee`
-  ];
-
-  for (const mod of buyerModifiers) {
-    if (!suggestions.some(s => s.toLowerCase() === mod.toLowerCase())) {
-      suggestions.push(mod);
-    }
-  }
-
-  return suggestions;
-}
-
-/**
- * Calls Google Ads API generateKeywordHistoricalMetrics
- */
-async function callGoogleAdsHistoricalMetrics(
-  customerId: string,
-  developerToken: string,
-  accessToken: string,
-  loginCustomerId: string | undefined,
-  keywords: string[],
-  geoTarget: string,
-  language: string
-) {
-  // Format customerId (must be digits only)
-  const cleanCustomerId = customerId.replace(/-/g, '');
-  const url = `https://googleads.googleapis.com/v18/customers/${cleanCustomerId}:generateKeywordHistoricalMetrics`;
-
-  const headers: Record<string, string> = {
-    'Authorization': `Bearer ${accessToken}`,
-    'developer-token': developerToken,
-    'Content-Type': 'application/json'
+function logServerDiagnostic(params: {
+  step: string;
+  httpStatus: number;
+  errorCode?: string;
+  message: string;
+  requestId?: string;
+}) {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    endpoint: 'POST /api/keyword-planner',
+    step: params.step,
+    httpStatus: params.httpStatus,
+    googleAdsErrorCode: params.errorCode || 'NONE',
+    message: params.message,
+    requestId: params.requestId || 'N/A'
   };
 
-  if (loginCustomerId) {
-    headers['login-customer-id'] = loginCustomerId.replace(/-/g, '');
-  }
-
-  const body = {
-    keywords: keywords.slice(0, 20),
-    geoTargetConstants: [geoTarget],
-    keywordPlanNetwork: 'GOOGLE_SEARCH',
-    language: language,
-    includeAdultKeywords: false
-  };
-
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body)
-  });
-
-  if (!resp.ok) {
-    const errorBody = await resp.text();
-    console.error('[Google Ads API Error] generateKeywordHistoricalMetrics:', resp.status, errorBody);
-    throw new Error(`Google Ads API error ${resp.status}: ${errorBody}`);
-  }
-
-  return await resp.json();
-}
-
-/**
- * Calls Google Ads API generateKeywordIdeas
- */
-async function callGoogleAdsKeywordIdeas(
-  customerId: string,
-  developerToken: string,
-  accessToken: string,
-  loginCustomerId: string | undefined,
-  seedKeywords: string[],
-  geoTarget: string,
-  language: string
-) {
-  const cleanCustomerId = customerId.replace(/-/g, '');
-  const url = `https://googleads.googleapis.com/v18/customers/${cleanCustomerId}:generateKeywordIdeas`;
-
-  const headers: Record<string, string> = {
-    'Authorization': `Bearer ${accessToken}`,
-    'developer-token': developerToken,
-    'Content-Type': 'application/json'
-  };
-
-  if (loginCustomerId) {
-    headers['login-customer-id'] = loginCustomerId.replace(/-/g, '');
-  }
-
-  const body = {
-    keywordSeed: {
-      keywords: seedKeywords.slice(0, 10)
-    },
-    geoTargetConstants: [geoTarget],
-    keywordPlanNetwork: 'GOOGLE_SEARCH',
-    language: language,
-    includeAdultKeywords: false
-  };
-
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body)
-  });
-
-  if (!resp.ok) {
-    const errorBody = await resp.text();
-    console.error('[Google Ads API Error] generateKeywordIdeas:', resp.status, errorBody);
-    throw new Error(`Google Ads API error ${resp.status}: ${errorBody}`);
-  }
-
-  return await resp.json();
+  console.error(`[Google Ads Diagnostic Log]\n${JSON.stringify(logEntry, null, 2)}`);
 }
 
 function parseCompetition(rawComp?: string): 'BAIXA' | 'MÉDIA' | 'ALTA' | 'DESCONHECIDA' {
@@ -299,17 +136,19 @@ function parseMonthName(monthNum: number | string): string {
 }
 
 /**
- * Main Controller Handler for Keyword Planning
+ * Main Controller Handler for Keyword Planning with 10-step diagnostic pipeline
  */
 export async function handleKeywordPlannerRequest(reqBody: {
   keywords?: string | string[];
   location?: string;
   language?: string;
   includeIdeas?: boolean;
-}) {
+}): Promise<KeywordPlannerResponse> {
   const { location = 'Brasil', language = 'Português', includeIdeas = true } = reqBody;
 
-  // 1. Parse and sanitize keywords
+  // =========================================================================
+  // STEP 0: Parse & validate user keywords input
+  // =========================================================================
   let keywordList: string[] = [];
   if (Array.isArray(reqBody.keywords)) {
     keywordList = reqBody.keywords
@@ -323,14 +162,28 @@ export async function handleKeywordPlannerRequest(reqBody: {
   }
 
   if (keywordList.length === 0) {
-    throw new Error('Informe ao menos uma palavra-chave para realizar a pesquisa.');
+    logServerDiagnostic({
+      step: '0_input_validation',
+      httpStatus: 400,
+      errorCode: 'INVALID_INPUT',
+      message: 'Nenhuma palavra-chave informada para a consulta.'
+    });
+
+    return {
+      success: false,
+      code: 'UNKNOWN_ERROR',
+      step: '0_input_validation',
+      message: 'Informe ao menos uma palavra-chave válida para consulta.',
+      details: 'O parâmetro keywords está vazio ou não contém termos válidos.',
+      diagnostics: getKeywordPlannerDiagnostics()
+    };
   }
 
   if (keywordList.length > 20) {
     keywordList = keywordList.slice(0, 20);
   }
 
-  // 2. Check Cache
+  // Check cache for identical query
   const cacheKey = `kw_${keywordList.slice().sort().join('|')}_${location.toLowerCase()}_${language.toLowerCase()}_${includeIdeas}`;
   const cached = searchCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
@@ -340,85 +193,343 @@ export async function handleKeywordPlannerRequest(reqBody: {
     };
   }
 
-  // 3. Resolve geo and language targets
+  // Resolve Geo & Language constants
   const locKey = location.toLowerCase().trim();
   const geoTarget = GEO_TARGET_MAP[locKey] || 'geoTargetConstants/2076';
 
   const langKey = language.toLowerCase().trim();
   const langTarget = LANGUAGE_TARGET_MAP[langKey] || 'languageConstants/1014';
 
-  // 4. Check Google Ads API credentials
-  const devToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
-  const customerId = process.env.GOOGLE_ADS_CUSTOMER_ID;
-  const loginCustomerId = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID;
+  // =========================================================================
+  // STEP 1: Reading environment variables
+  // =========================================================================
+  const clientId = process.env.GOOGLE_ADS_CLIENT_ID?.trim();
+  const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET?.trim();
+  const refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN?.trim();
+  const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN?.trim();
+  const rawCustomerId = process.env.GOOGLE_ADS_CUSTOMER_ID?.trim();
+  const rawLoginCustomerId = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID?.trim();
 
-  const isConfigured = Boolean(devToken && customerId);
+  const missingEnvVars: string[] = [];
+  if (!clientId) missingEnvVars.push('GOOGLE_ADS_CLIENT_ID');
+  if (!clientSecret) missingEnvVars.push('GOOGLE_ADS_CLIENT_SECRET');
+  if (!refreshToken) missingEnvVars.push('GOOGLE_ADS_REFRESH_TOKEN');
+  if (!developerToken) missingEnvVars.push('GOOGLE_ADS_DEVELOPER_TOKEN');
+  if (!rawCustomerId) missingEnvVars.push('GOOGLE_ADS_CUSTOMER_ID');
 
-  let googleAccessToken: string | null = null;
-  if (isConfigured) {
-    googleAccessToken = await getGoogleAdsAccessToken();
+  if (missingEnvVars.length > 0) {
+    logServerDiagnostic({
+      step: '1_env_vars_check',
+      httpStatus: 500,
+      errorCode: 'ENV_VARS_MISSING',
+      message: `Variáveis de ambiente do Google Ads não configuradas no servidor: ${missingEnvVars.join(', ')}`
+    });
+
+    return {
+      success: false,
+      code: 'GOOGLE_ADS_NOT_CONFIGURED',
+      step: '1_env_vars_check',
+      message: 'Google Ads ainda não está configurado no servidor.',
+      details: `Variáveis ausentes no servidor: ${missingEnvVars.join(', ')}. Configure-as no arquivo de ambiente (.env).`,
+      diagnostics: getKeywordPlannerDiagnostics()
+    };
   }
 
-  const results: any[] = [];
+  // =========================================================================
+  // STEP 2: Customer ID validation (10 digits without hyphens)
+  // =========================================================================
+  const cleanCustomerId = (rawCustomerId || '').replace(/\D/g, '');
+  if (cleanCustomerId.length !== 10) {
+    logServerDiagnostic({
+      step: '2_customer_id_validation',
+      httpStatus: 400,
+      errorCode: 'INVALID_CUSTOMER_ID_FORMAT',
+      message: `GOOGLE_ADS_CUSTOMER_ID possui formato inválido. Deve conter 10 dígitos numéricos (recebido: ${cleanCustomerId.length} dígitos).`
+    });
 
-  // Case A: Full Google Ads API available with credentials and valid OAuth token
-  if (isConfigured && googleAccessToken && customerId && devToken) {
+    return {
+      success: false,
+      code: 'GOOGLE_ADS_CUSTOMER_ERROR',
+      step: '2_customer_id_validation',
+      message: 'A conta Google Ads configurada não foi encontrada.',
+      details: `O GOOGLE_ADS_CUSTOMER_ID deve conter exatamente 10 dígitos numéricos (recebido: ${cleanCustomerId.length} dígitos). Remova caracteres especiais e verifique o ID da conta.`,
+      diagnostics: getKeywordPlannerDiagnostics()
+    };
+  }
+
+  // =========================================================================
+  // STEP 3: Login Customer ID sanitation (if configured for manager account)
+  // =========================================================================
+  let cleanLoginCustomerId: string | undefined = undefined;
+  if (rawLoginCustomerId) {
+    const sanitized = rawLoginCustomerId.replace(/\D/g, '');
+    if (sanitized.length === 10) {
+      cleanLoginCustomerId = sanitized;
+    } else {
+      logServerDiagnostic({
+        step: '3_login_customer_id_validation',
+        httpStatus: 400,
+        errorCode: 'INVALID_LOGIN_CUSTOMER_ID',
+        message: `GOOGLE_ADS_LOGIN_CUSTOMER_ID possui formato inválido (${sanitized.length} dígitos em vez de 10). Ignorando header.`
+      });
+    }
+  }
+
+  // =========================================================================
+  // STEP 4: OAuth authentication & token refresh
+  // =========================================================================
+  let accessToken = '';
+  if (cachedAccessToken && Date.now() < cachedAccessToken.expiresAt - 60000) {
+    accessToken = cachedAccessToken.token;
+  } else {
     try {
-      // Fetch historical metrics for primary keywords
-      const historicalData = await callGoogleAdsHistoricalMetrics(
-        customerId,
-        devToken,
-        googleAccessToken,
-        loginCustomerId,
-        keywordList,
-        geoTarget,
-        langTarget
-      );
+      const oauthResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          client_id: clientId!,
+          client_secret: clientSecret!,
+          refresh_token: refreshToken!
+        })
+      });
 
-      if (historicalData && Array.isArray(historicalData.results)) {
-        for (const res of historicalData.results) {
-          const metrics = res.keywordMetrics;
-          const monthlyVolumes = metrics?.monthlySearchVolumes?.map((mv: any) => ({
-            month: parseMonthName(mv.month),
-            year: Number(mv.year),
-            searches: Number(mv.monthlySearches || 0)
-          })) || [];
+      const oauthData = await oauthResponse.json().catch(() => ({}));
 
-          results.push({
-            keyword: res.text || res.keyword,
-            avgMonthlySearches: metrics?.avgMonthlySearches ? Number(metrics.avgMonthlySearches) : undefined,
-            competition: parseCompetition(metrics?.competition),
-            competitionIndex: metrics?.competitionIndex !== undefined ? Number(metrics.competitionIndex) : undefined,
-            monthlySearchVolumes: monthlyVolumes.length > 0 ? monthlyVolumes : undefined,
-            lowTopPageBid: metrics?.lowTopOfPageBidMicros ? Number(metrics.lowTopOfPageBidMicros) / 1000000 : undefined,
-            highTopPageBid: metrics?.highTopOfPageBidMicros ? Number(metrics.highTopOfPageBidMicros) / 1000000 : undefined,
-            currency: 'BRL',
-            isIdea: false
-          });
-        }
+      if (!oauthResponse.ok) {
+        const oauthErrCode = oauthData?.error || `HTTP_${oauthResponse.status}`;
+        const oauthErrDesc = oauthData?.error_description || 'Falha ao autenticar via OAuth com o Google.';
+
+        logServerDiagnostic({
+          step: '4_oauth_token_refresh',
+          httpStatus: oauthResponse.status,
+          errorCode: oauthErrCode,
+          message: `Erro na autenticação OAuth do Google Ads: ${oauthErrDesc}`
+        });
+
+        return {
+          success: false,
+          code: 'GOOGLE_ADS_AUTH_ERROR',
+          step: '4_oauth_token_refresh',
+          message: 'Não foi possível autenticar com o Google Ads.',
+          details: `Falha OAuth (${oauthErrCode}): ${oauthErrDesc}. Verifique GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET e GOOGLE_ADS_REFRESH_TOKEN.`,
+          diagnostics: getKeywordPlannerDiagnostics()
+        };
       }
 
-      // Fetch related keyword ideas if requested
-      if (includeIdeas && keywordList.length > 0) {
-        try {
-          const ideasData = await callGoogleAdsKeywordIdeas(
-            customerId,
-            devToken,
-            googleAccessToken,
-            loginCustomerId,
-            keywordList.slice(0, 5),
-            geoTarget,
-            langTarget
-          );
+      // =======================================================================
+      // STEP 5: Access token extraction & verification
+      // =======================================================================
+      if (!oauthData?.access_token) {
+        logServerDiagnostic({
+          step: '5_access_token_validation',
+          httpStatus: 500,
+          errorCode: 'NO_ACCESS_TOKEN_RETURNED',
+          message: 'OAuth endpoint retornou resposta OK, mas sem access_token.'
+        });
 
+        return {
+          success: false,
+          code: 'GOOGLE_ADS_AUTH_ERROR',
+          step: '5_access_token_validation',
+          message: 'Não foi possível autenticar com o Google Ads.',
+          details: 'O provedor OAuth não retornou um access_token válido.',
+          diagnostics: getKeywordPlannerDiagnostics()
+        };
+      }
+
+      accessToken = oauthData.access_token;
+      cachedAccessToken = {
+        token: accessToken,
+        expiresAt: Date.now() + (Number(oauthData.expires_in) || 3600) * 1000
+      };
+    } catch (networkErr: any) {
+      logServerDiagnostic({
+        step: '4_oauth_token_refresh',
+        httpStatus: 503,
+        errorCode: 'OAUTH_NETWORK_ERROR',
+        message: `Falha de rede ao conectar no endpoint OAuth do Google: ${networkErr.message}`
+      });
+
+      return {
+        success: false,
+        code: 'GOOGLE_ADS_AUTH_ERROR',
+        step: '4_oauth_token_refresh',
+        message: 'Não foi possível autenticar com o Google Ads.',
+        details: `Erro de rede no OAuth: ${networkErr.message}`,
+        diagnostics: getKeywordPlannerDiagnostics()
+      };
+    }
+  }
+
+  // =========================================================================
+  // STEP 6: Connection & Request Setup to Google Ads API
+  // =========================================================================
+  const googleAdsHeaders: Record<string, string> = {
+    'Authorization': `Bearer ${accessToken}`,
+    'developer-token': developerToken!,
+    'Content-Type': 'application/json'
+  };
+
+  if (cleanLoginCustomerId) {
+    googleAdsHeaders['login-customer-id'] = cleanLoginCustomerId;
+  }
+
+  const results: RealKeywordMetric[] = [];
+  let googleAdsRequestId = '';
+
+  // =========================================================================
+  // STEP 7 & 8: Account authorization & GenerateKeywordHistoricalMetrics
+  // =========================================================================
+  try {
+    const historicalUrl = `https://googleads.googleapis.com/v18/customers/${cleanCustomerId}:generateKeywordHistoricalMetrics`;
+    const historicalBody = {
+      keywords: keywordList.slice(0, 20),
+      geoTargetConstants: [geoTarget],
+      keywordPlanNetwork: 'GOOGLE_SEARCH',
+      language: langTarget,
+      includeAdultKeywords: false
+    };
+
+    const historicalResp = await fetch(historicalUrl, {
+      method: 'POST',
+      headers: googleAdsHeaders,
+      body: JSON.stringify(historicalBody)
+    });
+
+    googleAdsRequestId = historicalResp.headers.get('google-ads-request-id') || '';
+
+    if (!historicalResp.ok) {
+      const errJson = await historicalResp.json().catch(() => ({}));
+      const googleAdsErrors = errJson?.error?.details?.[0]?.errors || [];
+      const primaryError = googleAdsErrors[0] || {};
+      const errorCategory = Object.keys(primaryError.errorCode || {})[0] || '';
+      const specificErrorCode = primaryError.errorCode?.[errorCategory] || errJson?.error?.status || `HTTP_${historicalResp.status}`;
+      const errorMessage = primaryError.message || errJson?.error?.message || `Google Ads API retornou status ${historicalResp.status}`;
+      
+      if (!googleAdsRequestId) {
+        googleAdsRequestId = errJson?.error?.details?.[0]?.requestId || '';
+      }
+
+      // Map to exact functional error code
+      let appErrorCode: KeywordPlannerErrorCode = 'GOOGLE_ADS_API_ERROR';
+      let userFriendlyMessage = 'A Google Ads API recusou a consulta.';
+      let failureStep = '8_generate_keyword_historical_metrics';
+
+      const upperCode = String(specificErrorCode).toUpperCase();
+      const upperMsg = String(errorMessage).toUpperCase();
+
+      if (upperCode.includes('DEVELOPER_TOKEN') || upperMsg.includes('DEVELOPER TOKEN') || upperMsg.includes('DEVELOPER_TOKEN')) {
+        appErrorCode = 'GOOGLE_ADS_DEVELOPER_TOKEN_ERROR';
+        userFriendlyMessage = 'O Developer Token do Google Ads não está autorizado para esta conta.';
+        failureStep = '6_developer_token_validation';
+      } else if (
+        upperCode.includes('PERMISSION_DENIED') ||
+        upperCode.includes('USER_PERMISSION_DENIED') ||
+        upperCode.includes('NOT_ADS_USER') ||
+        upperCode.includes('AUTHORIZATION_ERROR') ||
+        upperMsg.includes('PERMISSION') ||
+        upperMsg.includes('NOT AUTHORIZED')
+      ) {
+        appErrorCode = 'GOOGLE_ADS_PERMISSION_ERROR';
+        userFriendlyMessage = 'A conta autorizada não possui acesso à conta Google Ads.';
+        failureStep = '7_account_authorization';
+      } else if (
+        upperCode.includes('CUSTOMER_NOT_FOUND') ||
+        upperCode.includes('INVALID_CUSTOMER_ID') ||
+        upperCode.includes('CUSTOMER_NOT_ENABLED') ||
+        upperMsg.includes('CUSTOMER')
+      ) {
+        appErrorCode = 'GOOGLE_ADS_CUSTOMER_ERROR';
+        userFriendlyMessage = 'A conta Google Ads configurada não foi encontrada.';
+        failureStep = '7_account_authorization';
+      } else if (
+        upperCode.includes('AUTHENTICATION_ERROR') ||
+        upperCode.includes('UNAUTHENTICATED') ||
+        upperCode.includes('OAUTH_TOKEN')
+      ) {
+        appErrorCode = 'GOOGLE_ADS_AUTH_ERROR';
+        userFriendlyMessage = 'Não foi possível autenticar com o Google Ads.';
+        failureStep = '4_oauth_token_refresh';
+      }
+
+      logServerDiagnostic({
+        step: failureStep,
+        httpStatus: historicalResp.status,
+        errorCode: specificErrorCode,
+        message: errorMessage,
+        requestId: googleAdsRequestId
+      });
+
+      return {
+        success: false,
+        code: appErrorCode,
+        step: failureStep,
+        message: userFriendlyMessage,
+        details: `[${specificErrorCode}] ${errorMessage}`,
+        requestId: googleAdsRequestId || undefined,
+        diagnostics: getKeywordPlannerDiagnostics()
+      };
+    }
+
+    const historicalData = await historicalResp.json();
+
+    // =======================================================================
+    // STEP 9: Optional GenerateKeywordIdeas
+    // =======================================================================
+    if (historicalData && Array.isArray(historicalData.results)) {
+      for (const res of historicalData.results) {
+        const metrics = res.keywordMetrics;
+        const monthlyVolumes: MonthlySearchVolume[] = metrics?.monthlySearchVolumes?.map((mv: any) => ({
+          month: parseMonthName(mv.month),
+          year: Number(mv.year),
+          searches: Number(mv.monthlySearches || 0)
+        })) || [];
+
+        results.push({
+          keyword: res.text || res.keyword,
+          avgMonthlySearches: metrics?.avgMonthlySearches ? Number(metrics.avgMonthlySearches) : undefined,
+          competition: parseCompetition(metrics?.competition),
+          competitionIndex: metrics?.competitionIndex !== undefined ? Number(metrics.competitionIndex) : undefined,
+          monthlySearchVolumes: monthlyVolumes.length > 0 ? monthlyVolumes : undefined,
+          lowTopPageBid: metrics?.lowTopOfPageBidMicros ? Number(metrics.lowTopOfPageBidMicros) / 1000000 : undefined,
+          highTopPageBid: metrics?.highTopOfPageBidMicros ? Number(metrics.highTopOfPageBidMicros) / 1000000 : undefined,
+          currency: 'BRL',
+          isIdea: false
+        });
+      }
+    }
+
+    if (includeIdeas && keywordList.length > 0) {
+      try {
+        const ideasUrl = `https://googleads.googleapis.com/v18/customers/${cleanCustomerId}:generateKeywordIdeas`;
+        const ideasBody = {
+          keywordSeed: {
+            keywords: keywordList.slice(0, 5)
+          },
+          geoTargetConstants: [geoTarget],
+          keywordPlanNetwork: 'GOOGLE_SEARCH',
+          language: langTarget,
+          includeAdultKeywords: false
+        };
+
+        const ideasResp = await fetch(ideasUrl, {
+          method: 'POST',
+          headers: googleAdsHeaders,
+          body: JSON.stringify(ideasBody)
+        });
+
+        if (ideasResp.ok) {
+          const ideasData = await ideasResp.json();
           if (ideasData && Array.isArray(ideasData.results)) {
             for (const res of ideasData.results) {
               const kwText = res.text || res.keyword;
-              // Avoid duplicates
-              if (results.some(r => r.keyword.toLowerCase() === kwText.toLowerCase())) continue;
+              if (!kwText || results.some(r => r.keyword.toLowerCase() === kwText.toLowerCase())) continue;
 
               const metrics = res.keywordMetrics;
-              const monthlyVolumes = metrics?.monthlySearchVolumes?.map((mv: any) => ({
+              const monthlyVolumes: MonthlySearchVolume[] = metrics?.monthlySearchVolumes?.map((mv: any) => ({
                 month: parseMonthName(mv.month),
                 year: Number(mv.year),
                 searches: Number(mv.monthlySearches || 0)
@@ -437,68 +548,61 @@ export async function handleKeywordPlannerRequest(reqBody: {
               });
             }
           }
-        } catch (ideaErr) {
-          console.warn('[Google Ads API Ideas] Optional ideas failed:', ideaErr);
+        } else {
+          const ideasErrJson = await ideasResp.json().catch(() => ({}));
+          logServerDiagnostic({
+            step: '9_generate_keyword_ideas',
+            httpStatus: ideasResp.status,
+            errorCode: ideasErrJson?.error?.status || `HTTP_${ideasResp.status}`,
+            message: `Optional generateKeywordIdeas failed: ${ideasErrJson?.error?.message || ideasResp.statusText}`,
+            requestId: ideasResp.headers.get('google-ads-request-id') || ''
+          });
         }
-      }
-
-      const responsePayload = {
-        success: true,
-        source: 'google_ads_api',
-        isRealApiConfigured: true,
-        queryKeywords: keywordList,
-        location,
-        language,
-        results
-      };
-
-      searchCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
-      return responsePayload;
-    } catch (apiErr: any) {
-      console.error('[Google Ads API Execution Error]:', apiErr.message);
-      // Fall through to real search suggestions discovery with explicit notification
-    }
-  }
-
-  // Case B: Google Ads credentials not yet configured or pending activation.
-  // We query Google's real search engine autocomplete suggestions to discover real queries that actual users search for.
-  // We NEVER invent or hallucinate fake numbers for avgMonthlySearches or CPC.
-  const discoveredTerms = new Set<string>();
-
-  for (const kw of keywordList) {
-    discoveredTerms.add(kw);
-    if (includeIdeas) {
-      const realIdeas = await fetchGoogleRealQuerySuggestions(kw, language, location);
-      for (const idea of realIdeas) {
-        discoveredTerms.add(idea);
+      } catch (ideaErr: any) {
+        logServerDiagnostic({
+          step: '9_generate_keyword_ideas',
+          httpStatus: 500,
+          errorCode: 'IDEAS_EXCEPTION',
+          message: `Exceção em generateKeywordIdeas: ${ideaErr.message}`
+        });
       }
     }
-  }
 
-  const realList = Array.from(discoveredTerms);
-
-  const realQueryResults = realList.map((term, index) => {
-    const isOriginalSeed = keywordList.some(k => k.toLowerCase() === term.toLowerCase());
-    return {
-      keyword: term,
-      // We do NOT fabricate numbers. Only real fields are populated.
-      isIdea: !isOriginalSeed
+    // =======================================================================
+    // STEP 10: Response Normalization & Delivery
+    // =======================================================================
+    const responsePayload: KeywordPlannerResponse = {
+      success: true,
+      source: 'google_ads_api',
+      isRealApiConfigured: true,
+      queryKeywords: keywordList,
+      location,
+      language,
+      results,
+      requestId: googleAdsRequestId || undefined,
+      diagnostics: getKeywordPlannerDiagnostics()
     };
-  });
 
-  const responsePayload = {
-    success: true,
-    source: 'google_suggest_real',
-    isRealApiConfigured: false,
-    queryKeywords: keywordList,
-    location,
-    language,
-    results: realQueryResults,
-    message: isConfigured
-      ? 'Credenciais do Google Ads não puderam autenticar na API. As palavras-chave reais foram extraídas via Google Search.'
-      : 'Para carregar as métricas numéricas exatas de volume de impressões e lances de leilão do Google Ads, configure GOOGLE_ADS_DEVELOPER_TOKEN e GOOGLE_ADS_CUSTOMER_ID no ambiente. Todas as ideias e termos exibidos abaixo são consultas reais de pesquisa.'
-  };
+    searchCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
+    return responsePayload;
 
-  searchCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
-  return responsePayload;
+  } catch (apiException: any) {
+    logServerDiagnostic({
+      step: '8_generate_keyword_historical_metrics',
+      httpStatus: 500,
+      errorCode: 'API_CONNECTION_EXCEPTION',
+      message: `Exceção ao comunicar com a Google Ads API: ${apiException.message}`,
+      requestId: googleAdsRequestId
+    });
+
+    return {
+      success: false,
+      code: 'GOOGLE_ADS_API_ERROR',
+      step: '8_generate_keyword_historical_metrics',
+      message: 'A Google Ads API recusou a consulta.',
+      details: `Falha de conexão com a API do Google Ads: ${apiException.message}`,
+      requestId: googleAdsRequestId || undefined,
+      diagnostics: getKeywordPlannerDiagnostics()
+    };
+  }
 }

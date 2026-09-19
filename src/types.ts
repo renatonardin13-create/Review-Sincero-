@@ -69,17 +69,42 @@ export interface RealKeywordMetric {
   isIdea?: boolean;
 }
 
+export type KeywordPlannerErrorCode =
+  | 'GOOGLE_ADS_NOT_CONFIGURED'
+  | 'GOOGLE_ADS_AUTH_ERROR'
+  | 'GOOGLE_ADS_PERMISSION_ERROR'
+  | 'GOOGLE_ADS_CUSTOMER_ERROR'
+  | 'GOOGLE_ADS_DEVELOPER_TOKEN_ERROR'
+  | 'GOOGLE_ADS_API_ERROR'
+  | 'UNKNOWN_ERROR';
+
+export interface KeywordPlannerDiagnostics {
+  googleAds: {
+    clientId: 'configured' | 'missing';
+    clientSecret: 'configured' | 'missing';
+    refreshToken: 'configured' | 'missing';
+    developerToken: 'configured' | 'missing';
+    customerId: 'configured' | 'missing';
+    loginCustomerId: 'configured' | 'missing';
+  };
+}
+
 export interface KeywordPlannerResponse {
   success: boolean;
-  source: 'google_ads_api' | 'google_suggest_real' | 'cache';
-  isRealApiConfigured: boolean;
-  queryKeywords: string[];
-  location: string;
-  language: string;
-  results: RealKeywordMetric[];
+  code?: KeywordPlannerErrorCode;
+  step?: string;
+  source?: 'google_ads_api' | 'google_suggest_real' | 'cache';
+  isRealApiConfigured?: boolean;
+  queryKeywords?: string[];
+  location?: string;
+  language?: string;
+  results?: RealKeywordMetric[];
   cached?: boolean;
   message?: string;
+  details?: string;
   error?: string;
+  requestId?: string;
+  diagnostics?: KeywordPlannerDiagnostics;
 }
 
 export interface KeywordSuggestion {

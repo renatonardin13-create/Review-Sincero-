@@ -1,5 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { RealKeywordMetric, KeywordPlannerResponse } from '../types';
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+  RealKeywordMetric,
+  KeywordPlannerResponse,
+  KeywordPlannerErrorCode,
+  KeywordPlannerDiagnostics
+} from '../types';
 import {
   Search,
   Sparkles,
@@ -21,18 +26,61 @@ import {
   ChevronUp,
   Info,
   Layers,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Server,
+  KeyRound,
+  CheckCircle2,
+  XCircle,
+  Terminal
 } from 'lucide-react';
 
 interface KeywordPlannerViewProps {
   onUseKeywordForReview: (keyword: string) => void;
 }
 
+const ERROR_TRANSLATIONS: Record<KeywordPlannerErrorCode, { title: string; friendlyMessage: string; hint: string }> = {
+  'GOOGLE_ADS_NOT_CONFIGURED': {
+    title: 'Integração Google Ads Não Configurada',
+    friendlyMessage: 'Google Ads ainda não está configurado no servidor.',
+    hint: 'Adicione as variáveis GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CUSTOMER_ID, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET e GOOGLE_ADS_REFRESH_TOKEN no ambiente.'
+  },
+  'GOOGLE_ADS_AUTH_ERROR': {
+    title: 'Falha de Autenticação OAuth',
+    friendlyMessage: 'Não foi possível autenticar com o Google Ads.',
+    hint: 'Verifique se o GOOGLE_ADS_REFRESH_TOKEN, CLIENT_ID e CLIENT_SECRET são válidos e se o escopo https://www.googleapis.com/auth/adwords foi concedido.'
+  },
+  'GOOGLE_ADS_PERMISSION_ERROR': {
+    title: 'Permissão Insuficiente',
+    friendlyMessage: 'A conta autorizada não possui acesso à conta Google Ads.',
+    hint: 'Verifique se o e-mail autenticado no OAuth possui permissão de leitura na conta Google Ads especificada.'
+  },
+  'GOOGLE_ADS_CUSTOMER_ERROR': {
+    title: 'Customer ID Não Encontrado',
+    friendlyMessage: 'A conta Google Ads configurada não foi encontrada.',
+    hint: 'Verifique se o GOOGLE_ADS_CUSTOMER_ID possui 10 dígitos numéricos (sem hífens) e pertence a uma conta ativa do Google Ads.'
+  },
+  'GOOGLE_ADS_DEVELOPER_TOKEN_ERROR': {
+    title: 'Developer Token Não Autorizado',
+    friendlyMessage: 'O Developer Token do Google Ads não está autorizado para esta conta.',
+    hint: 'Verifique o status do seu Developer Token no Google Ads API Center (Test Account vs Basic/Standard Access).'
+  },
+  'GOOGLE_ADS_API_ERROR': {
+    title: 'Recusa da Google Ads API',
+    friendlyMessage: 'A Google Ads API recusou a consulta.',
+    hint: 'A requisição foi recusada pela API do Google Ads. Verifique os logs do servidor para inspecionar os detalhes retornados.'
+  },
+  'UNKNOWN_ERROR': {
+    title: 'Erro na Consulta',
+    friendlyMessage: 'Não foi possível consultar os dados. Consulte os logs do servidor para identificar a causa.',
+    hint: 'Ocorreu uma falha inesperada durante o processamento da consulta.'
+  }
+};
+
 export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
   onUseKeywordForReview
 }) => {
   // Search inputs
-  const [keywordInput, setKeywordInput] = useState<string>('air fryer');
+  const [keywordInput, setKeywordInput] = useState<string>('escova secadora');
   const [location, setLocation] = useState<string>('Brasil');
   const [language, setLanguage] = useState<string>('Português');
   const [includeIdeas, setIncludeIdeas] = useState<boolean>(true);
@@ -41,7 +89,17 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
   const [status, setStatus] = useState<'default' | 'loading' | 'success' | 'empty' | 'error'>('default');
   const [responseMeta, setResponseMeta] = useState<KeywordPlannerResponse | null>(null);
   const [results, setResults] = useState<RealKeywordMetric[]>([]);
+  
+  // Detailed Error & Diagnostic State
+  const [errorCode, setErrorCode] = useState<KeywordPlannerErrorCode | null>(null);
+  const [errorStep, setErrorStep] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  const [errorRequestId, setErrorRequestId] = useState<string | null>(null);
+  const [diagnostics, setDiagnostics] = useState<KeywordPlannerDiagnostics | null>(null);
+  const [showDiagnosticsPanel, setShowDiagnosticsPanel] = useState<boolean>(false);
+  const [diagnosticsLoading, setDiagnosticsLoading] = useState<boolean>(false);
+
   const [copiedKw, setCopiedKw] = useState<string | null>(null);
 
   // Filters & Sorting in Table
@@ -69,14 +127,33 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
   ];
 
   const quickExamples = [
+    'escova secadora',
     'air fryer',
     'creatina 100 pura',
     'smartwatch',
     'fone bluetooth',
-    'escova secadora',
     'aspirador robo',
     'colageno tipo 2'
   ];
+
+  const fetchDiagnostics = async () => {
+    setDiagnosticsLoading(true);
+    try {
+      const resp = await fetch('/api/keyword-planner/diagnostics');
+      if (resp.ok) {
+        const data: KeywordPlannerDiagnostics = await resp.json();
+        setDiagnostics(data);
+      }
+    } catch (e) {
+      console.warn('[KeywordPlannerView] Erro ao consultar diagnósticos:', e);
+    } finally {
+      setDiagnosticsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDiagnostics();
+  }, []);
 
   const handleSearch = async (overrideKeywords?: string) => {
     const rawKeywords = overrideKeywords !== undefined ? overrideKeywords : keywordInput;
@@ -84,12 +161,19 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
 
     if (!cleanKw) {
       setStatus('error');
+      setErrorCode('UNKNOWN_ERROR');
+      setErrorStep('0_input_validation');
       setErrorMessage('Informe ao menos uma palavra-chave para realizar a pesquisa.');
+      setErrorDetails('O campo de busca não pode estar vazio.');
       return;
     }
 
     setStatus('loading');
     setErrorMessage('');
+    setErrorDetails(null);
+    setErrorCode(null);
+    setErrorStep(null);
+    setErrorRequestId(null);
     setExpandedTrendKw(null);
 
     try {
@@ -106,13 +190,30 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
         })
       });
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || errData.details || 'Não foi possível consultar os dados. Verifique a configuração da integração e tente novamente.');
+      const data: KeywordPlannerResponse = await response.json().catch(() => ({
+        success: false,
+        code: 'UNKNOWN_ERROR' as const,
+        message: 'Falha ao interpretar resposta do servidor.'
+      }));
+
+      setResponseMeta(data);
+
+      if (data.diagnostics) {
+        setDiagnostics(data.diagnostics);
       }
 
-      const data: KeywordPlannerResponse = await response.json();
-      setResponseMeta(data);
+      if (!data.success) {
+        setStatus('error');
+        const code = (data.code as KeywordPlannerErrorCode) || 'UNKNOWN_ERROR';
+        setErrorCode(code);
+        setErrorStep(data.step || null);
+        setErrorRequestId(data.requestId || null);
+        setErrorDetails(data.details || null);
+
+        const translation = ERROR_TRANSLATIONS[code] || ERROR_TRANSLATIONS['UNKNOWN_ERROR'];
+        setErrorMessage(data.message || translation.friendlyMessage);
+        return;
+      }
 
       if (!data.results || data.results.length === 0) {
         setResults([]);
@@ -122,9 +223,13 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
         setStatus('success');
       }
     } catch (err: any) {
-      console.error('[KeywordPlannerView] Search error:', err);
+      console.error('[KeywordPlannerView] Search network exception:', err);
       setStatus('error');
-      setErrorMessage(err.message || 'Não foi possível consultar os dados. Verifique a configuração da integração e tente novamente.');
+      setErrorCode('UNKNOWN_ERROR');
+      setErrorStep('network_fetch');
+      setErrorMessage('Não foi possível consultar os dados. Verifique a conexão com o servidor e tente novamente.');
+      setErrorDetails(err.message || 'Erro de rede ao disparar requisição POST /api/keyword-planner');
+      fetchDiagnostics();
     }
   };
 
@@ -137,7 +242,6 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
   const handleExportCSV = () => {
     if (results.length === 0) return;
 
-    // Header strictly containing real fields
     const headers = [
       'keyword',
       'average_monthly_searches',
@@ -232,17 +336,28 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
               </h2>
             </div>
             <p className="text-xs md:text-sm text-[#94A3B8] leading-relaxed">
-              Consulte dados reais de pesquisas mensais, índice de concorrência, tendências de busca e estimativas de CPC para otimizar seus reviews e conversões.
+              Consulte dados reais de pesquisas mensais, índice de concorrência, histórico de buscas e estimativas de leilão do Google Ads para estruturar seus reviews sinceros.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            {responseMeta && (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowDiagnosticsPanel(!showDiagnosticsPanel);
+                if (!diagnostics) fetchDiagnostics();
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] border border-[#24334A] text-xs font-semibold text-[#CBD5E1] hover:text-white transition-colors cursor-pointer"
+            >
+              <Server className="w-3.5 h-3.5 text-[#38BDF8]" />
+              <span>Status da Integração</span>
+              <ChevronDown className={`w-3 h-3 text-[#777] transition-transform ${showDiagnosticsPanel ? 'rotate-180' : ''}`} />
+            </button>
+
+            {responseMeta && responseMeta.success && (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#131B2A] border border-[#24334A] text-xs">
-                <span className={`w-2 h-2 rounded-full ${responseMeta.isRealApiConfigured ? 'bg-[#22C55E]' : 'bg-[#F5C542]'} animate-pulse`} />
-                <span className="text-[#E2E8F0] font-medium">
-                  {responseMeta.isRealApiConfigured ? 'Google Ads API Conectada' : 'Google Search Discovery'}
-                </span>
+                <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+                <span className="text-[#E2E8F0] font-medium">Google Ads API Conectada</span>
                 {responseMeta.cached && (
                   <span className="text-[10px] bg-[#1E293B] text-[#94A3B8] px-1.5 py-0.5 rounded font-mono">
                     cache
@@ -252,6 +367,82 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
             )}
           </div>
         </div>
+
+        {/* DIAGNOSTICS SLIDE-DOWN PANEL */}
+        {showDiagnosticsPanel && (
+          <div className="mt-6 pt-5 border-t border-[#1E293B] space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                <KeyRound className="w-4 h-4 text-[#F5C542]" />
+                <span>Diagnóstico das Variáveis de Ambiente (Google Ads API)</span>
+              </div>
+              <button
+                type="button"
+                onClick={fetchDiagnostics}
+                disabled={diagnosticsLoading}
+                className="flex items-center gap-1.5 text-xs text-[#38BDF8] hover:underline disabled:opacity-50 cursor-pointer"
+              >
+                <RefreshCw className={`w-3 h-3 ${diagnosticsLoading ? 'animate-spin' : ''}`} />
+                <span>Atualizar status</span>
+              </button>
+            </div>
+
+            <p className="text-xs text-[#94A3B8]">
+              Por motivos de segurança, os valores das credenciais nunca são expostos. Apenas a presença das variáveis é verificada no servidor.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                { name: 'GOOGLE_ADS_CLIENT_ID', label: 'Client ID (OAuth)', status: diagnostics?.googleAds.clientId, required: true },
+                { name: 'GOOGLE_ADS_CLIENT_SECRET', label: 'Client Secret (OAuth)', status: diagnostics?.googleAds.clientSecret, required: true },
+                { name: 'GOOGLE_ADS_REFRESH_TOKEN', label: 'Refresh Token (OAuth)', status: diagnostics?.googleAds.refreshToken, required: true },
+                { name: 'GOOGLE_ADS_DEVELOPER_TOKEN', label: 'Developer Token', status: diagnostics?.googleAds.developerToken, required: true },
+                { name: 'GOOGLE_ADS_CUSTOMER_ID', label: 'Customer ID (10 dígitos)', status: diagnostics?.googleAds.customerId, required: true },
+                { name: 'GOOGLE_ADS_LOGIN_CUSTOMER_ID', label: 'Login Customer ID (MCC)', status: diagnostics?.googleAds.loginCustomerId, required: false }
+              ].map((item, idx) => {
+                const isConfigured = item.status === 'configured';
+                return (
+                  <div
+                    key={idx}
+                    className={`p-3 rounded-xl border flex items-center justify-between ${
+                      isConfigured
+                        ? 'bg-[#0E1A16] border-[#10B981]/30'
+                        : item.required
+                        ? 'bg-[#1F1212] border-[#EF4444]/30'
+                        : 'bg-[#131B2A] border-[#24334A]'
+                    }`}
+                  >
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] font-mono font-bold text-white block">
+                        {item.name}
+                      </span>
+                      <span className="text-[10px] text-[#94A3B8] block">
+                        {item.label} {!item.required && '(opcional)'}
+                      </span>
+                    </div>
+                    <div>
+                      {isConfigured ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#10B981]/20 text-[#34D399] border border-[#10B981]/40">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>CONFIGURADO</span>
+                        </span>
+                      ) : (
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                          item.required
+                            ? 'bg-[#EF4444]/20 text-[#F87171] border border-[#EF4444]/40'
+                            : 'bg-[#334155]/30 text-[#94A3B8] border border-[#475569]'
+                        }`}>
+                          <XCircle className="w-3 h-3" />
+                          <span>{item.required ? 'AUSENTE' : 'NÃO CONFIGURADO'}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* SEARCH FORM CARD */}
@@ -270,7 +461,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleSearch();
                 }}
-                placeholder="Ex: air fryer, air fryer barata, melhor air fryer"
+                placeholder="Ex: escova secadora, air fryer, creatina 100 pura"
                 className="w-full bg-[#07090F] border border-[#1E293B] rounded-xl pl-10 pr-4 py-3 text-xs md:text-sm font-semibold text-white placeholder-[#555] focus:outline-none focus:border-[#3B82F6] transition-colors"
               />
               <Search className="w-4 h-4 text-[#777] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -330,7 +521,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
                 onChange={(e) => setIncludeIdeas(e.target.checked)}
                 className="w-4 h-4 rounded bg-[#07090F] border-[#1E293B] text-[#2563EB] focus:ring-0 cursor-pointer"
               />
-              <span>Gerar ideias e termos relacionados reais</span>
+              <span>Gerar ideias e termos relacionados (Google Ads API)</span>
             </label>
           </div>
 
@@ -343,7 +534,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
             {status === 'loading' ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Consultando dados de palavras-chave...</span>
+                <span>Consultando Google Ads API...</span>
               </>
             ) : (
               <>
@@ -384,7 +575,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
           <div className="max-w-md mx-auto space-y-1">
             <h3 className="text-base font-bold text-white">Planeje seus Reviews com Dados Reais</h3>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
-              Digite uma palavra-chave acima para descobrir termos de alta intenção de compra, concorrência no Google e criar páginas focadas em conversão real.
+              Consulte métricas oficiais de volume de buscas mensais, histórico e índice de leilão diretamente da Google Ads API para a sua palavra-chave.
             </p>
           </div>
         </div>
@@ -397,36 +588,119 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
             <RefreshCw className="w-6 h-6 text-[#38BDF8] animate-spin" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-white">Consultando dados de palavras-chave...</h3>
+            <h3 className="text-base font-bold text-white">Consultando Google Ads API...</h3>
             <p className="text-xs text-[#94A3B8]">
-              Consultando métricas e ideias relacionadas para <strong className="text-white">{keywordInput}</strong>...
+              Executando chamada oficial na Google Ads API para <strong className="text-white">{keywordInput}</strong>...
             </p>
           </div>
         </div>
       )}
 
-      {/* STATE: ERROR */}
+      {/* STATE: ERROR WITH DETAILED DIAGNOSTIC */}
       {status === 'error' && (
-        <div className="bg-[#1A0C0C] border border-[#7F1D1D]/60 rounded-2xl p-6 md:p-8 space-y-4 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-[#EF4444]">
-            <AlertCircle className="w-6 h-6" />
+        <div className="bg-[#140A0A] border border-[#7F1D1D]/70 rounded-2xl p-6 md:p-8 space-y-5 shadow-2xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-[#EF4444] shrink-0 mt-0.5">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-base md:text-lg font-bold text-white">
+                    {errorCode && ERROR_TRANSLATIONS[errorCode]?.title
+                      ? ERROR_TRANSLATIONS[errorCode].title
+                      : 'Falha na Consulta do Google Ads'}
+                  </h3>
+                  {errorCode && (
+                    <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-red-950/80 border border-red-800/60 text-red-300">
+                      {errorCode}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs md:text-sm text-[#FCA5A5] font-medium leading-relaxed">
+                  {errorMessage || 'Não foi possível consultar os dados.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleSearch()}
+                className="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Tentar Novamente</span>
+              </button>
+            </div>
           </div>
-          <div className="max-w-md mx-auto space-y-1">
-            <h3 className="text-base font-bold text-white">
-              Não foi possível consultar os dados
-            </h3>
-            <p className="text-xs text-[#F87171] leading-relaxed">
-              {errorMessage || 'Verifique a configuração da integração e tente novamente.'}
-            </p>
+
+          {/* Granular Diagnostic Info */}
+          <div className="bg-[#0A0505] border border-[#450A0A] rounded-xl p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#F87171] uppercase tracking-wider">
+              <Terminal className="w-3.5 h-3.5" />
+              <span>Detalhes Técnicos do Diagnóstico</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              {errorStep && (
+                <div className="bg-[#120707] p-2.5 rounded-lg border border-[#300E0E]">
+                  <span className="text-[#999] text-[10px] uppercase block">Etapa da Operação:</span>
+                  <span className="font-mono font-bold text-white">{errorStep}</span>
+                </div>
+              )}
+
+              {errorRequestId && (
+                <div className="bg-[#120707] p-2.5 rounded-lg border border-[#300E0E]">
+                  <span className="text-[#999] text-[10px] uppercase block">Google Ads Request ID:</span>
+                  <span className="font-mono text-white text-[11px] break-all">{errorRequestId}</span>
+                </div>
+              )}
+
+              {errorDetails && (
+                <div className="md:col-span-2 bg-[#120707] p-2.5 rounded-lg border border-[#300E0E]">
+                  <span className="text-[#999] text-[10px] uppercase block">Mensagem do Servidor:</span>
+                  <span className="text-[#FCA5A5] leading-relaxed">{errorDetails}</span>
+                </div>
+              )}
+            </div>
+
+            {errorCode && ERROR_TRANSLATIONS[errorCode]?.hint && (
+              <div className="pt-2 text-xs text-[#E2E8F0] bg-blue-950/20 border border-blue-900/30 rounded-lg p-3">
+                <strong className="text-[#60A5FA]">Recomendação: </strong>
+                <span>{ERROR_TRANSLATIONS[errorCode].hint}</span>
+              </div>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={() => handleSearch()}
-            className="inline-flex items-center gap-2 bg-[#1E293B] hover:bg-[#334155] text-white px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Tentar Novamente</span>
-          </button>
+
+          {/* Quick Environment Variables Check in Error Box */}
+          <div className="space-y-2 pt-1">
+            <span className="text-[11px] font-bold text-[#AAA] uppercase tracking-wider block">
+              Status das Variáveis de Ambiente no Servidor:
+            </span>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              {[
+                { name: 'CLIENT_ID', val: diagnostics?.googleAds.clientId },
+                { name: 'CLIENT_SECRET', val: diagnostics?.googleAds.clientSecret },
+                { name: 'REFRESH_TOKEN', val: diagnostics?.googleAds.refreshToken },
+                { name: 'DEVELOPER_TOKEN', val: diagnostics?.googleAds.developerToken },
+                { name: 'CUSTOMER_ID', val: diagnostics?.googleAds.customerId }
+              ].map((v, i) => {
+                const isOk = v.val === 'configured';
+                return (
+                  <div
+                    key={i}
+                    className={`px-2.5 py-1.5 rounded-lg border text-[10px] flex items-center justify-between ${
+                      isOk ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-300' : 'bg-red-950/40 border-red-800/50 text-red-300'
+                    }`}
+                  >
+                    <span className="font-mono font-bold">{v.name}</span>
+                    <span className="font-bold">{isOk ? '✓ OK' : '✗ AUSENTE'}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
@@ -438,7 +712,7 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
           </div>
           <h3 className="text-base font-bold text-white">Nenhuma palavra-chave encontrada.</h3>
           <p className="text-xs text-[#94A3B8] max-w-sm mx-auto">
-            Tente buscar por termos mais amplos ou variar a localização e idioma.
+            A Google Ads API não retornou dados de volume para este termo específico. Tente termos com grafia alternativa ou mais abrangentes.
           </p>
         </div>
       )}
@@ -446,17 +720,6 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
       {/* STATE: SUCCESS WITH RESULTS TABLE */}
       {status === 'success' && (
         <div className="space-y-4">
-          {/* Informative source / config notice */}
-          {responseMeta?.message && (
-            <div className="bg-[#0B1324] border border-[#1E3A8A]/50 rounded-2xl p-4 flex items-start gap-3">
-              <Info className="w-4 h-4 text-[#60A5FA] shrink-0 mt-0.5" />
-              <div className="space-y-0.5 text-xs text-[#CBD5E1]">
-                <strong className="text-white font-semibold">Fonte dos Dados: </strong>
-                <span>{responseMeta.message}</span>
-              </div>
-            </div>
-          )}
-
           {/* FILTERS & STATS BAR */}
           <div className="bg-[#0D111A] border border-[#1E293B] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3 flex-1">
@@ -684,7 +947,6 @@ export const KeywordPlannerView: React.FC<KeywordPlannerViewProps> = ({
                                   </span>
                                 </div>
 
-                                {/* Sparkline Bar Representation of Real Monthly Volumes */}
                                 <div className="grid grid-cols-6 sm:grid-cols-12 gap-2 pt-2 items-end h-28">
                                   {(() => {
                                     const maxVal = Math.max(...item.monthlySearchVolumes.map((m) => m.searches), 1);
