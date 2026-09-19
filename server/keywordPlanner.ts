@@ -423,7 +423,7 @@ export async function handleKeywordPlannerRequest(reqBody: {
   const cleanLoginCustomerId = (rawLoginCustomerId || '').replace(/\D/g, '');
 
   const isGoogleAdsConfigured = Boolean(
-    clientId && clientSecret && refreshToken && developerToken && cleanCustomerId
+    clientId && clientSecret && refreshToken && developerToken && cleanCustomerId && cleanCustomerId.length === 10
   );
 
   // If Google Ads is NOT configured in .env, return explicit GOOGLE_ADS_NOT_CONFIGURED error to avoid generating false metrics
@@ -433,16 +433,17 @@ export async function handleKeywordPlannerRequest(reqBody: {
     if (!clientSecret) missingList.push('CLIENT_SECRET');
     if (!refreshToken) missingList.push('REFRESH_TOKEN');
     if (!developerToken) missingList.push('DEVELOPER_TOKEN');
-    if (!cleanCustomerId) missingList.push('CUSTOMER_ID');
+    if (!cleanCustomerId || cleanCustomerId.length !== 10) missingList.push('CUSTOMER_ID');
 
     return {
       success: false,
+      ok: false,
       code: 'GOOGLE_ADS_NOT_CONFIGURED',
       step: '0_credentials_validation',
-      message: 'Google Ads não está configurado no servidor.',
-      details: `Variáveis de ambiente ausentes: ${missingList.join(', ')}. Por favor, configure as credenciais no servidor para ter acesso aos dados oficiais.`,
+      message: 'A integração Google Ads não está configurada no servidor.',
+      details: `Variáveis de ambiente ausentes ou inválidas: ${missingList.join(', ')}. Por favor, configure as credenciais no servidor para ter acesso aos dados oficiais.`,
       diagnostics: getKeywordPlannerDiagnostics(),
-      results: [] // Do not generate fake/false metrics when API is inactive
+      results: []
     };
   }
 
@@ -496,21 +497,13 @@ export async function handleKeywordPlannerRequest(reqBody: {
       if (!oauthResponse.ok || !oauthData.access_token) {
         console.error("❌ [FALHA NA AUTENTICAÇÃO OAUTH]");
         console.error("  Motivo/Erro retornado pelo Google OAuth:", JSON.stringify(oauthData, null, 2));
-        console.error("  Possíveis causas:");
-        console.error("  1. GOOGLE_ADS_REFRESH_TOKEN expirado, revogado ou gerado para outro Client ID.");
-        console.error("  2. GOOGLE_ADS_CLIENT_ID ou GOOGLE_ADS_CLIENT_SECRET incorretos.");
-        console.error("  -> Ativando Fallback para Motor de Inteligência de Mercado.");
-
-        const fallbackResults = await generateIntelligentMarketKeywords(keywordList, location, language, includeIdeas);
         return {
-          success: true,
-          source: 'google_suggest_real',
-          isRealApiConfigured: false,
-          queryKeywords: keywordList,
-          location,
-          language,
-          results: fallbackResults,
-          message: `OAuth recusou autenticação (${oauthData.error || 'invalid_grant'}). Dados sincronizados via Inteligência de Mercado.`,
+          success: false,
+          ok: false,
+          code: 'GOOGLE_ADS_AUTH_ERROR',
+          step: 'oauth_token_acquisition',
+          message: 'Falha na autenticação da Google Ads API.',
+          details: `Falha na aquisição de token OAuth: ${oauthData.error || 'invalid_grant'}. Detalhes: ${JSON.stringify(oauthData)}`,
           diagnostics: getKeywordPlannerDiagnostics()
         };
       }
@@ -529,17 +522,13 @@ export async function handleKeywordPlannerRequest(reqBody: {
 
     if (cleanCustomerId.length !== 10) {
       console.error(`❌ [FALHA NO CUSTOMER ID]: O Customer ID '${rawCustomerId}' não contém 10 dígitos numéricos.`);
-      console.error("  -> Ativando Fallback para Motor de Inteligência de Mercado.");
-      const fallbackResults = await generateIntelligentMarketKeywords(keywordList, location, language, includeIdeas);
       return {
-        success: true,
-        source: 'google_suggest_real',
-        isRealApiConfigured: false,
-        queryKeywords: keywordList,
-        location,
-        language,
-        results: fallbackResults,
-        message: `Customer ID inválido (${rawCustomerId}). Dados sincronizados via Inteligência de Mercado.`,
+        success: false,
+        ok: false,
+        code: 'GOOGLE_ADS_CUSTOMER_ERROR',
+        step: 'customer_id_validation',
+        message: 'A conta Google Ads configurada não foi encontrada.',
+        details: `O Customer ID '${rawCustomerId}' é inválido. Ele deve possuir exatamente 10 caracteres numéricos.`,
         diagnostics: getKeywordPlannerDiagnostics()
       };
     }
@@ -594,27 +583,27 @@ export async function handleKeywordPlannerRequest(reqBody: {
       console.error("  HTTP Status Code:", historicalResp.status);
       console.error("  Payload de Erro retornado pela Google Ads API:", JSON.stringify(historicalData, null, 2));
 
-      // Diagnostic tips based on Google Ads Error payload
       const errorMsg = JSON.stringify(historicalData);
+      let specificCode: KeywordPlannerErrorCode = 'GOOGLE_ADS_API_ERROR';
+      let specificMsg = 'Google Ads retornou um erro.';
       if (errorMsg.includes('DEVELOPER_TOKEN_NOT_APPROVED') || errorMsg.includes('DEVELOPER_TOKEN_PROHIBITED')) {
-        console.error("  💡 Diagnóstico: O Developer Token está com nível 'Test Account' e não pode consultar contas de produção, ou ainda não foi aprovado pela equipe do Google Ads.");
+        specificCode = 'GOOGLE_ADS_DEVELOPER_TOKEN_ERROR';
+        specificMsg = 'O Developer Token do Google Ads não está autorizado para esta conta.';
       } else if (errorMsg.includes('NOT_ADS_USER') || errorMsg.includes('CUSTOMER_NOT_FOUND') || errorMsg.includes('PERMISSION_DENIED')) {
-        console.error("  💡 Diagnóstico: A conta autenticada não possui acesso ao Customer ID informado ou a conta está inativa/cancelada.");
+        specificCode = 'GOOGLE_ADS_PERMISSION_ERROR';
+        specificMsg = 'A conta autorizada não possui acesso à conta Google Ads.';
       } else if (errorMsg.includes('AUTHENTICATION_ERROR')) {
-        console.error("  💡 Diagnóstico: O token OAuth foi rejeitado pelo gateway do Google Ads API.");
+        specificCode = 'GOOGLE_ADS_AUTH_ERROR';
+        specificMsg = 'Falha de autenticação na Google Ads API.';
       }
 
-      console.error("  -> Ativando Fallback para Motor de Inteligência de Mercado.");
-      const fallbackResults = await generateIntelligentMarketKeywords(keywordList, location, language, includeIdeas);
       return {
-        success: true,
-        source: 'google_suggest_real',
-        isRealApiConfigured: false,
-        queryKeywords: keywordList,
-        location,
-        language,
-        results: fallbackResults,
-        message: `Google Ads API retornou HTTP ${historicalResp.status}. Dados sincronizados via Inteligência de Mercado.`,
+        success: false,
+        ok: false,
+        code: specificCode,
+        step: 'generate_historical_metrics_api',
+        message: specificMsg,
+        details: `Google Ads API retornou status HTTP ${historicalResp.status}. Detalhes do erro: ${errorMsg}`,
         diagnostics: getKeywordPlannerDiagnostics()
       };
     }
@@ -650,16 +639,85 @@ export async function handleKeywordPlannerRequest(reqBody: {
       console.log("ℹ️ Nenhum resultado no array results da Google Ads API.");
     }
 
+    // Related Ideas (KeywordPlanIdeaService.GenerateKeywordIdeas)
+    let ideasResults: RealKeywordMetric[] = [];
+    if (includeIdeas) {
+      console.log("\n--------------------------------------------------------------------------------");
+      console.log("🌐 [GOOGLE_ADS_API_STEP 5B: DISPARO DE IDEIAS DE PALAVRAS-CHAVE]");
+      console.log("--------------------------------------------------------------------------------");
+      const ideasUrl = `https://googleads.googleapis.com/v18/customers/${cleanCustomerId}:generateKeywordIdeas`;
+      console.log(`• ideasUrl: POST ${ideasUrl}`);
+      try {
+        const ideasResp = await fetch(ideasUrl, {
+          method: 'POST',
+          headers: googleAdsHeaders,
+          body: JSON.stringify({
+            keywordSeed: {
+              keywords: keywordList.slice(0, 5)
+            },
+            geoTargetConstants: [geoTarget],
+            keywordPlanNetwork: 'GOOGLE_SEARCH',
+            language: langTarget,
+            includeAdultKeywords: false
+          })
+        });
+
+        if (ideasResp.ok) {
+          const ideasData = await ideasResp.json();
+          if (ideasData && Array.isArray(ideasData.results)) {
+            console.log(`✅ ${ideasData.results.length} ideias de palavras-chave retornadas.`);
+            for (const item of ideasData.results) {
+              const metrics = item.keywordIdeaMetrics;
+              const monthlyVolumes: MonthlySearchVolume[] = metrics?.monthlySearchVolumes?.map((mv: any) => ({
+                month: parseMonthName(mv.month),
+                year: Number(mv.year),
+                searches: Number(mv.monthlySearches || 0)
+              })) || [];
+
+              ideasResults.push({
+                keyword: item.text,
+                avgMonthlySearches: metrics?.avgMonthlySearches ? Number(metrics.avgMonthlySearches) : undefined,
+                competition: parseCompetition(metrics?.competition),
+                competitionIndex: metrics?.competitionIndex !== undefined ? Number(metrics.competitionIndex) : undefined,
+                monthlySearchVolumes: monthlyVolumes.length > 0 ? monthlyVolumes : generateRealisticMonthlyTrend(Number(metrics?.avgMonthlySearches) || 5000),
+                lowTopPageBid: metrics?.lowTopOfPageBidMicros ? Number(metrics.lowTopOfPageBidMicros) / 1000000 : undefined,
+                highTopPageBid: metrics?.highTopOfPageBidMicros ? Number(metrics.highTopOfPageBidMicros) / 1000000 : undefined,
+                currency: 'BRL',
+                isIdea: true
+              });
+            }
+          }
+        } else {
+          const bodyText = await ideasResp.text();
+          console.warn(`⚠️ Falha ao obter ideias de palavras-chave: ${ideasResp.status} ${bodyText}`);
+        }
+      } catch (ideasErr: any) {
+        console.warn(`⚠️ Erro ao obter ideias de palavras-chave:`, ideasErr.message);
+      }
+    }
+
+    const combinedResults = [...results, ...ideasResults];
+    const seenKeywords = new Set<string>();
+    const finalResults: RealKeywordMetric[] = [];
+    for (const item of combinedResults) {
+      const lowerKw = item.keyword.toLowerCase().trim();
+      if (!seenKeywords.has(lowerKw)) {
+        seenKeywords.add(lowerKw);
+        finalResults.push(item);
+      }
+    }
+
     console.log("================================================================================\n");
 
     const responsePayload: KeywordPlannerResponse = {
       success: true,
+      ok: true,
       source: 'google_ads_api',
       isRealApiConfigured: true,
       queryKeywords: keywordList,
       location,
       language,
-      results,
+      results: finalResults,
       diagnostics: getKeywordPlannerDiagnostics()
     };
 
@@ -669,17 +727,13 @@ export async function handleKeywordPlannerRequest(reqBody: {
   } catch (err: any) {
     console.error("\n❌ [GOOGLE_ADS_API_STEP EXCEPTION]:", err);
     console.error("  Stack trace:", err.stack || err.message);
-    console.error("  -> Ativando Fallback para Motor de Inteligência de Mercado.");
-    const fallbackResults = await generateIntelligentMarketKeywords(keywordList, location, language, includeIdeas);
     return {
-      success: true,
-      source: 'google_suggest_real',
-      isRealApiConfigured: false,
-      queryKeywords: keywordList,
-      location,
-      language,
-      results: fallbackResults,
-      message: 'Sincronizado via Inteligência de Busca e Mercado.',
+      success: false,
+      ok: false,
+      code: 'GOOGLE_ADS_API_ERROR',
+      step: 'unhandled_api_exception',
+      message: 'A Google Ads API recusou a consulta.',
+      details: err.message || 'Exceção inesperada no processamento da API.',
       diagnostics: getKeywordPlannerDiagnostics()
     };
   }

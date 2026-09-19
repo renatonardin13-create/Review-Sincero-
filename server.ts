@@ -1095,6 +1095,24 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     }
   });
 
+  // 1. CORRIGIR HTTP 405: Rejeitar qualquer método que não seja POST em /api/keyword-planner
+  app.all("/api/keyword-planner", (req, res, next) => {
+    console.log(`[Keyword Planner Audit] Request recebido`);
+    console.log(`  → método: ${req.method}`);
+    console.log(`  → rota: ${req.originalUrl}`);
+
+    if (req.method !== "POST") {
+      console.log(`  → método rejeitado (405): ${req.method}`);
+      return res.status(405).json({
+        ok: false,
+        success: false,
+        code: "METHOD_NOT_ALLOWED",
+        message: "Método HTTP não permitido."
+      });
+    }
+    next();
+  });
+
   // API Route: Real Keyword Planner (Google Ads API & Real Query Discovery)
   app.post("/api/keyword-planner", async (req, res) => {
     try {
@@ -1102,17 +1120,22 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
       if (!checkRateLimit(clientIp)) {
         return res.status(429).json({
           success: false,
+          ok: false,
           code: "UNKNOWN_ERROR",
           message: "Limite de requisições excedido. Aguarde alguns instantes antes de realizar nova pesquisa.",
           details: "Rate limit ativo (máximo de requisições por minuto atingido)."
         });
       }
 
-      const { keywords, location, language, includeIdeas } = req.body;
+      const { keywords, location = "Brasil", language = "Português", includeIdeas } = req.body;
+
+      // → payload validado
+      console.log(`  → payload validado: keywords=${JSON.stringify(keywords)}, location=${location}, language=${language}, includeIdeas=${includeIdeas}`);
 
       if (!keywords || (typeof keywords === 'string' && !keywords.trim()) || (Array.isArray(keywords) && keywords.length === 0)) {
         return res.status(400).json({
           success: false,
+          ok: false,
           code: "UNKNOWN_ERROR",
           step: "0_input_validation",
           message: "Informe ao menos uma palavra-chave válida para consulta.",
@@ -1120,6 +1143,32 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
         });
       }
 
+      // Check credentials before calling the planner
+      const clientId = process.env.GOOGLE_ADS_CLIENT_ID?.trim();
+      const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET?.trim();
+      const refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN?.trim();
+      const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN?.trim();
+      const rawCustomerId = process.env.GOOGLE_ADS_CUSTOMER_ID?.trim();
+      const cleanCustomerId = (rawCustomerId || '').replace(/\D/g, '');
+
+      const isConfigured = Boolean(
+        clientId && clientSecret && refreshToken && developerToken && cleanCustomerId && cleanCustomerId.length === 10
+      );
+
+      console.log(`  → credenciais disponíveis: ${isConfigured ? 'SIM ✅' : 'NÃO ❌'}`);
+
+      if (!isConfigured) {
+        console.log(`  → retornando GOOGLE_ADS_NOT_CONFIGURED (503)`);
+        return res.status(503).json({
+          success: false,
+          ok: false,
+          code: "GOOGLE_ADS_NOT_CONFIGURED",
+          message: "A integração Google Ads não está configurada no servidor.",
+          details: "Variáveis de ambiente ausentes ou inválidas no servidor. Por favor, configure as credenciais."
+        });
+      }
+
+      console.log(`  → chamada Google Ads`);
       const plannerResult = await handleKeywordPlannerRequest({
         keywords,
         location,
@@ -1127,16 +1176,35 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
         includeIdeas: includeIdeas !== false
       });
 
-      // If backend reports an explicit failure (e.g. not configured, permission, token error)
+      console.log(`  → resposta Google Ads: success=${plannerResult.success}, code=${plannerResult.code || 'SUCCESS'}`);
+
       if (!plannerResult.success) {
-        return res.status(200).json(plannerResult);
+        // Map different codes to their corresponding semantically correct status codes
+        const code = plannerResult.code;
+        console.log(`  → normalização de erro: ${code}`);
+        let statusCode = 400;
+        if (code === "GOOGLE_ADS_NOT_CONFIGURED") {
+          statusCode = 503;
+        } else if (code === "GOOGLE_ADS_AUTH_ERROR") {
+          statusCode = 401;
+        } else if (code === "GOOGLE_ADS_DEVELOPER_TOKEN_ERROR" || code === "GOOGLE_ADS_PERMISSION_ERROR") {
+          statusCode = 403;
+        } else if (code === "GOOGLE_ADS_CUSTOMER_ERROR") {
+          statusCode = 400;
+        } else {
+          statusCode = 502; // Bad Gateway on general API error
+        }
+
+        return res.status(statusCode).json(plannerResult);
       }
 
+      console.log(`  → normalização e resposta frontend`);
       res.json(plannerResult);
     } catch (err: any) {
       console.error("[server] Erro não tratado no Planejador de Palavras-chave:", err);
       res.status(500).json({
         success: false,
+        ok: false,
         code: "UNKNOWN_ERROR",
         step: "unhandled_server_exception",
         message: "Não foi possível consultar os dados. Consulte os logs do servidor para identificar a causa.",

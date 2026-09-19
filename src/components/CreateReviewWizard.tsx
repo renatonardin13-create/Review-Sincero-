@@ -496,25 +496,10 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
       let isReal = response.isRealApiConfigured || false;
       let resultsList = response.results || [];
 
-      // If Google Ads is NOT configured, or returns an error of missing integration, we degrade gracefully to estimated
-      if (!response.success && response.code === 'GOOGLE_ADS_NOT_CONFIGURED') {
-        setKeywordWarning('Google Ads não configurado (Exibindo Projeções Estimadas de Volume)');
+      if (!response.success) {
+        setKeywordWarning(response.message || 'A integração com o Google Ads não está configurada ou ativa no servidor.');
         isReal = false;
-        
-        // Generate high-intent estimated keywords rather than having an empty list
-        resultsList = [
-          { keyword: `${term} é bom mesmo`, avgMonthlySearches: 18900, competition: 'MÉDIA', lowTopPageBid: 0.80, highTopPageBid: 1.60 },
-          { keyword: `${term} reclame aqui`, avgMonthlySearches: 24300, competition: 'ALTA', lowTopPageBid: 0.50, highTopPageBid: 1.10 },
-          { keyword: `cupom de desconto ${term}`, avgMonthlySearches: 16700, competition: 'ALTA', lowTopPageBid: 1.20, highTopPageBid: 3.20 },
-          { keyword: `como usar ${term}`, avgMonthlySearches: 8400, competition: 'BAIXA', lowTopPageBid: 0.30, highTopPageBid: 0.75 }
-        ];
-      } else if (!response.success) {
-        setKeywordWarning(response.message || 'Erro ao consultar Google Ads (Exibindo Estimativas)');
-        isReal = false;
-        resultsList = [
-          { keyword: `${term} é bom mesmo`, avgMonthlySearches: 18900, competition: 'MÉDIA', lowTopPageBid: 0.80, highTopPageBid: 1.60 },
-          { keyword: `${term} reclame aqui`, avgMonthlySearches: 24300, competition: 'ALTA', lowTopPageBid: 0.50, highTopPageBid: 1.10 }
-        ];
+        resultsList = [];
       }
 
       const formatted = keywordService.formatToSuggestions(resultsList, isReal);

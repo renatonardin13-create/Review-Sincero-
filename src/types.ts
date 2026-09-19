@@ -114,6 +114,7 @@ export interface KeywordPlannerDiagnostics {
 
 export interface KeywordPlannerResponse {
   success: boolean;
+  ok?: boolean;
   code?: KeywordPlannerErrorCode;
   step?: string;
   source?: 'google_ads_api' | 'google_suggest_real' | 'cache';
