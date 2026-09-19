@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { resolveOfficialProductUrl } from '../utils/urlResolver';
 import { TrendItem } from '../types';
 import {
   TrendingUp,
@@ -613,7 +614,17 @@ export const TrendsView: React.FC<TrendsViewProps> = ({
               const trendThumbnail =
                 trend.thumbnail ||
                 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80';
-              const trendRealUrl = (trend as any).realUrl || `https://lista.mercadolivre.com.br/${encodeURIComponent(trend.searchTerm || trend.title)}`;
+              
+              const resolvedUrl = resolveOfficialProductUrl({
+                  platform: isShopee ? 'Shopee' : 'Mercado Livre',
+                  productUrl: (trend as any).realUrl,
+                  searchTerm: trend.searchTerm || trend.title
+              });
+
+              const isProduct = isShopee 
+                  ? resolvedUrl?.includes('/product/') 
+                  : resolvedUrl?.includes('/p/') || resolvedUrl?.includes('produto.');
+
               const isCopied = copiedId === (trend.id || `${idx}`);
 
               return (
@@ -728,15 +739,15 @@ export const TrendsView: React.FC<TrendsViewProps> = ({
                       )}
                     </button>
 
-                    {trendRealUrl && (
+                    {resolvedUrl && (
                       <a
-                        href={trendRealUrl}
+                        href={resolvedUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 text-[11px] font-semibold text-[#8E8E8E] hover:text-white bg-[#1A1A1A] hover:bg-[#252525] border border-[#2A2A2A] px-3.5 py-2.5 rounded-xl transition-all"
-                        title={isShopee ? 'Ver no site da Shopee' : 'Ver em lista.mercadolivre.com.br'}
+                        title={isShopee ? (isProduct ? 'Ver na Shopee' : 'Pesquisar na Shopee') : (isProduct ? 'Ver no Mercado Livre' : 'Pesquisar no Mercado Livre')}
                       >
-                        <span>{isShopee ? 'Shopee' : 'Meli'}</span>
+                        <span>{isShopee ? (isProduct ? 'Ver na Shopee' : 'Pesquisar na Shopee') : (isProduct ? 'Ver no Mercado Livre' : 'Pesquisar no Mercado Livre')}</span>
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     )}

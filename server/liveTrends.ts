@@ -2,6 +2,7 @@
  * Live Trends Service for Mercado Livre (tendencias.mercadolivre.com.br) and Shopee Brasil
  * Direct, real-time connection with official websites and APIs.
  */
+import { resolveOfficialProductUrl } from './urlResolver';
 
 export interface LiveTrendRawItem {
   keyword: string;
@@ -235,7 +236,11 @@ export function formatMeliTrendItems(
       suggestedDescription: `Tendência oficial extraída ao vivo de tendencias.mercadolivre.com.br. Produto com forte tração de buscas e excelente conversão para review honesto.`,
       platform: 'Mercado Livre',
       thumbnail,
-      realUrl: t.url || `https://lista.mercadolivre.com.br/${encodeURIComponent(t.keyword)}`,
+      realUrl: resolveOfficialProductUrl({
+        platform: 'Mercado Livre',
+        productUrl: t.url,
+        searchTerm: t.keyword
+      }) || `https://lista.mercadolivre.com.br/${encodeURIComponent(t.keyword)}`,
       soldQuantity: t.filter_result ? Math.round(t.filter_result) : 500,
       trendType: (t.trend_type === 'INCREASED_SEARCH_GROWTH'
         ? 'GROWTH'
@@ -312,7 +317,10 @@ export async function fetchShopeeLiveTrends(category = 'Tech'): Promise<Formatte
       suggestedDescription: `Campeão absoluto de vendas na Shopee Brasil. Alta procura por análises e comparativos antes da compra.`,
       platform: 'Shopee',
       thumbnail: item.img,
-      realUrl: `https://shopee.com.br/search?keyword=${encodeURIComponent(item.query)}`,
+      realUrl: resolveOfficialProductUrl({
+        platform: 'Shopee',
+        searchTerm: item.query
+      }) || `https://shopee.com.br/search?keyword=${encodeURIComponent(item.query)}`,
       rating: item.rating
     };
   });
