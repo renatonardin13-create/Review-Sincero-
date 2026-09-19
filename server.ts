@@ -308,6 +308,7 @@ async function startServer() {
           else if (type === 'popular') rawList = meliData.shortTailTrends;
 
           meliItems = formatMeliTrendItems(rawList);
+          console.log(`[server] Meli trends count for platform ${platform}:`, meliItems?.length);
           if (!meliItems || meliItems.length === 0) {
             console.log("[server] Scraping returned 0 live Mercado Livre trends, triggering fallback.");
             meliItems = generateMeliFallbackProducts(category);
@@ -321,6 +322,7 @@ async function startServer() {
       if (platform === 'shopee' || platform === 'all') {
         try {
           shopeeItems = await fetchShopeeLiveTrends(category);
+          console.log(`[server] Shopee trends count for platform ${platform}:`, shopeeItems?.length);
           if (!shopeeItems || shopeeItems.length === 0) {
             console.log("[server] Shopee fetched 0 trends, triggering fallback.");
             shopeeItems = generateShopeeFallbackProducts(category);
@@ -1334,8 +1336,7 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
             productImage: item.thumbnail?.replace('-I.jpg', '-O.jpg'),
             affiliateUrl: item.permalink,
             technicalDescription: 'Produto descoberto através de pesquisa manual no sistema.',
-            soldQuantity: item.sold_quantity,
-            platform: 'Mercado Livre'
+            soldQuantity: item.sold_quantity
           }));
         }
       }

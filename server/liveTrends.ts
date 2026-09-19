@@ -293,35 +293,114 @@ const SHOPEE_LIVE_CATEGORY_DATA: Record<string, { title: string; price: string; 
   ]
 };
 
+const SHOPEE_CATEGORY_TERMS: Record<string, string[]> = {
+    'Tech': ['fone bluetooth sem fio tws', 'smartwatch d20 relogio inteligente', 'maquininha cartao mercado pago', 'suporte celular mesa articulado', 'cabo iphone tipo c reforçado', 'ring light led tripé'],
+    'Celulares': ['capinha iphone case aveludada', 'pelicula 3d privacidade vidro', 'carregador rapido 20w', 'suporte magsafe veicular', 'fone ouvido p2'],
+    'Informática': ['mousepad gamer gigante 80x30', 'hub usb 3.0 tipo c', 'teclado bluetooth tablet celular', 'pasta termica prata', 'cooler fan rgb'],
+    'Casa e cozinha': ['mini processador de alimentos manual eletrico', 'dispenser detergente esponja', 'rolo adesivo tira pelos lavavel', 'luz led com sensor presenca', 'tampa de silicone elastica pote'],
+    'Beleza e skincare': ['gloss labial volumoso bocao', 'kit pinceis maquiagem kabuki', 'curvex cilios termico', 'esponja maquiagem gota', 'serum acido hialuronico facial', 'escova polvo desembaracadora'],
+    'Moda': ['bolsa feminina transversal alca corrente', 'kit 10 pares meia invisivel cano curto', 'bermuda tactel dry fit masculino', 'conjunto canelado feminino verao', 'relogio digital esportivo prova dagua'],
+    'Esporte': ['kit 5 faixas elasticas mini band', 'corda de pular rolamento crossfit', 'coqueteleira mixer suplementos shaker', 'balanca digital bioimpedancia bluetooth', 'joelheira compressao elastica'],
+    'Fitness': ['creatina 300g pura', 'luva musculacao com munhequeira', 'roda abdominal exercicios', 'faixa elastica thera band'],
+    'Infantil e família': ['kit brinquedo pop it anti stress', 'tapete infantil eva tatame', 'prato magico infantil nao cai', 'meia infantil antiderrapante bichinho'],
+    'Suplementos e saúde': ['creatina 100 pura monohidratada', 'maca peruana preta ultra concentrada', 'melatonina gotas sono rapido', 'vitamina d3 2000ui']
+};
+
 /**
  * Fetch Shopee live trends & best sellers
  */
 export async function fetchShopeeLiveTrends(category = 'Tech'): Promise<FormattedTrendItem[]> {
-  const catItems = SHOPEE_LIVE_CATEGORY_DATA[category] || SHOPEE_LIVE_CATEGORY_DATA['Tech'];
+  const termsList = SHOPEE_CATEGORY_TERMS[category] || SHOPEE_CATEGORY_TERMS['Tech'];
+  const results: FormattedTrendItem[] = [];
 
-  return catItems.map((item, idx) => {
-    return {
-      id: `shopee-live-${idx}-${item.query.replace(/\s+/g, '-')}`,
-      rank: idx + 1,
-      title: item.title,
-      searchTerm: item.query,
-      searchQueryDisplay: `${item.title.split(' ').slice(0, 5).join(' ')} vale a pena?`,
-      category: category as any,
-      badges: [
-        { label: idx === 0 ? '🔥 #1 Mais Vendido Shopee' : '🔥 Top Vendas Shopee', type: 'hot' },
-        { label: '🟠 Shopee Indicado', type: 'demand' }
-      ],
-      subtitleMetrics: `${item.sold} vendidos • ⭐ ${item.rating} avaliação real Shopee`,
-      indicator: `+${Math.floor(220 + Math.random() * 150)}% vendas recentes`,
-      suggestedPrice: item.price,
-      suggestedDescription: `Campeão absoluto de vendas na Shopee Brasil. Alta procura por análises e comparativos antes da compra.`,
-      platform: 'Shopee',
-      thumbnail: item.img,
-      realUrl: resolveOfficialProductUrl({
-        platform: 'Shopee',
-        searchTerm: item.query
-      }) || `https://shopee.com.br/search?keyword=${encodeURIComponent(item.query)}`,
-      rating: item.rating
-    };
-  });
+  for (const query of termsList.slice(0, 8)) {
+    try {
+      const shopeeSearchUrl = `https://shopee.com.br/api/v4/search/search_items?by=sales&keyword=${encodeURIComponent(query)}&limit=3&newest=0&order=desc&page_type=search&scenario=PAGE_GLOBAL_SEARCH&version=2`;
+      const resp = await fetch(shopeeSearchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json',
+          'x-api-source': 'pc'
+        }
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        const rawItem = data?.items?.[0]?.item_basic;
+
+        if (rawItem) {
+          const rawPrice = (rawItem.price || rawItem.price_min || 0) / 100000;
+          const formattedPrice = rawPrice > 0
+            ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(rawPrice)
+            : 'R$ --';
+
+          const imageUrl = rawItem.image
+            ? `https://down-br.img.susercontent.com/file/${rawItem.image}`
+            : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80';
+
+          const soldCount = rawItem.historical_sold || rawItem.sold || 500;
+          const formattedSold = soldCount > 1000 ? `${(soldCount / 1000).toFixed(1)}k` : `${soldCount}`;
+
+          results.push({
+            id: `shopee-real-${rawItem.itemid || Math.random()}`,
+            rank: results.length + 1,
+            title: rawItem.name || query,
+            searchTerm: query,
+            searchQueryDisplay: `${(rawItem.name || query).split(' ').slice(0, 5).join(' ')} funciona?`,
+            category: category as any,
+            badges: [
+              { label: results.length === 0 ? '🔥 #1 Mais Vendido Shopee' : '🔥 Top Vendas Shopee', type: 'hot' as const },
+              { label: '🟠 Shopee Indicado', type: 'demand' as const }
+            ],
+            subtitleMetrics: `${formattedSold} vendidos na Shopee • ⭐ ${(rawItem.item_rating?.rating_star || 4.8).toFixed(1)} avaliação`,
+            indicator: `+${Math.floor(220 + Math.random() * 150)}% vendas recentes`,
+            suggestedPrice: formattedPrice,
+            suggestedDescription: `Campeão absoluto de vendas na Shopee Brasil na categoria ${category}. Grande volume de buscas por reviews sinceros.`,
+            platform: 'Shopee',
+            thumbnail: imageUrl,
+            realUrl: resolveOfficialProductUrl({
+              platform: 'Shopee',
+              searchTerm: query
+            }) || `https://shopee.com.br/search?keyword=${encodeURIComponent(query)}`,
+            rating: rawItem.item_rating?.rating_star || 4.8,
+            soldQuantity: soldCount
+          });
+          continue;
+        }
+      }
+    } catch (err) {
+      console.warn(`[server] Shopee fetch error for query ${query}:`, err);
+    }
+  }
+
+  // Fallback to static data if not enough items found
+  if (results.length < 3) {
+      console.log("[server] Shopee fetched too few trends, triggering fallback.");
+      const catItems = SHOPEE_LIVE_CATEGORY_DATA[category] || SHOPEE_LIVE_CATEGORY_DATA['Tech'];
+      const fallbackResults = catItems.map((item, idx) => ({
+          id: `shopee-live-${idx}-${item.query.replace(/\s+/g, '-')}`,
+          rank: results.length + idx + 1,
+          title: item.title,
+          searchTerm: item.query,
+          searchQueryDisplay: `${item.title.split(' ').slice(0, 5).join(' ')} vale a pena?`,
+          category: category as any,
+          badges: [
+            { label: '🟠 Shopee', type: 'demand' as const }
+          ],
+          subtitleMetrics: `${item.sold} vendidos • ⭐ ${item.rating} avaliação Shopee`,
+          indicator: `+${Math.floor(220 + Math.random() * 150)}% vendas recentes`,
+          suggestedPrice: item.price,
+          suggestedDescription: `Campeão absoluto de vendas na Shopee Brasil.`,
+          platform: 'Shopee',
+          thumbnail: item.img,
+          realUrl: resolveOfficialProductUrl({
+            platform: 'Shopee',
+            searchTerm: item.query
+          }) || `https://shopee.com.br/search?keyword=${encodeURIComponent(item.query)}`,
+          rating: item.rating
+      }));
+      results.push(...fallbackResults);
+  }
+
+  return results.slice(0, 16); // Return a reasonable amount
 }
