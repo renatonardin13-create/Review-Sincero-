@@ -47,7 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'campeoes', label: 'Produtos Campeões', icon: Trophy, badge: 'TOP' },
     { id: 'comparar', label: 'Comparar Produtos', icon: Scale, badge: 'NOVO' },
-    { id: 'tutorial', label: 'Tutorial & Guia', icon: BookOpen, badge: 'GRÁTIS' },
+    { id: 'tutorial', label: 'Área de Membros & Aulas', icon: BookOpen, badge: 'VIP' },
     { id: 'reviews', label: 'Meus Reviews', icon: FileText },
     { id: 'create', label: 'Criar Review', icon: PlusCircle, action: onNewReview },
     { id: 'keyword-planner', label: 'Planejador Palavras', icon: Search },

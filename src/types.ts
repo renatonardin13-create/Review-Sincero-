@@ -263,6 +263,44 @@ export interface TrendBadge {
   type: 'hot' | 'ticket' | 'opportunity' | 'rising' | 'demand';
 }
 
+export interface LessonSupportMaterial {
+  id: string;
+  title: string;
+  type: 'pdf' | 'link' | 'code' | 'prompt' | 'download';
+  url?: string;
+  content?: string;
+}
+
+export interface LessonItem {
+  id: string;
+  moduleId: string;
+  title: string;
+  duration: string;
+  youtubeUrlOrId: string;
+  youtubeId: string;
+  description: string;
+  keyTakeaways?: string[];
+  materials?: LessonSupportMaterial[];
+  promptTemplate?: string;
+  order: number;
+}
+
+export interface CourseModule {
+  id: string;
+  title: string;
+  description?: string;
+  order: number;
+  badge?: string;
+}
+
+export interface MemberAcademyData {
+  modules: CourseModule[];
+  lessons: LessonItem[];
+  completedLessonIds: string[];
+  userNotesByLesson: Record<string, string>;
+  activeLessonId?: string;
+}
+
 export interface TrendItem {
   id: string;
   rank: number;

@@ -19,8 +19,11 @@ import {
   Clock,
   Flame,
   Award,
-  ExternalLink
+  ExternalLink,
+  Film,
+  GraduationCap
 } from 'lucide-react';
+import { MembersAcademyView } from './MembersAcademyView';
 
 interface TutorialViewProps {
   onNavigateTo: (viewId: string) => void;
@@ -31,9 +34,10 @@ export const TutorialView: React.FC<TutorialViewProps> = ({
   onNavigateTo,
   onNewReview
 }) => {
-  const [activeTab, setActiveTab] = useState<string>('quickstart');
+  const [activeTab, setActiveTab] = useState<string>('members');
 
   const tutorialTabs = [
+    { id: 'members', label: '🎓 Área de Membros (Vídeos VIP)', icon: GraduationCap, badge: 'NOVO' },
     { id: 'quickstart', label: '⚡ Início Rápido (3 min)', icon: Zap },
     { id: 'generator', label: '🤖 Gerador com IA', icon: Sparkles },
     { id: 'trends', label: '📈 Radar de Tendências', icon: TrendingUp },
@@ -44,63 +48,91 @@ export const TutorialView: React.FC<TutorialViewProps> = ({
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300 pb-24">
-      {/* Hero Header */}
-      <div className="bg-[#121212] border border-[#222222] rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#F5C542]/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5C542]/10 border border-[#F5C542]/30 text-[#F5C542] text-xs font-bold uppercase tracking-wider">
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>GUIA COMPLETO & TUTORIAIS</span>
-            </div>
-
-            <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight font-display">
-              Como Dominar Todas as Funcionalidades do App
-            </h1>
-
-            <p className="text-xs md:text-sm text-[#A1A1A1] leading-relaxed">
-              Descubra como criar páginas de review de alta conversão, minerar produtos em alta em tempo real, encontrar palavras-chave lucrativas e monetizar sua audiência com banners em slides.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={onNewReview}
-              className="flex items-center gap-2 bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-6 py-3.5 rounded-2xl text-xs sm:text-sm shadow-xl shadow-[#F5C542]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Criar Minha Primeira Review</span>
-            </button>
-          </div>
+    <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300 pb-24">
+      {/* Tutorial Navigation Bar */}
+      <div className="flex items-center justify-between gap-4 p-2 bg-[#0C0F17] border border-[#1E293B] rounded-2xl overflow-x-auto">
+        <div className="flex items-center gap-1.5 min-w-max">
+          {tutorialTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  isActive
+                    ? 'bg-[#F5C542] text-[#080808] shadow-md'
+                    : 'text-[#94A3B8] hover:text-white hover:bg-[#131B2A]'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+                {tab.badge && (
+                  <span
+                    className={`text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase ${
+                      isActive ? 'bg-[#080808] text-[#F5C542]' : 'bg-[#F5C542]/20 text-[#F5C542]'
+                    }`}
+                  >
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Tutorial Navigation Tabs */}
-      <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 bg-[#121212] border border-[#222222] rounded-2xl">
-        {tutorialTabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-[#F5C542] text-[#080808] shadow-md scale-102'
-                  : 'text-[#A1A1A1] hover:text-white hover:bg-[#1A1A1A]'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* Render Members Academy directly when on 'members' tab */}
+      {activeTab === 'members' ? (
+        <MembersAcademyView
+          onNavigateTo={onNavigateTo}
+          onNewReview={onNewReview}
+          onSwitchToGuide={() => setActiveTab('quickstart')}
+        />
+      ) : (
+        <div className="space-y-6">
+          {/* Hero Header for Written Guides */}
+          <div className="bg-[#121212] border border-[#222222] rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#F5C542]/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
 
-      {/* Tab Content Display */}
-      <div className="bg-[#151515] border border-[#242424] rounded-3xl p-6 md:p-10 space-y-8 shadow-xl">
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="space-y-3 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5C542]/10 border border-[#F5C542]/30 text-[#F5C542] text-xs font-bold uppercase tracking-wider">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>GUIA PASSO A PASSO EM TEXTO</span>
+                </div>
+
+                <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight font-display">
+                  Guia Rápido de Cada Módulo do Sistema
+                </h1>
+
+                <p className="text-xs md:text-sm text-[#A1A1A1] leading-relaxed">
+                  Consulte os passos práticos em texto para acelerar a sua produção de reviews e dominar as integrações.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  onClick={() => setActiveTab('members')}
+                  className="flex items-center gap-2 bg-[#131B2A] hover:bg-[#1E293B] text-[#F5C542] border border-[#F5C542]/30 font-bold px-4 py-3 rounded-2xl text-xs transition-all cursor-pointer"
+                >
+                  <Film className="w-4 h-4" />
+                  <span>Ver em Videoaulas VIP</span>
+                </button>
+
+                <button
+                  onClick={onNewReview}
+                  className="flex items-center gap-2 bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-5 py-3 rounded-2xl text-xs shadow-xl shadow-[#F5C542]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Criar Review</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Tab Content Display for Written Guides */}
+          <div className="bg-[#151515] border border-[#242424] rounded-3xl p-6 md:p-10 space-y-8 shadow-xl">
         {/* =========================================================================
             TAB 1: QUICKSTART
            ========================================================================= */}
@@ -539,6 +571,8 @@ export const TutorialView: React.FC<TutorialViewProps> = ({
           </div>
         )}
       </div>
+        </div>
+      )}
     </div>
   );
 };
