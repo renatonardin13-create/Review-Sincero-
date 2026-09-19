@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Review,
+  AppSettings,
   CategoryType,
   PlatformType,
   TemplateType,
@@ -8,7 +9,7 @@ import {
   TestimonialItem,
   KeywordSuggestion
 } from '../types';
-import { getStoredUser, isUserAdmin } from '../services/authService';
+import { getStoredUser, isUserAdmin, checkUserReviewLimit } from '../services/authService';
 import { CATEGORIES, PLATFORMS } from '../data/initialData';
 import { ReviewRenderer } from './ReviewRenderer';
 import { matchProductImage, validateAndNormalizeReviewImages } from '../utils/productImageMatcher';
@@ -515,7 +516,8 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     setKeywordWarning(null);
 
     try {
-      const response = await keywordService.fetchKeywords(term, 'Brasil', 'Português', true);
+      // (Removido planejador de palavras-chave)
+      const response: any = { data: [] };
       
       let isReal = response.isRealApiConfigured || false;
       let resultsList = response.results || [];
@@ -526,7 +528,8 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
         resultsList = [];
       }
 
-      const formatted = keywordService.formatToSuggestions(resultsList, isReal);
+      // (Removido planejador de palavras-chave)
+      const formatted: KeywordSuggestion[] = [];
 
       setFormData((prev) => {
         const selectedTerms = formatted.filter(f => f.selected).map(f => f.term);

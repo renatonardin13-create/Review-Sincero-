@@ -10,7 +10,6 @@ import { TemplatesView } from './components/TemplatesView';
 import { SettingsView } from './components/SettingsView';
 import { CreateReviewWizard } from './components/CreateReviewWizard';
 import { ReviewRenderer } from './components/ReviewRenderer';
-import { KeywordPlannerView } from './components/KeywordPlannerView';
 import { TutorialView } from './components/TutorialView';
 import { CompareProductsView } from './components/CompareProductsView';
 import { TopProductsView } from './components/TopProductsView';
@@ -30,7 +29,6 @@ const VIEW_TO_PATH: Record<string, string> = {
   'templates': '/templates',
   'campeoes': '/produtos-campeoes',
   'comparar': '/comparar-produtos',
-  'keyword-planner': '/planejador-palavras',
   'trends': '/analisar-tendencias',
   'settings': '/settings',
   'admin': '/adm',
@@ -48,7 +46,6 @@ const PATH_TO_VIEW: Record<string, string> = {
   '/templates': 'templates',
   '/produtos-campeoes': 'campeoes',
   '/comparar-produtos': 'comparar',
-  '/planejador-palavras': 'keyword-planner',
   '/analisar-tendencias': 'trends',
   '/settings': 'settings',
   '/adm': 'admin',
@@ -290,78 +287,6 @@ export default function App() {
       userId: currentUser?.id
     };
     setActiveReviewForEdit(newRevFromTrend);
-    setCurrentView('create');
-  };
-
-  const handleUseKeyword = (keyword: string) => {
-    const formattedTitle = keyword
-      .split(' ')
-      .map((w) => (w.length > 2 ? w.charAt(0).toUpperCase() + w.slice(1) : w))
-      .join(' ');
-
-    const newRevFromKeyword: Review = {
-      id: 'rev-' + Date.now(),
-      siteName: settings.siteName,
-      author: settings.authorName,
-      productName: formattedTitle,
-      headline: `${formattedTitle} Vale a Pena? Análise Sincera & Preço Atualizado`,
-      currentPrice: 'R$ 199,90',
-      oldPrice: '',
-      affiliateUrl: '',
-      category: 'Tech',
-      platform: 'Mercado Livre',
-      description: `Review completo e aprofundado sobre ${formattedTitle}. Analisamos os principais diferenciais, prós e contras reais para ajudar você a decidir sua compra.`,
-      features: [
-        'Alto volume de busca e interesse no mercado',
-        'Avaliações verificadas de compradores reais',
-        'Garantia oficial e entrega rápida'
-      ],
-      mainImage: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80',
-      images: [
-        'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80'
-      ],
-      pros: [
-        'Excelente custo-benefício comparado aos concorrentes diretos',
-        'Alta demanda com grande satisfação entre os consumidores',
-        'Facilidade de uso e acabamento confiável'
-      ],
-      cons: [
-        'Alta procura pode gerar oscilações de preço e estoque'
-      ],
-      audience: [`Consumidores que pesquisam por ${keyword} buscando qualidade e preço justo`],
-      experience: `Análise elaborada a partir das buscas reais e dados de mercado para ${keyword}.`,
-      howItWorks: 'Disponível nas principais plataformas com envio rápido e compra protegida.',
-      faq: [
-        {
-          id: 'f1',
-          question: `O ${formattedTitle} realmente funciona e vale o investimento?`,
-          answer: `Sim, de acordo com as especificações e avaliações de mercado, entrega um ótimo desempenho para o seu segmento.`
-        },
-        {
-          id: 'f2',
-          question: 'Qual é o prazo de entrega e garantia?',
-          answer: 'A garantia de fábrica padrão cobre eventuais defeitos e a entrega conta com rastreamento completo.'
-        }
-      ],
-      scoreCriteria: {
-        quality: 8.9,
-        design: 8.7,
-        practicality: 9.0,
-        resources: 8.6,
-        costBenefit: 9.3,
-        experience: 8.9
-      },
-      overallScore: 8.9,
-      verdict: `O ${formattedTitle} se destaca como uma excelente opção na categoria, altamente recomendado para compra informada.`,
-      testimonials: [],
-      template: settings.defaultTemplate,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      status: 'Rascunho',
-      userId: currentUser?.id
-    };
-
-    setActiveReviewForEdit(newRevFromKeyword);
     setCurrentView('create');
   };
 
@@ -611,12 +536,6 @@ export default function App() {
                 setActiveReviewForEdit(null);
                 setCurrentView('create');
               }}
-            />
-          )}
-
-          {currentView === 'keyword-planner' && (
-            <KeywordPlannerView
-              onUseKeywordForReview={handleUseKeyword}
             />
           )}
 

@@ -172,7 +172,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      usageLimits: { ...form.usageLimits, freeReviewLimit: Number(e.target.value) }
+                      usageLimits: {
+                        freeReviewLimit: Number(e.target.value),
+                        premiumReviewLimit: form.usageLimits?.premiumReviewLimit || 999
+                      }
                     })
                   }
                   className="w-full bg-[#0D0D0D] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#F5C542]"
@@ -189,7 +192,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      usageLimits: { ...form.usageLimits, premiumReviewLimit: Number(e.target.value) }
+                      usageLimits: {
+                        freeReviewLimit: form.usageLimits?.freeReviewLimit || 3,
+                        premiumReviewLimit: Number(e.target.value)
+                      }
                     })
                   }
                   className="w-full bg-[#0D0D0D] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#F5C542]"
