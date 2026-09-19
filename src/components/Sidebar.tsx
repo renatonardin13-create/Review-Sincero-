@@ -46,7 +46,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenAuthModal
 }) => {
   const isAdmin =
-    currentUser?.role === 'admin' ||
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
   const principalItems = [

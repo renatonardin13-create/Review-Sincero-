@@ -24,7 +24,6 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [showNotifications, setShowNotifications] = useState(false);
 
   const isAdmin =
-    currentUser?.role === 'admin' ||
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
   return (

@@ -40,7 +40,6 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   onNavigateTo
 }) => {
   const isAdmin =
-    currentUser.role === 'admin' ||
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
   const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis'>('overview');
   const [academyData, setAcademyData] = useState<MemberAcademyData>(getStoredAcademyData);

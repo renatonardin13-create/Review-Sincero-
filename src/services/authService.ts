@@ -33,6 +33,8 @@ export function getStoredUser(): AuthUser {
       // Auto-enforce admin role if email matches
       if (parsed.email && parsed.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim()) {
         parsed.role = 'admin';
+      } else {
+        parsed.role = 'user';
       }
       return parsed;
     }
@@ -45,6 +47,11 @@ export function getStoredUser(): AuthUser {
 
 export function saveStoredUser(user: AuthUser): void {
   try {
+    if (user.email && user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim()) {
+      user.role = 'admin';
+    } else {
+      user.role = 'user';
+    }
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
     recordUserInDirectory(user);
   } catch (e) {
@@ -54,10 +61,7 @@ export function saveStoredUser(user: AuthUser): void {
 
 export function isUserAdmin(user?: AuthUser | null): boolean {
   if (!user) return false;
-  return (
-    user.role === 'admin' ||
-    user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim()
-  );
+  return user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 }
 
 export function loginWithGoogleAccount(customEmail?: string, customName?: string): AuthUser {

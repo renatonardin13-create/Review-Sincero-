@@ -33,7 +33,6 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<AuthUser>(() => getStoredUser());
 
   const isAdmin =
-    currentUser?.role === 'admin' ||
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
   const handleUserChange = (user: AuthUser) => {
@@ -49,18 +48,13 @@ export default function App() {
     } catch (e) {
       console.error(e);
     }
-    return SAMPLE_REVIEWS;
+    const initialUser = getStoredUser();
+    return SAMPLE_REVIEWS.map(r => ({ ...r, userId: r.userId || initialUser.id }));
   });
 
   const userReviews = React.useMemo(() => {
     if (!currentUser || !currentUser.id) return [];
-    const isMaster = currentUser.id === 'usr-admin-master' || currentUser.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-    return reviews.filter((r) => {
-      if (isMaster) {
-        return r.userId === currentUser.id || !r.userId;
-      }
-      return r.userId === currentUser.id;
-    });
+    return reviews.filter((r) => r.userId === currentUser.id);
   }, [reviews, currentUser]);
 
   const [settings, setSettings] = useState<AppSettings>(() => {
@@ -93,6 +87,14 @@ export default function App() {
   }, [settings]);
 
   const handleSaveReview = (review: Review) => {
+    if (review.id && reviews.some((r) => r.id === review.id)) {
+      const existing = reviews.find((r) => r.id === review.id);
+      if (existing && existing.userId !== currentUser?.id) {
+        alert("Erro de Permissão: Você não é o proprietário desta review!");
+        return;
+      }
+    }
+
     const reviewWithUser = {
       ...review,
       userId: review.userId || currentUser?.id
@@ -108,12 +110,23 @@ export default function App() {
   };
 
   const handleDeleteReview = (id: string) => {
+    const existing = reviews.find((r) => r.id === id);
+    if (existing && existing.userId !== currentUser?.id) {
+      alert("Erro de Permissão: Você não é o proprietário desta review!");
+      return;
+    }
+
     if (confirm('Tem certeza que deseja excluir esta review?')) {
       setReviews(reviews.filter((r) => r.id !== id));
     }
   };
 
   const handleDuplicateReview = (review: Review) => {
+    if (review.userId !== currentUser?.id) {
+      alert("Erro de Permissão: Você não é o proprietário desta review!");
+      return;
+    }
+
     const duplicated: Review = {
       ...review,
       id: 'rev-' + Date.now(),
@@ -379,10 +392,20 @@ export default function App() {
                 setCurrentView('create');
               }}
               onEditReview={(rev) => {
+                if (rev.userId !== currentUser?.id) {
+                  alert("Erro de Permissão: Você não é o proprietário desta review!");
+                  return;
+                }
                 setActiveReviewForEdit(rev);
                 setCurrentView('create');
               }}
-              onViewReview={(rev) => setActiveReviewForView(rev)}
+              onViewReview={(rev) => {
+                if (rev.userId !== currentUser?.id) {
+                  alert("Erro de Permissão: Você não é o proprietário desta review!");
+                  return;
+                }
+                setActiveReviewForView(rev);
+              }}
               onDuplicateReview={handleDuplicateReview}
               onDeleteReview={handleDeleteReview}
               setCurrentView={setCurrentView}
@@ -444,10 +467,20 @@ export default function App() {
                 setCurrentView('create');
               }}
               onEditReview={(rev) => {
+                if (rev.userId !== currentUser?.id) {
+                  alert("Erro de Permissão: Você não é o proprietário desta review!");
+                  return;
+                }
                 setActiveReviewForEdit(rev);
                 setCurrentView('create');
               }}
-              onViewReview={(rev) => setActiveReviewForView(rev)}
+              onViewReview={(rev) => {
+                if (rev.userId !== currentUser?.id) {
+                  alert("Erro de Permissão: Você não é o proprietário desta review!");
+                  return;
+                }
+                setActiveReviewForView(rev);
+              }}
               onDuplicateReview={handleDuplicateReview}
               onDeleteReview={handleDeleteReview}
             />
