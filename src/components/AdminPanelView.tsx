@@ -184,7 +184,8 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           { id: 'academy', label: '🎓 Gerenciar Videoaulas & Curso', icon: Film },
           { id: 'banners', label: '⚙️ Ajustes & Monetização Global', icon: DollarSign },
           { id: 'users', label: '👥 Alunos & Usuários', icon: Users },
-          { id: 'apis', label: '🔑 Chaves & Integrações de APIs', icon: Key }
+          { id: 'apis', label: '🔑 Chaves & Integrações de APIs', icon: Key },
+          { id: 'login', label: '🖥️ Configuração Tela de Login', icon: LayoutGrid }
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -570,6 +571,21 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                 Mapeamento das tendências de alto giro e maiores pedidos na Shopee Brasil.
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 6: Login Media */}
+      {activeTab === 'login' && (
+        <div className="bg-[#121212] border border-[#222] rounded-3xl p-6 md:p-8 space-y-6 animate-in fade-in">
+          <div className="border-b border-[#222] pb-5">
+            <h3 className="text-lg font-black text-white">Configuração da Tela de Login</h3>
+            <p className="text-xs text-[#8E8E8E]">
+              Defina a mídia de fundo para a tela de acesso dos usuários.
+            </p>
+          </div>
+          <div className="p-8 text-center text-[#8E8E8E]">
+            <p className="text-sm">Área em implementação...</p>
           </div>
         </div>
       )}

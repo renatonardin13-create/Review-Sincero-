@@ -1316,6 +1316,8 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     });
   });
 
+  app.use("/api/admin", adminMediaRouter);
+
   // Vite middleware for development or static serving for production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
