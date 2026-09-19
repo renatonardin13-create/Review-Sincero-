@@ -29,14 +29,12 @@ import { AuthUser } from '../types';
 interface TutorialViewProps {
   onNavigateTo: (viewId: string) => void;
   onNewReview: () => void;
-  onOpenCalculator?: () => void;
   currentUser?: AuthUser;
 }
 
 export const TutorialView: React.FC<TutorialViewProps> = ({
   onNavigateTo,
   onNewReview,
-  onOpenCalculator,
   currentUser
 }) => {
   const [activeTab, setActiveTab] = useState<string>('members');
@@ -93,7 +91,6 @@ export const TutorialView: React.FC<TutorialViewProps> = ({
           onNavigateTo={onNavigateTo}
           onNewReview={onNewReview}
           onSwitchToGuide={() => setActiveTab('quickstart')}
-          onOpenCalculator={onOpenCalculator}
           currentUser={currentUser}
         />
       ) : (

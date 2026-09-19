@@ -68,7 +68,6 @@ interface MembersAcademyViewProps {
   onNavigateTo?: (viewId: string) => void;
   onNewReview?: () => void;
   onSwitchToGuide?: () => void;
-  onOpenCalculator?: () => void;
   currentUser?: AuthUser;
 }
 
@@ -76,7 +75,6 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
   onNavigateTo,
   onNewReview,
   onSwitchToGuide,
-  onOpenCalculator,
   currentUser
 }) => {
   const isAdmin =
@@ -650,23 +648,6 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
           >
             <Sliders className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform mb-1" />
             <span className="text-[11px] font-bold truncate">Comparar</span>
-          </button>
-
-          {/* 10. Calculadora */}
-          <button
-            type="button"
-            onClick={() => {
-              if (onOpenCalculator) {
-                onOpenCalculator();
-              } else {
-                onNavigateTo?.('comissoes');
-              }
-            }}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-[#F5C542]/40 transition-all group cursor-pointer"
-            title="Calculadora de Comissões e Lucro"
-          >
-            <DollarSign className="w-4 h-4 text-[#22C55E] group-hover:scale-110 transition-transform mb-1" />
-            <span className="text-[11px] font-bold truncate">Calculadora</span>
           </button>
         </div>
       </div>

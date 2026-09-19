@@ -13,7 +13,6 @@ import { ReviewRenderer } from './components/ReviewRenderer';
 import { TutorialView } from './components/TutorialView';
 import { CompareProductsView } from './components/CompareProductsView';
 import { TopProductsView } from './components/TopProductsView';
-import { CommissionCalculatorModal } from './components/CommissionCalculatorModal';
 import { AdminPanelView } from './components/AdminPanelView';
 import { AccessRestrictedView } from './components/AccessRestrictedView';
 import { AuthModal } from './components/AuthModal';
@@ -33,8 +32,7 @@ const VIEW_TO_PATH: Record<string, string> = {
   'settings': '/settings',
   'admin': '/adm',
   'settings-banners': '/adm/banners',
-  'login': '/login',
-  'calculadora': '/calculadora'
+  'login': '/login'
 };
 
 const PATH_TO_VIEW: Record<string, string> = {
@@ -51,15 +49,13 @@ const PATH_TO_VIEW: Record<string, string> = {
   '/adm': 'admin',
   '/admin': 'admin',
   '/adm/banners': 'settings-banners',
-  '/login': 'login',
-  '/calculadora': 'calculadora'
+  '/login': 'login'
 };
 
 export default function App() {
   const [currentView, setCurrentView] = useState<string>('dashboard');
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isCalculatorOpen, setIsCalculatorOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
   // Auth User State & Role Verification
@@ -124,12 +120,6 @@ export default function App() {
 
     if (expectedPath && currentPath !== expectedPath) {
       window.history.pushState(null, '', expectedPath);
-    }
-
-    if (currentView === 'calculadora') {
-      setIsCalculatorOpen(true);
-    } else {
-      setIsCalculatorOpen(false);
     }
   }, [currentView]);
 
@@ -386,7 +376,6 @@ export default function App() {
           setActiveReviewForEdit(null);
           setCurrentView('create');
         }}
-        onOpenCalculator={() => setCurrentView('calculadora')}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
         currentUser={currentUser}
@@ -483,7 +472,6 @@ export default function App() {
                 setActiveReviewForEdit(null);
                 setCurrentView('create');
               }}
-              onOpenCalculator={() => setCurrentView('calculadora')}
               currentUser={currentUser || undefined}
             />
           )}
@@ -563,25 +551,6 @@ export default function App() {
           )}
         </main>
       </div>
-
-      {/* Commission Calculator Modal */}
-      <CommissionCalculatorModal
-        isOpen={isCalculatorOpen}
-        onClose={() => {
-          setIsCalculatorOpen(false);
-          if (currentView === 'calculadora') {
-            setCurrentView('dashboard');
-          }
-        }}
-        onNewReview={(prod) => {
-          if (prod) {
-            handleUseChampionProduct(prod);
-          } else {
-            setActiveReviewForEdit(null);
-            setCurrentView('create');
-          }
-        }}
-      />
 
       {/* User Authentication & Role Switcher Modal */}
       <AuthModal

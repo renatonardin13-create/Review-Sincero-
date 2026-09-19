@@ -29,7 +29,6 @@ interface SidebarProps {
   currentView: string;
   setCurrentView: (view: string) => void;
   onNewReview: () => void;
-  onOpenCalculator?: () => void;
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
   currentUser?: AuthUser | null;
@@ -41,7 +40,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentView,
   setCurrentView,
   onNewReview,
-  onOpenCalculator,
   mobileOpen,
   setMobileOpen,
   currentUser,
@@ -63,12 +61,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'campeoes', label: 'Produtos Campeões', icon: Trophy, badge: 'TOP' },
     { id: 'comparar', label: 'Comparar Produtos', icon: Scale },
     { id: 'trends', label: 'Analisar Tendências', icon: TrendingUp },
-    {
-      id: 'calculadora',
-      label: 'Calculadora de Lucro',
-      icon: Calculator,
-      action: onOpenCalculator ? onOpenCalculator : () => setCurrentView('calculadora')
-    },
     { id: 'settings', label: 'Perfil & Config', icon: User },
     {
       id: 'login',
