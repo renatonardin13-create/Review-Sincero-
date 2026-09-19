@@ -245,7 +245,8 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
   }, [allAvailableProducts, selectedTab, selectedCategory, liveSearchResults.length, searchFilter, liveTrends]);
 
   const pagedProducts = useMemo(() => filteredProducts.slice(0, visibleCount), [filteredProducts, visibleCount]);
-  const hasMore = filteredProducts.length > visibleCount;
+  const hasMore = filteredProducts.length >= visibleCount && filteredProducts.length > 0;
+  const isAtEnd = !hasMore && filteredProducts.length > 0;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -577,6 +578,12 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
           >
             Carregar mais
           </button>
+        </div>
+      )}
+
+      {isAtEnd && !hasMore && (
+        <div className="flex justify-center pt-8 text-[#666] text-sm">
+          Todos os produtos disponíveis foram carregados.
         </div>
       )}
 
