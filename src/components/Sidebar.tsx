@@ -45,23 +45,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const principalItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'campeoes', label: 'Produtos Campeões', icon: Trophy, badge: 'TOP' },
-    { id: 'comparar', label: 'Comparar Produtos', icon: Scale, badge: 'NOVO' },
     { id: 'tutorial', label: 'Área de Membros & Aulas', icon: BookOpen, badge: 'VIP' },
     { id: 'reviews', label: 'Meus Reviews', icon: FileText },
     { id: 'create', label: 'Criar Review', icon: PlusCircle, action: onNewReview },
-    { id: 'keyword-planner', label: 'Planejador Palavras', icon: Search },
-    { id: 'trends', label: 'Categorias & Trends', icon: Layers },
     { id: 'templates', label: 'Templates', icon: LayoutTemplate }
   ];
 
   const ferramentasItems = [
     { id: 'campeoes', label: 'Produtos Campeões', icon: Trophy, badge: 'TOP' },
     { id: 'comparar', label: 'Comparar Produtos', icon: Scale },
-    { id: 'settings-banners', label: 'Banners em Slides', icon: DollarSign, badge: 'NOVO', action: () => setCurrentView('settings-banners') },
     { id: 'keyword-planner', label: 'Planejador de Palavras', icon: Search },
     { id: 'trends', label: 'Analisar Tendências', icon: TrendingUp },
-    { id: 'comissoes', label: 'Calculadora Comissão', icon: Calculator, action: onOpenCalculator ? onOpenCalculator : () => setCurrentView('comissoes') },
+    { id: 'settings-banners', label: 'Banners em Slides', icon: DollarSign, badge: 'NOVO', action: () => setCurrentView('settings-banners') },
+    { id: 'comissoes', label: 'Calculadora de Lucro', icon: Calculator, action: onOpenCalculator ? onOpenCalculator : () => setCurrentView('comissoes') },
     { id: 'settings', label: 'Perfil & Config', icon: User }
   ];
 
