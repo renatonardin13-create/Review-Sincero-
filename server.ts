@@ -313,20 +313,22 @@ async function startServer() {
             meliItems = generateMeliFallbackProducts(category);
           }
         } catch (meliErr) {
-          console.warn("[server] Live Meli fetch error, fallback:", meliErr);
+          console.warn("[server] Live Meli fetch error, triggering fallback:", meliErr);
           meliItems = generateMeliFallbackProducts(category);
+          console.log("[server] Meli Fallback generated items count:", meliItems ? meliItems.length : 0);
         }
       }
 
       if (platform === 'shopee' || platform === 'all') {
         try {
           shopeeItems = await fetchShopeeLiveTrends(category);
+          console.log("[server] Shopee fetched trends count:", shopeeItems ? shopeeItems.length : 0);
           if (!shopeeItems || shopeeItems.length === 0) {
             console.log("[server] Shopee fetched 0 trends, triggering fallback.");
             shopeeItems = generateShopeeFallbackProducts(category);
           }
         } catch (shopeeErr) {
-          console.warn("[server] Live Shopee fetch error:", shopeeErr);
+          console.warn("[server] Live Shopee fetch error, triggering fallback:", shopeeErr);
           shopeeItems = generateShopeeFallbackProducts(category);
         }
       }
