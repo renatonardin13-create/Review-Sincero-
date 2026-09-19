@@ -246,6 +246,7 @@ export interface Review {
   createdAt: string;
   updatedAt: string;
   status: 'Rascunho' | 'Publicado' | 'Arquivado';
+  userId?: string;
 }
 
 export interface PromoBannerSlide {

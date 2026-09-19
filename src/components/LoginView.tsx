@@ -118,18 +118,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
     }, 500);
   };
 
-  const handleQuickFill = (targetRole: 'admin' | 'user') => {
-    if (targetRole === 'admin') {
-      setEmail(ADMIN_EMAIL);
-      setName('Renato Nardin');
-      setPassword('adminMaster@2026');
-    } else {
-      setEmail('cliente.comum@gmail.com');
-      setName('Lucas Silva');
-      setPassword('comum123456');
-    }
-  };
-
   return (
     <div className="relative min-h-screen w-full bg-[#07090E] text-white flex flex-col items-center justify-center p-4 sm:p-6 overflow-x-hidden select-none">
       {/* Background Architectural / Studio Moodboard Overlay */}
@@ -201,23 +189,23 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               {mode === 'signin' ? (
                 <>
-                  Welcome{' '}
+                  Bem-vindo de{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F5C542] via-[#EAB308] to-[#CA8A04]">
-                    Back
+                    Volta
                   </span>
                 </>
               ) : (
                 <>
-                  Create{' '}
+                  Criar{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F5C542] via-[#EAB308] to-[#CA8A04]">
-                    Account
+                    Conta
                   </span>
                 </>
               )}
             </h1>
             <p className="text-xs text-[#94A3B8] mt-1.5">
               {mode === 'signin'
-                ? 'Sign in to continue your engineering journey'
+                ? 'Entre para continuar sua jornada de reviews'
                 : 'Cadastre-se para acessar as ferramentas e conteúdos'}
             </p>
           </div>
@@ -280,7 +268,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             {mode === 'signup' && (
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-[#CBD5E1] block">
-                  Full Name
+                  Nome Completo
                 </label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3.5 w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#94A3B8]">
@@ -288,7 +276,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   </div>
                   <input
                     type="text"
-                    placeholder="Enter your full name"
+                    placeholder="Digite seu nome completo"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full bg-[#181C26] border border-white/10 rounded-2xl pl-13 pr-4 py-3 text-sm text-white placeholder-[#64748B] focus:outline-none focus:border-[#F5C542]/60 focus:bg-[#1A1F2C] transition-all"
@@ -300,7 +288,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             {/* Email Address */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-[#CBD5E1] block">
-                Email Address
+                Endereço de E-mail
               </label>
               <div className="relative flex items-center">
                 <div className="absolute left-3.5 w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#94A3B8]">
@@ -309,7 +297,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 <input
                   type="email"
                   required
-                  placeholder="Enter your email"
+                  placeholder="Digite seu e-mail"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-[#181C26] border border-white/10 rounded-2xl pl-13 pr-4 py-3 text-sm text-white placeholder-[#64748B] focus:outline-none focus:border-[#F5C542]/60 focus:bg-[#1A1F2C] transition-all font-sans"
@@ -320,7 +308,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             {/* Password */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-[#CBD5E1] block">
-                Password
+                Senha
               </label>
               <div className="relative flex items-center">
                 <div className="absolute left-3.5 w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#94A3B8]">
@@ -329,7 +317,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
-                  placeholder="Enter your password"
+                  placeholder="Digite sua senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-[#181C26] border border-white/10 rounded-2xl pl-13 pr-11 py-3 text-sm text-white placeholder-[#64748B] focus:outline-none focus:border-[#F5C542]/60 focus:bg-[#1A1F2C] transition-all"
@@ -358,7 +346,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   }}
                   className="text-[11px] text-[#94A3B8] hover:text-[#F5C542] transition-colors cursor-pointer"
                 >
-                  Forgot Password?
+                  Esqueceu sua senha?
                 </button>
               </div>
             )}
@@ -375,7 +363,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               
               {/* Content */}
               <div className="relative z-10 flex items-center justify-center gap-2 text-[#FFF7ED]">
-                <span>{isLoading ? 'Processando...' : mode === 'signin' ? 'Sign In' : 'Create Account'}</span>
+                <span>{isLoading ? 'Processando...' : mode === 'signin' ? 'Entrar' : 'Criar Conta'}</span>
                 <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
               </div>
             </button>
@@ -388,7 +376,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 <div className="w-full border-t border-white/10" />
               </div>
               <span className="relative px-3 bg-[#11141D] text-[11px] text-[#64748B]">
-                or continue with
+                ou continue com
               </span>
             </div>
 
@@ -401,50 +389,30 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 onClick={() => handleGoogleLogin(ADMIN_EMAIL, 'Renato Nardin')}
                 disabled={isLoading}
                 title="Entrar com Google (Admin Master)"
-                className="h-12 rounded-2xl bg-[#181C26] border border-white/10 hover:border-white/20 hover:bg-[#1F2432] flex items-center justify-center transition-all cursor-pointer group"
+                className="h-12 rounded-2xl bg-[#181C26] border border-white/10 hover:border-white/20 hover:bg-[#1F2432] flex items-center justify-center transition-all cursor-pointer group col-span-3"
               >
                 {/* SVG Google 4 colors logo */}
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path
-                    fill="#EA4335"
-                    d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.9C6.2 7.4 8.9 5 12 5z"
-                  />
-                  <path
-                    fill="#4285F4"
-                    d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.3 14.7c-.2-.7-.4-1.5-.4-2.7s.1-2 .4-2.7L1.6 6.4C.6 8.3 0 10.5 0 12.8s.6 4.5 1.6 6.4l3.7-2.9c0-.6 0-1 0-1.6z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.4-6.7-5.3L1.6 16.4C3.5 20.2 7.4 23.5 12 23.5z"
-                  />
-                </svg>
-              </button>
-
-              {/* GitHub Button */}
-              <button
-                type="button"
-                onClick={() => handleGoogleLogin('usuario.github@gmail.com', 'GitHub User')}
-                disabled={isLoading}
-                title="Entrar com GitHub (Usuário Comum)"
-                className="h-12 rounded-2xl bg-[#181C26] border border-white/10 hover:border-white/20 hover:bg-[#1F2432] flex items-center justify-center transition-all cursor-pointer text-white/80 hover:text-white"
-              >
-                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-                </svg>
-              </button>
-
-              {/* LinkedIn / Admin 1-Click Button */}
-              <button
-                type="button"
-                onClick={() => handleQuickFill('admin')}
-                title="Preencher credenciais de Administrador Master"
-                className="h-12 rounded-2xl bg-[#181C26] border border-white/10 hover:border-[#0A66C2]/40 hover:bg-[#1F2432] flex items-center justify-center transition-all cursor-pointer text-[#0A66C2] font-bold text-sm"
-              >
-                <span className="font-extrabold text-base tracking-tighter">in</span>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path
+                      fill="#EA4335"
+                      d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.9C6.2 7.4 8.9 5 12 5z"
+                    />
+                    <path
+                      fill="#4285F4"
+                      d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.3 14.7c-.2-.7-.4-1.5-.4-2.7s.1-2 .4-2.7L1.6 6.4C.6 8.3 0 10.5 0 12.8s.6 4.5 1.6 6.4l3.7-2.9c0-.6 0-1 0-1.6z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.4-6.7-5.3L1.6 16.4C3.5 20.2 7.4 23.5 12 23.5z"
+                    />
+                  </svg>
+                  <span className="text-xs font-bold text-white/90">Entrar com Google</span>
+                </div>
               </button>
             </div>
           </div>
@@ -453,7 +421,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
           <div className="mt-6 text-center">
             {mode === 'signin' ? (
               <p className="text-xs text-[#94A3B8]">
-                Don't have an account?{' '}
+                Não tem uma conta?{' '}
                 <button
                   type="button"
                   onClick={() => {
@@ -462,12 +430,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   }}
                   className="font-semibold text-[#F5C542] hover:underline cursor-pointer ml-1"
                 >
-                  Sign Up
+                  Cadastre-se
                 </button>
               </p>
             ) : (
               <p className="text-xs text-[#94A3B8]">
-                Already have an account?{' '}
+                Já tem uma conta?{' '}
                 <button
                   type="button"
                   onClick={() => {
@@ -476,38 +444,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   }}
                   className="font-semibold text-[#F5C542] hover:underline cursor-pointer ml-1"
                 >
-                  Sign In
+                  Entrar
                 </button>
               </p>
             )}
-          </div>
-        </div>
-
-        {/* Quick Demo Credentials Footer Helper for Testing */}
-        <div className="mt-6 w-full max-w-sm p-3.5 rounded-2xl bg-[#0D1017]/80 border border-white/5 backdrop-blur-md">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] uppercase font-bold text-[#64748B] flex items-center gap-1">
-              <Zap className="w-3 h-3 text-[#F5C542]" />
-              <span>Atalhos de Teste Rápido:</span>
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('admin')}
-              className="px-2.5 py-1.5 rounded-xl bg-[#1C1809] border border-[#F5C542]/30 hover:border-[#F5C542] text-[10px] font-bold text-[#F5C542] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Crown className="w-3 h-3" />
-              <span>Preencher Admin</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('user')}
-              className="px-2.5 py-1.5 rounded-xl bg-[#131B2A] border border-[#3B82F6]/30 hover:border-[#3B82F6] text-[10px] font-bold text-[#93C5FD] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <User className="w-3 h-3" />
-              <span>Preencher Comum</span>
-            </button>
           </div>
         </div>
       </div>

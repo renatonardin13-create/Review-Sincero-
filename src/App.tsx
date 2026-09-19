@@ -52,6 +52,17 @@ export default function App() {
     return SAMPLE_REVIEWS;
   });
 
+  const userReviews = React.useMemo(() => {
+    if (!currentUser || !currentUser.id) return [];
+    const isMaster = currentUser.id === 'usr-admin-master' || currentUser.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+    return reviews.filter((r) => {
+      if (isMaster) {
+        return r.userId === currentUser.id || !r.userId;
+      }
+      return r.userId === currentUser.id;
+    });
+  }, [reviews, currentUser]);
+
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
       const saved = localStorage.getItem('review_sincero_settings');
@@ -82,11 +93,15 @@ export default function App() {
   }, [settings]);
 
   const handleSaveReview = (review: Review) => {
+    const reviewWithUser = {
+      ...review,
+      userId: review.userId || currentUser?.id
+    };
     const exists = reviews.some((r) => r.id === review.id);
     if (exists) {
-      setReviews(reviews.map((r) => (r.id === review.id ? { ...review, updatedAt: new Date().toISOString() } : r)));
+      setReviews(reviews.map((r) => (r.id === review.id ? { ...reviewWithUser, updatedAt: new Date().toISOString() } : r)));
     } else {
-      setReviews([review, ...reviews]);
+      setReviews([reviewWithUser, ...reviews]);
     }
     setCurrentView('reviews');
     setActiveReviewForEdit(null);
@@ -103,6 +118,7 @@ export default function App() {
       ...review,
       id: 'rev-' + Date.now(),
       productName: `${review.productName} (Cópia)`,
+      userId: currentUser?.id,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -154,7 +170,8 @@ export default function App() {
       template: settings.defaultTemplate,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      status: 'Rascunho'
+      status: 'Rascunho',
+      userId: currentUser?.id
     };
     setActiveReviewForEdit(newRevFromTrend);
     setCurrentView('create');
@@ -224,7 +241,8 @@ export default function App() {
       template: settings.defaultTemplate,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      status: 'Rascunho'
+      status: 'Rascunho',
+      userId: currentUser?.id
     };
 
     setActiveReviewForEdit(newRevFromKeyword);
@@ -295,7 +313,8 @@ export default function App() {
       template: settings.defaultTemplate,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      status: 'Rascunho'
+      status: 'Rascunho',
+      userId: currentUser?.id
     };
 
     setActiveReviewForEdit(newDraft);
@@ -350,7 +369,7 @@ export default function App() {
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
           {currentView === 'dashboard' && (
             <Dashboard
-              reviews={reviews}
+              reviews={userReviews}
               settings={settings}
               currentUser={currentUser}
               onOpenAuthModal={() => setIsAuthModalOpen(true)}
@@ -418,7 +437,7 @@ export default function App() {
 
           {currentView === 'reviews' && (
             <ReviewsList
-              reviews={reviews}
+              reviews={userReviews}
               onNewReview={() => {
                 setActiveReviewForEdit(null);
                 setCurrentView('create');
