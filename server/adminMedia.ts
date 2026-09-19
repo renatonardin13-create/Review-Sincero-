@@ -19,10 +19,19 @@ const adminAuth = (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const storage = multer.diskStorage({
+  destination: 'public/uploads/',
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
 const upload = multer({ 
-  dest: 'public/uploads/',
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
   fileFilter: (req, file, cb) => {
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'video/mp4'];
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm'];
     if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {

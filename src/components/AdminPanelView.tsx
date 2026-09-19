@@ -21,7 +21,8 @@ import {
   RotateCcw,
   Ban,
   Unlock,
-  UserPlus
+  UserPlus,
+  LayoutGrid
 } from 'lucide-react';
 import { AuthUser, AppSettings, MemberAcademyData, ADMIN_EMAIL } from '../types';
 import { getStoredAcademyData, saveStoredAcademyData, resetStoredAcademyData } from '../data/academyData';
@@ -44,10 +45,18 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
 }) => {
   const isAdmin =
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis' | 'login'>('overview');
   const [academyData, setAcademyData] = useState<MemberAcademyData>(getStoredAcademyData);
   const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+  const [loginMedia, setLoginMedia] = useState<{ activeBackground: string; backgroundImage: string; backgroundVideo: string }>({ activeBackground: 'default', backgroundImage: '', backgroundVideo: '' });
+
+  React.useEffect(() => {
+    fetch('/api/admin/login-media')
+      .then(res => res.json())
+      .then(data => setLoginMedia(data))
+      .catch(console.error);
+  }, []);
   const [newUser, setNewUser] = useState({ name: '', email: '' });
   const [showAddUser, setShowAddUser] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
@@ -584,8 +593,54 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
               Defina a mídia de fundo para a tela de acesso dos usuários.
             </p>
           </div>
-          <div className="p-8 text-center text-[#8E8E8E]">
-            <p className="text-sm">Área em implementação...</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Imagem */}
+            <div className="p-5 bg-[#181818] border border-[#222] rounded-2xl space-y-4">
+               <h4 className="text-sm font-bold text-white">Imagem de Fundo</h4>
+               <div className="aspect-video bg-black rounded-lg overflow-hidden border border-[#222]">
+                  {loginMedia.backgroundImage ? (
+                    <img src={loginMedia.backgroundImage} alt="Preview" className="w-full h-full object-cover" />
+                  ) : <div className="flex items-center justify-center h-full text-[#555] text-xs">Sem imagem</div>}
+               </div>
+               <input type="file" accept="image/*" onChange={(e) => {
+                 if (e.target.files?.[0]) {
+                   const formData = new FormData();
+                   formData.append('media', e.target.files[0]);
+                   formData.append('activeBackground', 'image');
+                   fetch('/api/admin/login-media', { method: 'POST', body: formData, headers: { 'x-admin-email': currentUser.email } })
+                    .then(r => r.json())
+                    .then(d => setLoginMedia(d.config));
+                 }
+               }} />
+            </div>
+             {/* Vídeo */}
+            <div className="p-5 bg-[#181818] border border-[#222] rounded-2xl space-y-4">
+               <h4 className="text-sm font-bold text-white">Vídeo de Fundo</h4>
+               <div className="aspect-video bg-black rounded-lg overflow-hidden border border-[#222]">
+                  {loginMedia.backgroundVideo ? (
+                    <video src={loginMedia.backgroundVideo} className="w-full h-full object-cover" />
+                  ) : <div className="flex items-center justify-center h-full text-[#555] text-xs">Sem vídeo</div>}
+               </div>
+               <input type="file" accept="video/*" onChange={(e) => {
+                 if (e.target.files?.[0]) {
+                   const formData = new FormData();
+                   formData.append('media', e.target.files[0]);
+                   formData.append('activeBackground', 'video');
+                   fetch('/api/admin/login-media', { method: 'POST', body: formData, headers: { 'x-admin-email': currentUser.email } })
+                    .then(r => r.json())
+                    .then(d => setLoginMedia(d.config));
+                 }
+               }} />
+            </div>
+          </div>
+          
+          <div className="flex gap-4">
+             <button onClick={() => {
+                fetch('/api/admin/login-media', { method: 'POST', body: JSON.stringify({ activeBackground: 'default' }), headers: { 'x-admin-email': currentUser.email, 'Content-Type': 'application/json' } })
+                .then(r => r.json())
+                .then(d => setLoginMedia(d.config));
+             }} className="px-4 py-2 bg-[#222] rounded-lg text-xs font-bold text-white">Restaurar Padrão</button>
           </div>
         </div>
       )}
