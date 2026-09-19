@@ -1250,18 +1250,23 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
               </button>
             </div>
 
-            {keywordWarning && (
-              <div className="flex items-start gap-2 bg-amber-950/20 border border-amber-500/30 text-amber-300 p-3 rounded-xl text-xs mt-2">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{keywordWarning}</span>
-              </div>
-            )}
-
+            
             {/* Main Keyword Input */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#A1A1A1] uppercase tracking-wider">
-                PALAVRA-CHAVE PRINCIPAL
-              </label>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-[#A1A1A1] uppercase tracking-wider">
+                  PALAVRA-CHAVE PRINCIPAL
+                </label>
+                <a 
+                  href="https://ads.google.com/aw/keywordplanner/ideas/new?ocid=146771323&euid=156883603&__u=1579093947&uscid=146771323&__c=4388368227&authuser=0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E293B] text-white rounded-lg text-[10px] font-bold hover:bg-[#2D3748] transition-colors"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Acessar Planejador Google Ads
+                </a>
+              </div>
               <input
                 type="text"
                 value={formData.keywordPlanner?.mainKeyword || formData.productName}
@@ -1278,6 +1283,32 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                 className="w-full bg-[#080B10] border border-[#1E293B] rounded-xl px-4 py-3 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#3B82F6]"
                 placeholder="Ex: Fone de Ouvido Bluetooth TWS Sem Fio Bateria de Longa Duração"
               />
+              
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newKeywordInput}
+                  onChange={(e) => setNewKeywordInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (newKeywordInput.trim()) {
+                        setFormData(prev => ({
+                          ...prev,
+                          keywordPlanner: {
+                            mainKeyword: prev.keywordPlanner?.mainKeyword || prev.productName,
+                            highIntentTerms: Array.from(new Set([...(prev.keywordPlanner?.highIntentTerms || []), newKeywordInput.trim()])),
+                            suggestions: prev.keywordPlanner?.suggestions || []
+                          }
+                        }));
+                        setNewKeywordInput('');
+                      }
+                    }
+                  }}
+                  className="flex-1 bg-[#080B10] border border-[#1E293B] rounded-xl px-4 py-3 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#3B82F6]"
+                  placeholder="Inserir palavra-chave manualmente e dar Enter..."
+                />
+              </div>
             </div>
 
             {/* Selected High Intent Tags */}
