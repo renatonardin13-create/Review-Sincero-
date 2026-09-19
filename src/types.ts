@@ -283,6 +283,10 @@ export interface AppSettings {
   bannerAutoplaySpeed?: number; // em segundos (ex: 5)
   enableBannerCarousel?: boolean; // exibir carrossel no dashboard
   enableQuickLoginShortcuts?: boolean; // exibir atalhos de login rápido na tela de login
+  usageLimits?: {
+    freeReviewLimit: number;
+    premiumReviewLimit: number;
+  };
 }
 
 export interface TrendBadge {

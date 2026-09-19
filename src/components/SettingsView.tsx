@@ -159,41 +159,39 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
 
-          <div className="border-t border-[#2A2A2A] pt-6">
-            <h4 className="text-sm font-bold text-white mb-4">Redes Sociais & Contato</h4>
+           <div className="border-t border-[#2A2A2A] pt-6">
+            <h4 className="text-sm font-bold text-white mb-4">Limites de Uso (Plano)</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-semibold text-[#A1A1A1] uppercase tracking-wider mb-2">
-                  Instagram
+                  Limite de Reviews (Gratuito)
                 </label>
                 <input
-                  type="text"
-                  value={form.socialLinks?.instagram || ''}
+                  type="number"
+                  value={form.usageLimits?.freeReviewLimit || 3}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      socialLinks: { ...form.socialLinks, instagram: e.target.value }
+                      usageLimits: { ...form.usageLimits, freeReviewLimit: Number(e.target.value) }
                     })
                   }
-                  placeholder="@seuperfil"
                   className="w-full bg-[#0D0D0D] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#F5C542]"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-[#A1A1A1] uppercase tracking-wider mb-2">
-                  YouTube / Canal
+                  Limite de Reviews (Premium)
                 </label>
                 <input
-                  type="text"
-                  value={form.socialLinks?.youtube || ''}
+                  type="number"
+                  value={form.usageLimits?.premiumReviewLimit || 999}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      socialLinks: { ...form.socialLinks, youtube: e.target.value }
+                      usageLimits: { ...form.usageLimits, premiumReviewLimit: Number(e.target.value) }
                     })
                   }
-                  placeholder="Nome do canal"
                   className="w-full bg-[#0D0D0D] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#F5C542]"
                 />
               </div>

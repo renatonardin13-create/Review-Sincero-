@@ -593,6 +593,8 @@ export default function App() {
           {currentView === 'create' && (
             <CreateReviewWizard
               initialReview={activeReviewForEdit}
+              settings={settings}
+              userReviews={userReviews}
               onSave={handleSaveReview}
               onCancel={() => {
                 setActiveReviewForEdit(null);

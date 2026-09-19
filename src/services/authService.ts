@@ -153,3 +153,9 @@ export function recordUserInDirectory(user: AuthUser): void {
     console.error(e);
   }
 }
+
+export function checkUserReviewLimit(user: AuthUser, settings: any, reviewCount: number): boolean {
+  if (isUserAdmin(user)) return true;
+  const limit = settings.usageLimits?.freeReviewLimit || 3;
+  return reviewCount < limit;
+}

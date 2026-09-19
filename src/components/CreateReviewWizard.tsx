@@ -8,7 +8,7 @@ import {
   TestimonialItem,
   KeywordSuggestion
 } from '../types';
-import { keywordService } from '../services/keywordService';
+import { getStoredUser, isUserAdmin } from '../services/authService';
 import { CATEGORIES, PLATFORMS } from '../data/initialData';
 import { ReviewRenderer } from './ReviewRenderer';
 import { matchProductImage, validateAndNormalizeReviewImages } from '../utils/productImageMatcher';
@@ -196,6 +196,8 @@ const POPULAR_NICHES = [
 
 interface CreateReviewWizardProps {
   initialReview?: Review | null;
+  settings: AppSettings;
+  userReviews: Review[];
   onSave: (review: Review) => void;
   onCancel: () => void;
   onSwitchToTrends?: () => void;
@@ -204,6 +206,8 @@ interface CreateReviewWizardProps {
 
 export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   initialReview,
+  settings,
+  userReviews,
   onSave,
   onCancel,
   onSwitchToTrends,
@@ -225,6 +229,15 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   const [newKeywordInput, setNewKeywordInput] = useState<string>('');
   const [isSearchingKeywords, setIsSearchingKeywords] = useState<boolean>(false);
   const [keywordWarning, setKeywordWarning] = useState<string | null>(null);
+  const [isLimitExceeded, setIsLimitExceeded] = useState<boolean>(false);
+
+  useEffect(() => {
+    const user = getStoredUser();
+    if (user && !isUserAdmin(user)) {
+      const allowed = checkUserReviewLimit(user, settings, userReviews.length);
+      setIsLimitExceeded(!allowed);
+    }
+  }, [userReviews, settings]);
 
   // Form State initialized with defaults matching the screenshot
   const [formData, setFormData] = useState<Review>(() => {
@@ -379,6 +392,17 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
       status: 'Publicado'
     };
   });
+
+  const handleSave = () => {
+    const user = getStoredUser();
+    if (user && !isUserAdmin(user)) {
+      if (isLimitExceeded) {
+        alert('Limite de reviews atingido! Por favor, atualize para o plano Premium para criar mais reviews.');
+        return;
+      }
+    }
+    onSave(formData);
+  };
 
   // Re-synchronize and validate consistency when initialReview prop changes
   useEffect(() => {
@@ -2988,7 +3012,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => onSave(validateAndNormalizeReviewImages(formData))}
+              onClick={handleSave}
               className="flex items-center gap-2 bg-[#22C55E] hover:bg-[#16A34A] text-black font-extrabold px-6 py-2.5 rounded-xl text-xs shadow-lg shadow-green-500/20 transition-all cursor-pointer hover:scale-[1.02]"
             >
               <Save className="w-4 h-4 stroke-[2.5]" />

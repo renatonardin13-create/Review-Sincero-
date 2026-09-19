@@ -87,7 +87,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   promoBanners: DEFAULT_PROMO_BANNERS,
   bannerAutoplaySpeed: 6,
   enableBannerCarousel: true,
-  enableQuickLoginShortcuts: true
+  enableQuickLoginShortcuts: true,
+  usageLimits: {
+    freeReviewLimit: 3,
+    premiumReviewLimit: 999
+  }
 };
 
 export const SAMPLE_REVIEWS: Review[] = [
