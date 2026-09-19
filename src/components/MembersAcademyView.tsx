@@ -36,13 +36,19 @@ import {
   Zap,
   Flame,
   UserCheck,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Home,
+  LayoutTemplate,
+  DollarSign,
+  TrendingUp
 } from 'lucide-react';
 import {
   CourseModule,
   LessonItem,
   MemberAcademyData,
-  LessonSupportMaterial
+  LessonSupportMaterial,
+  AuthUser,
+  ADMIN_EMAIL
 } from '../types';
 import {
   getStoredAcademyData,
@@ -61,13 +67,20 @@ interface MembersAcademyViewProps {
   onNavigateTo?: (viewId: string) => void;
   onNewReview?: () => void;
   onSwitchToGuide?: () => void;
+  onOpenCalculator?: () => void;
+  currentUser?: AuthUser;
 }
 
 export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
   onNavigateTo,
   onNewReview,
-  onSwitchToGuide
+  onSwitchToGuide,
+  onOpenCalculator,
+  currentUser
 }) => {
+  const isAdmin =
+    currentUser?.role === 'admin' ||
+    currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
   // Main Academy State
   const [academyData, setAcademyData] = useState<MemberAcademyData>(getStoredAcademyData);
   const [activeLessonId, setActiveLessonId] = useState<string>(() => {
@@ -490,8 +503,8 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
               </div>
             </div>
 
-            {/* Quick Navigation Buttons */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Quick Navigation Buttons & Admin Controls */}
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               {onSwitchToGuide && (
                 <button
                   type="button"
@@ -504,20 +517,156 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
                 </button>
               )}
 
-              <button
-                type="button"
-                onClick={() => {
-                  resetLessonForm();
-                  setManageTab('add_lesson');
-                  setIsManageModalOpen(true);
-                }}
-                className="flex items-center gap-1.5 bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-4 py-2 rounded-xl text-xs shadow-lg shadow-[#F5C542]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                <PlusCircle className="w-3.5 h-3.5" />
-                <span>Subir / Gerenciar Videoaulas</span>
-              </button>
+              {isAdmin ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetLessonForm();
+                    setManageTab('add_lesson');
+                    setIsManageModalOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-4 py-2 rounded-xl text-xs shadow-lg shadow-[#F5C542]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>Subir / Gerenciar Videoaulas</span>
+                </button>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Acesso VIP Gratuito Ativo</span>
+                </div>
+              )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* QUICK SHORTCUTS TOOLBAR / ATALHOS DO APLICATIVO */}
+      <div className="bg-[#0C0F17] border border-[#1E293B] rounded-2xl p-3 shadow-xl">
+        <div className="flex items-center justify-between gap-2 mb-2 px-1">
+          <span className="text-[10px] font-black uppercase tracking-wider text-[#94A3B8] flex items-center gap-1.5">
+            <Zap className="w-3 h-3 text-[#F5C542]" />
+            <span>Atalhos Rápidos do Aplicativo</span>
+          </span>
+          <span className="text-[10px] text-[#64748B]">Navegação instantânea</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10 gap-2">
+          {/* 1. Início */}
+          <button
+            type="button"
+            onClick={() => onNavigateTo?.('dashboard')}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-[#F5C542]/40 transition-all group cursor-pointer"
+            title="Ir para o Dashboard Principal"
+          >
+            <Home className="w-4 h-4 text-[#F5C542] group-hover:scale-110 transition-transform mb-1" />
+            <span className="text-[11px] font-bold truncate">Início</span>
+          </button>
+
+          {/* 2. Início Rápido */}
+          <button
+            type="button"
+            onClick={() => onSwitchToGuide ? onSwitchToGuide() : onNavigateTo?.('tutorial')}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-[#38BDF8]/40 transition-all group cursor-pointer"
+            title="Passo a passo rápido em 3 minutos"
+          >
+            <Zap className="w-4 h-4 text-[#38BDF8] group-hover:scale-110 transition-transform mb-1" />
+            <span className="text-[11px] font-bold truncate">Início Rápido</span>
+          </button>
+
+          {/* 3. Gerador */}
+          <button
+            type="button"
+            onClick={() => onNewReview?.()}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-[#F5C542]/40 transition-all group cursor-pointer"
+            title="Criar novo review com Inteligência Artificial"
+          >
+            <Sparkles className="w-4 h-4 text-[#F5C542] group-hover:scale-110 transition-transform mb-1" />
+            <span className="text-[11px] font-bold truncate">Gerador</span>
+          </button>
+
+          {/* 4. Radar de Tendência */}
+          <button
+            type="button"
+            onClick={() => onNavigateTo?.('trends')}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-emerald-400/40 transition-all group cursor-pointer"
+            title="Análise de tendências do Mercado Livre e Shopee"
+          >
+            <TrendingUp className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform mb-1" />
+            <span className="text-[11px] font-bold truncate">Tendência</span>
+          </button>
+
+          {/* 5. Planejador */}
+          <button
+            type="button"
+            onClick={() => onNavigateTo?.('keyword-planner')}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-amber-400/40 transition-all group cursor-pointer"
+            title="Planejador de Palavras-Chave de alta conversão"
+          >
+            <Search className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform mb-1" />
+            <span className="text-[11px] font-bold truncate">Planejador</span>
+          </button>
+
+          {/* 6. Template */}
+          <button
+            type="button"
+            onClick={() => onNavigateTo?.('templates')}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-purple-400/40 transition-all group cursor-pointer"
+            title="Modelos de páginas e templates de alta conversão"
+          >
+            <LayoutTemplate className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform mb-1" />
+            <span className="text-[11px] font-bold truncate">Templates</span>
+          </button>
+
+          {/* 7. Banner */}
+          <button
+            type="button"
+            onClick={() => onNavigateTo?.('settings-banners')}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-emerald-400/40 transition-all group cursor-pointer"
+            title="Configurar Banners em Slides e Anúncios"
+          >
+            <DollarSign className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform mb-1" />
+            <span className="text-[11px] font-bold truncate">Banners</span>
+          </button>
+
+          {/* 8. Produtos Campeões */}
+          <button
+            type="button"
+            onClick={() => onNavigateTo?.('campeoes')}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-[#F5C542]/40 transition-all group cursor-pointer"
+            title="Produtos Campeões de Venda Reconciliados"
+          >
+            <Award className="w-4 h-4 text-[#F5C542] group-hover:scale-110 transition-transform mb-1" />
+            <span className="text-[11px] font-bold truncate">Campeões</span>
+          </button>
+
+          {/* 9. Comparar Produto */}
+          <button
+            type="button"
+            onClick={() => onNavigateTo?.('comparar')}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-blue-400/40 transition-all group cursor-pointer"
+            title="Comparador Lado a Lado de Produtos"
+          >
+            <Sliders className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform mb-1" />
+            <span className="text-[11px] font-bold truncate">Comparar</span>
+          </button>
+
+          {/* 10. Calculadora */}
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenCalculator) {
+                onOpenCalculator();
+              } else {
+                onNavigateTo?.('comissoes');
+              }
+            }}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-[#F5C542]/40 transition-all group cursor-pointer"
+            title="Calculadora de Comissões e Lucro"
+          >
+            <DollarSign className="w-4 h-4 text-[#22C55E] group-hover:scale-110 transition-transform mb-1" />
+            <span className="text-[11px] font-bold truncate">Calculadora</span>
+          </button>
         </div>
       </div>
 

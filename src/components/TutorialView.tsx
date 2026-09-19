@@ -24,15 +24,20 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { MembersAcademyView } from './MembersAcademyView';
+import { AuthUser } from '../types';
 
 interface TutorialViewProps {
   onNavigateTo: (viewId: string) => void;
   onNewReview: () => void;
+  onOpenCalculator?: () => void;
+  currentUser?: AuthUser;
 }
 
 export const TutorialView: React.FC<TutorialViewProps> = ({
   onNavigateTo,
-  onNewReview
+  onNewReview,
+  onOpenCalculator,
+  currentUser
 }) => {
   const [activeTab, setActiveTab] = useState<string>('members');
 
@@ -88,6 +93,8 @@ export const TutorialView: React.FC<TutorialViewProps> = ({
           onNavigateTo={onNavigateTo}
           onNewReview={onNewReview}
           onSwitchToGuide={() => setActiveTab('quickstart')}
+          onOpenCalculator={onOpenCalculator}
+          currentUser={currentUser}
         />
       ) : (
         <div className="space-y-6">

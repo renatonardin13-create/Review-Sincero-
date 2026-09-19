@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Review, AppSettings, TrendItem } from './types';
+import { Review, AppSettings, TrendItem, AuthUser, ADMIN_EMAIL } from './types';
 import { SAMPLE_REVIEWS, DEFAULT_SETTINGS } from './data/initialData';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
@@ -15,6 +15,9 @@ import { TutorialView } from './components/TutorialView';
 import { CompareProductsView } from './components/CompareProductsView';
 import { TopProductsView } from './components/TopProductsView';
 import { CommissionCalculatorModal } from './components/CommissionCalculatorModal';
+import { AdminPanelView } from './components/AdminPanelView';
+import { AuthModal } from './components/AuthModal';
+import { getStoredUser, saveStoredUser } from './services/authService';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 
 export default function App() {
@@ -22,6 +25,15 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isCalculatorOpen, setIsCalculatorOpen] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+
+  // Auth User State
+  const [currentUser, setCurrentUser] = useState<AuthUser>(() => getStoredUser());
+
+  const handleUserChange = (user: AuthUser) => {
+    setCurrentUser(user);
+    saveStoredUser(user);
+  };
 
   // LocalStorage state for reviews & settings
   const [reviews, setReviews] = useState<Review[]>(() => {
@@ -297,6 +309,8 @@ export default function App() {
         onOpenCalculator={() => setIsCalculatorOpen(true)}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
+        currentUser={currentUser}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
       />
 
       {/* Main Layout Area */}
@@ -310,6 +324,8 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           authorName={settings.authorName}
+          currentUser={currentUser}
+          onOpenAuthModal={() => setIsAuthModalOpen(true)}
         />
 
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
@@ -329,6 +345,16 @@ export default function App() {
               onDuplicateReview={handleDuplicateReview}
               onDeleteReview={handleDeleteReview}
               setCurrentView={setCurrentView}
+            />
+          )}
+
+          {currentView === 'admin' && (
+            <AdminPanelView
+              currentUser={currentUser}
+              settings={settings}
+              onSaveSettings={setSettings}
+              onOpenVideoManager={() => setCurrentView('tutorial')}
+              onNavigateTo={setCurrentView}
             />
           )}
 
@@ -356,6 +382,8 @@ export default function App() {
                 setActiveReviewForEdit(null);
                 setCurrentView('create');
               }}
+              onOpenCalculator={() => setIsCalculatorOpen(true)}
+              currentUser={currentUser}
             />
           )}
 
@@ -431,6 +459,14 @@ export default function App() {
         }}
       />
 
+      {/* User Authentication & Role Switcher Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        currentUser={currentUser}
+        onUserChanged={handleUserChange}
+      />
+
       {/* Full Review Modal Viewer */}
       {activeReviewForView && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md overflow-y-auto">
@@ -438,7 +474,7 @@ export default function App() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setActiveReviewForView(null)}
-                className="flex items-center gap-2 text-xs font-semibold text-[#A1A1A1] hover:text-white bg-[#151515] border border-[#2A2A2A] px-4 py-2 rounded-xl"
+                className="flex items-center gap-2 text-xs font-semibold text-[#A1A1A1] hover:text-white bg-[#151515] border border-[#2A2A2A] px-4 py-2 rounded-xl cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Fechar Preview</span>
@@ -456,7 +492,7 @@ export default function App() {
                   setActiveReviewForEdit(rev);
                   setCurrentView('create');
                 }}
-                className="bg-[#151515] hover:bg-[#1C1C1C] border border-[#2A2A2A] text-white font-bold px-4 py-2 rounded-xl text-xs"
+                className="bg-[#151515] hover:bg-[#1C1C1C] border border-[#2A2A2A] text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer"
               >
                 Editar Review
               </button>

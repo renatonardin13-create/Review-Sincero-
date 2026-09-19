@@ -317,3 +317,18 @@ export interface TrendItem {
   thumbnail?: string;
   realUrl?: string;
 }
+
+export type UserRole = 'admin' | 'user';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string;
+  role: UserRole;
+  provider: 'google' | 'email';
+  createdAt: string;
+  lastLoginAt: string;
+}
+
+export const ADMIN_EMAIL = 'renatonardin13@gmail.com';

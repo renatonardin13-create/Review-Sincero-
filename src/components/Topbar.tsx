@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Bell, Plus, Menu, User, Sparkles } from 'lucide-react';
+import { Search, Bell, Plus, Menu, User, Sparkles, Crown, ShieldCheck, LogIn } from 'lucide-react';
+import { AuthUser, ADMIN_EMAIL } from '../types';
 
 interface TopbarProps {
   onNewReview: () => void;
@@ -7,6 +8,8 @@ interface TopbarProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   authorName: string;
+  currentUser?: AuthUser;
+  onOpenAuthModal?: () => void;
 }
 
 export const Topbar: React.FC<TopbarProps> = ({
@@ -14,9 +17,15 @@ export const Topbar: React.FC<TopbarProps> = ({
   onOpenMobile,
   searchQuery,
   setSearchQuery,
-  authorName
+  authorName,
+  currentUser,
+  onOpenAuthModal
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const isAdmin =
+    currentUser?.role === 'admin' ||
+    currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
   return (
     <header className="sticky top-0 z-30 h-20 bg-[#0D0D0D]/90 backdrop-blur-md border-b border-[#2A2A2A] px-4 md:px-8 flex items-center justify-between">
@@ -48,7 +57,7 @@ export const Topbar: React.FC<TopbarProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2.5 rounded-xl bg-[#151515] border border-[#2A2A2A] text-[#A1A1A1] hover:text-white hover:border-[#2A2A2A] transition-colors"
+            className="relative p-2.5 rounded-xl bg-[#151515] border border-[#2A2A2A] text-[#A1A1A1] hover:text-white hover:border-[#2A2A2A] transition-colors cursor-pointer"
             title="Notificações"
           >
             <Bell className="w-5 h-5" />
@@ -67,7 +76,7 @@ export const Topbar: React.FC<TopbarProps> = ({
                 <div className="p-2.5 rounded-xl bg-[#0D0D0D] border border-[#2A2A2A]">
                   <p className="text-xs text-white font-medium">Sistema atualizado</p>
                   <p className="text-[11px] text-[#A1A1A1] mt-0.5">
-                    Novos templates de conversão e IA aprimorada disponíveis.
+                    Área de membros VIP com videoaulas integradas e controle de acesso liberado.
                   </p>
                 </div>
               </div>
@@ -75,24 +84,55 @@ export const Topbar: React.FC<TopbarProps> = ({
           )}
         </div>
 
-        {/* Profile indicator */}
-        <div className="hidden md:flex items-center gap-3 pl-3 border-l border-[#2A2A2A]">
-          <div className="w-9 h-9 rounded-xl bg-[#151515] border border-[#2A2A2A] flex items-center justify-center text-[#F5C542] font-semibold text-sm">
-            {authorName ? authorName.charAt(0).toUpperCase() : 'C'}
+        {/* User Account / Profile Badge with 1-Click Role Switcher */}
+        <button
+          type="button"
+          onClick={onOpenAuthModal}
+          className={`flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl border transition-all cursor-pointer ${
+            isAdmin
+              ? 'bg-[#1C1809] border-[#F5C542]/40 hover:border-[#F5C542]'
+              : 'bg-[#121926] border-[#2563EB]/40 hover:border-[#2563EB]'
+          }`}
+          title="Clique para alternar usuário ou fazer login"
+        >
+          <div
+            className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+              isAdmin
+                ? 'bg-[#F5C542] text-black shadow-md shadow-[#F5C542]/20'
+                : 'bg-[#2563EB] text-white shadow-md shadow-blue-500/20'
+            }`}
+          >
+            {isAdmin ? '👑' : '👤'}
           </div>
-          <div className="text-left">
-            <p className="text-xs font-medium text-white truncate max-w-[120px]">{authorName}</p>
-            <p className="text-[10px] text-[#A1A1A1]">Editor Pro</p>
+
+          <div className="text-left hidden md:block">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-white truncate max-w-[130px]">
+                {currentUser ? currentUser.name.split(' ')[0] : authorName}
+              </span>
+              <span
+                className={`text-[9px] font-black px-1.5 py-0.2 rounded uppercase ${
+                  isAdmin
+                    ? 'bg-[#F5C542] text-black'
+                    : 'bg-[#2563EB] text-white'
+                }`}
+              >
+                {isAdmin ? 'ADMIN' : 'ALUNO'}
+              </span>
+            </div>
+            <p className="text-[10px] text-[#A1A1A1] truncate max-w-[140px]">
+              {currentUser?.email || ADMIN_EMAIL}
+            </p>
           </div>
-        </div>
+        </button>
 
         {/* CTA Nova Review */}
         <button
           onClick={onNewReview}
-          className="flex items-center gap-2 bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-bold px-4 py-2.5 rounded-xl text-sm shadow-lg shadow-[#F5C542]/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="flex items-center gap-2 bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-4 py-2.5 rounded-xl text-sm shadow-lg shadow-[#F5C542]/10 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[3]" />
-          <span>Nova Review</span>
+          <span className="hidden sm:inline">Nova Review</span>
         </button>
       </div>
     </header>

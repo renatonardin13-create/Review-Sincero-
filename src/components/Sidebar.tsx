@@ -10,21 +10,18 @@ import {
   Menu,
   X,
   Sparkles,
-  Link2,
   DollarSign,
-  Layers,
-  Download,
-  Store,
   Search,
   Scale,
-  Percent,
-  Package,
-  User,
-  Rocket,
+  Calculator,
   BookOpen,
   Trophy,
-  Calculator
+  Crown,
+  User,
+  Users,
+  Film
 } from 'lucide-react';
+import { AuthUser, ADMIN_EMAIL } from '../types';
 
 interface SidebarProps {
   currentView: string;
@@ -33,6 +30,8 @@ interface SidebarProps {
   onOpenCalculator?: () => void;
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
+  currentUser?: AuthUser;
+  onOpenAuthModal?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -41,8 +40,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onNewReview,
   onOpenCalculator,
   mobileOpen,
-  setMobileOpen
+  setMobileOpen,
+  currentUser,
+  onOpenAuthModal
 }) => {
+  const isAdmin =
+    currentUser?.role === 'admin' ||
+    currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+
   const principalItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'tutorial', label: 'Área de Membros & Aulas', icon: BookOpen, badge: 'VIP' },
@@ -56,8 +61,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'comparar', label: 'Comparar Produtos', icon: Scale },
     { id: 'keyword-planner', label: 'Planejador de Palavras', icon: Search },
     { id: 'trends', label: 'Analisar Tendências', icon: TrendingUp },
-    { id: 'settings-banners', label: 'Banners em Slides', icon: DollarSign, badge: 'NOVO', action: () => setCurrentView('settings-banners') },
-    { id: 'comissoes', label: 'Calculadora de Lucro', icon: Calculator, action: onOpenCalculator ? onOpenCalculator : () => setCurrentView('comissoes') },
+    {
+      id: 'settings-banners',
+      label: 'Banners em Slides',
+      icon: DollarSign,
+      badge: 'NOVO',
+      action: () => setCurrentView('settings-banners')
+    },
+    {
+      id: 'comissoes',
+      label: 'Calculadora de Lucro',
+      icon: Calculator,
+      action: onOpenCalculator ? onOpenCalculator : () => setCurrentView('comissoes')
+    },
     { id: 'settings', label: 'Perfil & Config', icon: User }
   ];
 
@@ -114,7 +130,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
+          {/* ADMIN SECTION (Visible to Admin or for Direct Access) */}
+          {isAdmin && (
+            <div className="space-y-1">
+              <span className="px-3 text-[10px] font-black tracking-wider text-[#F5C542] uppercase flex items-center gap-1.5">
+                <Crown className="w-3 h-3" />
+                <span>ADMINISTRAÇÃO MASTER</span>
+              </span>
+              <div className="space-y-0.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentView('admin');
+                    setMobileOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all group cursor-pointer ${
+                    currentView === 'admin'
+                      ? 'bg-[#2A2208] text-[#F5C542] border border-[#F5C542]/50 shadow-md shadow-[#F5C542]/10'
+                      : 'text-[#F5C542]/80 hover:text-[#F5C542] hover:bg-[#1A1608]'
+                  }`}
+                >
+                  <Crown className="w-4 h-4 text-[#F5C542]" />
+                  <span className="truncate">Área Administrativa</span>
+                  <span className="ml-auto text-[9px] bg-[#F5C542] text-black font-black px-1.5 py-0.5 rounded uppercase">
+                    ADM
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* PRINCIPAL SECTION */}
           <div className="space-y-1">
             <span className="px-3 text-[10px] font-bold tracking-wider text-[#666666] uppercase">
@@ -189,15 +235,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </nav>
 
-        {/* Footer Status */}
-        <div className="p-3 border-t border-[#1F1F1F] bg-[#0A0A0A]">
-          <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#121212] border border-[#222]">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-              <span className="text-[11px] text-[#A1A1A1] font-medium">Sistema 100% Online</span>
+        {/* Footer User Role Card */}
+        <div className="p-3 border-t border-[#1F1F1F] bg-[#0A0A0A] space-y-2">
+          <button
+            type="button"
+            onClick={onOpenAuthModal}
+            className={`w-full p-2.5 rounded-2xl border text-left flex items-center gap-2.5 transition-all cursor-pointer ${
+              isAdmin
+                ? 'bg-[#1C1809] border-[#F5C542]/30 hover:border-[#F5C542]'
+                : 'bg-[#121824] border-[#2563EB]/30 hover:border-[#2563EB]'
+            }`}
+          >
+            <div
+              className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                isAdmin
+                  ? 'bg-[#F5C542] text-black'
+                  : 'bg-[#2563EB] text-white'
+              }`}
+            >
+              {isAdmin ? '👑' : '👤'}
             </div>
-            <span className="text-[9px] text-[#7E7E7E] font-mono">v3.0</span>
-          </div>
+
+            <div className="overflow-hidden flex-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-white truncate">
+                  {currentUser?.name?.split(' ')[0] || 'Aluno'}
+                </span>
+                <span
+                  className={`text-[8px] font-black px-1 py-0.2 rounded uppercase ${
+                    isAdmin ? 'bg-[#F5C542] text-black' : 'bg-[#2563EB] text-white'
+                  }`}
+                >
+                  {isAdmin ? 'ADM' : 'GRÁTIS'}
+                </span>
+              </div>
+              <p className="text-[9px] text-[#8E8E8E] truncate">
+                {currentUser?.email || ADMIN_EMAIL}
+              </p>
+            </div>
+          </button>
         </div>
       </aside>
     </>
