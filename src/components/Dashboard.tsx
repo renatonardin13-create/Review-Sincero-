@@ -20,19 +20,6 @@ import {
   Zap,
   Lock
 } from 'lucide-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
-} from 'recharts';
 import { PromoBannerCarousel } from './PromoBannerCarousel';
 
 interface DashboardProps {
@@ -67,20 +54,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const now = new Date();
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
-
-  const categoryCounts = reviews.reduce((acc, rev) => {
-    const cat = rev.category || 'Outros';
-    acc[cat] = (acc[cat] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const categoryData = Object.entries(categoryCounts).map(([name, value]) => ({ name, value }));
-  const COLORS = ['#F5C542', '#38BDF8', '#22C55E', '#EF4444', '#A1A1A1'];
-
-  const statusData = [
-    { name: 'Publicado', value: publishedReviews },
-    { name: 'Rascunho', value: reviews.filter(r => r.status === 'Rascunho').length },
-  ];
 
   const isAdmin =
     currentUser?.role === 'admin' ||
@@ -310,50 +283,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="mt-4 flex items-baseline gap-2">
             <span className="text-3xl font-extrabold text-white">{currentMonthReviews}</span>
             <span className="text-xs text-[#A1A1A1]">Neste período</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Analytics Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Category Distribution (Pie Chart) */}
-        <div className="bg-[#151515] border border-[#2A2A2A] rounded-3xl p-6">
-          <h3 className="text-sm font-bold text-white mb-6">Distribuição por Categoria</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        {/* Reviews Trend (Bar Chart) - Status Breakdown */}
-        <div className="bg-[#151515] border border-[#2A2A2A] rounded-3xl p-6">
-          <h3 className="text-sm font-bold text-white mb-6">Status das Reviews</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={statusData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
-                <XAxis dataKey="name" stroke="#A1A1A1" />
-                <YAxis stroke="#A1A1A1" />
-                <Tooltip />
-                <Bar dataKey="value" fill="#F5C542" />
-              </BarChart>
-            </ResponsiveContainer>
           </div>
         </div>
       </div>

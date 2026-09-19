@@ -861,10 +861,10 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
   const currencySymbol = PLATFORMS[platform]?.moeda === 'USD' ? 'US$' : 'R$';
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl max-h-[95vh] bg-[#090B0F] border border-[#1E2433] rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl overflow-y-auto space-y-6">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl bg-[#090B0F] border border-[#1E2433] rounded-3xl p-6 md:p-8 shadow-2xl space-y-6">
         {/* Header */}
-        <div className="sticky top-0 bg-[#090B0F] z-20 flex items-center justify-between pb-4 border-b border-[#1E2433]">
+        <div className="flex items-center justify-between pb-4 border-b border-[#1E2433]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#22C55E]/10 border border-[#22C55E]/30 flex items-center justify-center text-[#22C55E]">
               <Calculator className="w-5 h-5" />
@@ -1197,7 +1197,7 @@ export const CommissionCalculatorModal: React.FC<CommissionCalculatorModalProps>
         </div>
 
         {/* Footer Actions */}
-        <div className="sticky bottom-0 bg-[#090B0F] z-20 flex items-center justify-end gap-3 pt-2 mt-4 border-t border-[#1E2433]">
+        <div className="flex items-center justify-end gap-3 pt-2">
           <button
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl bg-[#11141D] hover:bg-[#171C29] text-[#A1A1A1] hover:text-white text-xs font-bold transition-all cursor-pointer border border-[#1E2433]"

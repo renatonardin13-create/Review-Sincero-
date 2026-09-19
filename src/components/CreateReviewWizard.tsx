@@ -74,7 +74,7 @@ const POPULAR_NICHES = [
     ctaText: 'QUERO O MEU POR R$ 59.90 →',
     slug: 'fone-de-ouvido-bluetooth-tws-sem-fio-bateria-de-longa-duracao',
     siteName: 'ReviewFísico',
-    author: 'Carlos Mendonça',
+    author: 'Thais Monteiro',
     seoTitle: 'Fone de Ouvido Bluetooth TWS Sem Fio Bateria de Longa Duração - Review Sincero e Vale a Pena? (Análise 2026)',
     seoDescription: 'Descubra se Fone de Ouvido Bluetooth TWS Sem Fio Bateria de Longa Duração é bom, vale a pena e confira prós, contras, veredito e onde comprar com o melhor preço e garantia.',
     keywords: [
@@ -121,7 +121,7 @@ const POPULAR_NICHES = [
     ctaText: 'QUERO O MEU POR R$ 449.90 →',
     slug: 'robo-aspirador-inteligente-mop-sensor',
     siteName: 'ReviewFísico',
-    author: 'Carlos Mendonça',
+    author: 'Thais Monteiro',
     seoTitle: 'Robô Aspirador de Pó com Mop - Vale a Pena? Resenha Completa e Teste',
     seoDescription: 'Testamos na prática o Robô Aspirador Inteligente: potência de sucção, autonomia da bateria e se realmente limpa pelos de pets e poeira.',
     keywords: [
@@ -143,7 +143,7 @@ const POPULAR_NICHES = [
     ctaText: 'COMPRAR COM FRETE GRÁTIS POR R$ 89.90 →',
     slug: 'smartwatch-relogio-inteligente-monitor-cardiaco',
     siteName: 'ReviewFísico',
-    author: 'Carlos Mendonça',
+    author: 'Thais Monteiro',
     seoTitle: 'Smartwatch Relógio Inteligente - Análise Sincera e Prós e Contras',
     seoDescription: 'Avaliação detalhada sobre bateria, precisão dos sensores e compatibilidade com Android e iPhone.',
     keywords: [
@@ -186,7 +186,7 @@ const POPULAR_NICHES = [
     ctaText: 'QUERO A MINHA POR R$ 549.90 →',
     slug: 'cadeira-ergonomica-presidente-escritorio',
     siteName: 'ReviewFísico',
-    author: 'Carlos Mendonça',
+    author: 'Thais Monteiro',
     seoTitle: 'Cadeira Ergonômica Presidente - Acaba com as Dores nas Costas? Review 2026',
     seoDescription: 'Testamos a cadeira presidente ergonômica durante 30 dias de trabalho intenso. Confira durabilidade e conforto.',
     keywords: [
@@ -224,8 +224,6 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   const [copiedTarget, setCopiedTarget] = useState<string | null>(null);
   const [generatingTitles, setGeneratingTitles] = useState<boolean>(false);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
-  const [generatingSeoTips, setGeneratingSeoTips] = useState<boolean>(false);
-  const [suggestedSeoTips, setSuggestedSeoTips] = useState<string[]>([]);
   const [toastMessage, setToastMessage] = useState<{
     title: string;
     desc: string;
@@ -252,7 +250,7 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     return {
       id: 'rev-' + Date.now(),
       siteName: 'ReviewFísico',
-      author: 'Carlos Mendonça',
+      author: 'Thais Monteiro',
       productName: defaultNiche.name,
       headline: defaultNiche.headline,
       ctaButtonText: defaultNiche.ctaText,
@@ -493,26 +491,6 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     }
   };
 
-  const handleGenerateSeoTips = async () => {
-    if (!formData.productName) return;
-    setGeneratingSeoTips(true);
-    try {
-      const response = await fetch("/api/gemini/generate-seo-tips", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productName: formData.productName })
-      });
-      const data = await response.json();
-      if (data.tips) {
-        setSuggestedSeoTips(data.tips);
-      }
-    } catch (err) {
-      console.error("Erro ao gerar dicas de SEO:", err);
-    } finally {
-      setGeneratingSeoTips(false);
-    }
-  };
-
   // Toggle Keyword Selection
   const toggleKeywordSelection = (id: string) => {
     setFormData((prev) => {
@@ -750,7 +728,7 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     if (prod.includes('cadeira') || prod.includes('ergon') || prod.includes('escrit') || prod.includes('office')) {
       setFormData((prev) => ({
         ...prev,
-        author: prev.author || 'Carlos Mendonça',
+        author: prev.author || 'Thais Monteiro',
         overallScore: 9.2,
         guaranteeDays: 30,
         verifiedReviewsCount: 2184,
@@ -787,7 +765,7 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     } else if (prod.includes('fone') || prod.includes('airpod') || prod.includes('head') || prod.includes('bluetooth')) {
       setFormData((prev) => ({
         ...prev,
-        author: prev.author || 'Carlos Mendonça',
+        author: prev.author || 'Thais Monteiro',
         overallScore: 9.0,
         guaranteeDays: 30,
         verifiedReviewsCount: 1840,
@@ -936,7 +914,7 @@ ${formData.oldPrice ? `- Preço Anterior / Sem Desconto: R$ ${formData.oldPrice}
 - Plataforma: ${formData.platform}
 - Categoria: ${formData.category}
 - Nome do Portal de Avaliação: ${formData.siteName || 'ReviewFísico'}
-- Avaliador / Especialista: ${formData.author || 'Carlos Mendonça'}
+- Avaliador / Especialista: ${formData.author || 'Thais Monteiro'}
 - Nota do Especialista: ${formData.overallScore || 9.2} / 10
 - Garantia Incondicional: ${formData.guaranteeDays || 30} dias
 - Total de Avaliações Verificadas: ${formData.verifiedReviewsCount || 2184} compradores
@@ -987,7 +965,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
 3. Card de preço com destaque para economia e botão de compra direcionando para ${formData.affiliateUrl || 'https://www.mercadolivre.com.br/'}.
 4. Seção de identificação com checks azuis para o público-alvo e caixa de aviso para a frase anti-persona.
 5. Grid de Prós & Contras em cartões contrastantes.
-6. Selo com foto e assinatura de ${formData.author || 'Carlos Mendonça'} com nota ${formData.overallScore || 9.2}/10.
+6. Selo com foto e assinatura de ${formData.author || 'Thais Monteiro'} com nota ${formData.overallScore || 9.2}/10.
 7. Depoimentos com estrelas e avatares reais.
 8. FAQ em sanfona/accordion.
 9. Botão flutuante no rodapé com CTA de compra garantida.`;
@@ -1891,13 +1869,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => setFormData(prev => ({ 
-                          ...prev, 
-                          seoSettings: { 
-                            metaTitle: title, 
-                            metaDescription: prev.seoSettings?.metaDescription || '' 
-                          } 
-                        }))}
+                        onClick={() => setFormData(prev => ({ ...prev, seoSettings: { ...prev.seoSettings, metaTitle: title } }))}
                         className="block w-full text-left text-xs text-white p-2 hover:bg-[#334155] rounded-lg transition-colors"
                       >
                         {title}
@@ -2258,7 +2230,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                 <div className="col-span-8">
                   <input
                     type="text"
-                    value={formData.author || 'Carlos Mendonça'}
+                    value={formData.author || 'Thais Monteiro'}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -3357,38 +3329,6 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                   <ExternalLink className="w-3 h-3 text-[#94A3B8]" />
                 </button>
               </div>
-            </div>
-
-            {/* SEO TIPS SECTION */}
-            <div className="space-y-3 pt-4 border-t border-[#1E293B] mt-4">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
-                  DICAS DE SEO PARA O SEU PRODUTO
-                </label>
-                <button
-                  type="button"
-                  onClick={handleGenerateSeoTips}
-                  disabled={generatingSeoTips || !formData.productName}
-                  className="text-[10px] font-bold text-[#3B82F6] hover:text-[#2563EB] disabled:text-[#555] transition-colors cursor-pointer"
-                >
-                  {generatingSeoTips ? "Gerando..." : "Gerar dicas com IA"}
-                </button>
-              </div>
-
-              {suggestedSeoTips.length > 0 ? (
-                <div className="space-y-2 bg-[#0F1420] border border-[#1E293B] p-3 rounded-xl">
-                  {suggestedSeoTips.map((tip, idx) => (
-                    <p key={idx} className="text-xs text-[#CBD5E1] leading-relaxed flex gap-2">
-                      <span className="text-[#3B82F6] font-bold">💡</span>
-                      {tip}
-                    </p>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-[10px] text-[#64748B] italic">
-                  Clique no botão para gerar sugestões baseadas no seu produto.
-                </div>
-              )}
             </div>
 
             {/* PROMPT PREVIEW BOX */}

@@ -68,7 +68,7 @@ export async function fetchMeliLiveTrends(forceRefresh = false): Promise<LiveMel
   try {
     const res = await fetch('https://tendencias.mercadolivre.com.br/', {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
         'Cache-Control': 'no-cache',
@@ -77,15 +77,10 @@ export async function fetchMeliLiveTrends(forceRefresh = false): Promise<LiveMel
     });
 
     if (!res.ok) {
-      console.error(`[liveTrends] HTTP ${res.status} from Meli`);
       throw new Error(`HTTP ${res.status} ${res.statusText} from tendencias.mercadolivre.com.br`);
     }
 
     const html = await res.text();
-    if (!html || html.length < 1000) {
-      console.error(`[liveTrends] Meli response too small (${html.length} bytes)`);
-      throw new Error('Meli returned empty or invalid HTML');
-    }
 
     let growthTrends: LiveTrendRawItem[] = [];
     let revenueTrends: LiveTrendRawItem[] = [];
@@ -294,47 +289,11 @@ const SHOPEE_LIVE_CATEGORY_DATA: Record<string, { title: string; price: string; 
 };
 
 /**
- * Fetch and extract live trends directly from Shopee Brasil
- */
-async function fetchShopeeLiveTrendsLive(category = 'Tech'): Promise<FormattedTrendItem[]> {
-  try {
-    const url = `https://shopee.com.br/search?keyword=${encodeURIComponent(category)}`;
-    console.log(`[liveTrends] Attempting Shopee fetch: ${url}`);
-    
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-      }
-    });
-
-    console.log(`[liveTrends] Shopee fetch status: ${res.status}`);
-    if (!res.ok) throw new Error(`Shopee HTTP ${res.status}`);
-    
-    const text = await res.text();
-    console.log(`[liveTrends] Shopee response length: ${text.length} chars`);
-    
-    // Simplistic parsing for demonstration - actual Shopee scraping requires advanced tools
-    // We'll return empty if we can't parse reliably
-    return []; 
-  } catch (err) {
-    console.error('[liveTrends] Shopee Live fetch failed:', err);
-    return [];
-  }
-}
-
-/**
  * Fetch Shopee live trends & best sellers
  */
 export async function fetchShopeeLiveTrends(category = 'Tech'): Promise<FormattedTrendItem[]> {
-  const liveTrends = await fetchShopeeLiveTrendsLive(category);
-  if (liveTrends && liveTrends.length > 0) {
-    return liveTrends;
-  }
-  
-  // Fallback to curated data
   const catItems = SHOPEE_LIVE_CATEGORY_DATA[category] || SHOPEE_LIVE_CATEGORY_DATA['Tech'];
+
   return catItems.map((item, idx) => {
     return {
       id: `shopee-live-${idx}-${item.query.replace(/\s+/g, '-')}`,

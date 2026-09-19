@@ -360,8 +360,6 @@ export interface AuthUser {
   provider: 'google' | 'email';
   createdAt: string;
   lastLoginAt: string;
-  blocked?: boolean;
-  tempPassword?: string;
 }
 
 export const ADMIN_EMAIL = 'renatonardin13@gmail.com';

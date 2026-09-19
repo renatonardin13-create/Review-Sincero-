@@ -42,16 +42,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string; role?: string } | null>(null);
 
-  // Configuração opcional de fundo: imagem ou vídeo
-  const [mediaConfig, setMediaConfig] = useState<{ activeBackground: string; backgroundImage: string; backgroundVideo: string }>({ activeBackground: 'default', backgroundImage: '', backgroundVideo: '' });
-
-  React.useEffect(() => {
-    fetch('/api/admin/login-media')
-      .then(res => res.json())
-      .then(data => setMediaConfig(data))
-      .catch(console.error);
-  }, []);
-
   // Live check if the typed email is the Administrator
   const isInputAdmin = email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase().trim();
 
@@ -133,39 +123,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
   return (
     <div className="relative min-h-screen w-full bg-[#07090E] text-white flex flex-col items-center justify-center p-4 sm:p-6 overflow-x-hidden select-none">
       {/* Background Architectural / Studio Moodboard Overlay */}
-      {mediaConfig.activeBackground === 'video' ? (
-        mediaConfig.youtubeUrl ? (
-            <div className="fixed inset-0 w-full h-full pointer-events-none opacity-25">
-                <iframe
-                    className="w-full h-full"
-                    src={`https://www.youtube.com/embed/${mediaConfig.youtubeUrl.split('v=')[1]?.split('&')[0] || mediaConfig.youtubeUrl.split('/').pop()}?autoplay=1&mute=1&loop=1&playlist=${mediaConfig.youtubeUrl.split('v=')[1]?.split('&')[0] || mediaConfig.youtubeUrl.split('/').pop()}&controls=0&showinfo=0&modestbranding=1`}
-                    frameBorder="0"
-                    allow="autoplay; encrypted-media"
-                    allowFullScreen
-                ></iframe>
-            </div>
-        ) : mediaConfig.backgroundVideo ? (
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="fixed inset-0 w-full h-full object-cover pointer-events-none opacity-25"
-              onError={(e) => {
-                  console.error('Video error', e);
-              }}
-            >
-              <source src={mediaConfig.backgroundVideo} type="video/mp4" />
-            </video>
-        ) : null
-      ) : (
-        <div 
-          className="fixed inset-0 pointer-events-none opacity-25 bg-cover bg-center"
-          style={{
-            backgroundImage: `radial-gradient(circle at 50% 30%, rgba(245, 197, 66, 0.08) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(30, 41, 59, 0.4) 0%, transparent 50%), url('${mediaConfig.activeBackground === 'image' && mediaConfig.backgroundImage ? mediaConfig.backgroundImage : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80'}')`
-          }}
-        />
-      )}
+      <div 
+        className="fixed inset-0 pointer-events-none opacity-25 bg-cover bg-center"
+        style={{
+          backgroundImage: `radial-gradient(circle at 50% 30%, rgba(245, 197, 66, 0.08) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(30, 41, 59, 0.4) 0%, transparent 50%), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80')`
+        }}
+      />
 
       {/* Dark Ambient Grid & Blueprint Overlay */}
       <div className="fixed inset-0 pointer-events-none bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)]" />

@@ -535,15 +535,16 @@ export async function handleKeywordPlannerRequest(reqBody: {
   const cleanLoginCustomerId = (rawLoginCustomerId || '').replace(/\D/g, '');
 
   const isGoogleAdsConfigured = Boolean(
-    clientId && clientSecret && refreshToken && cleanCustomerId && cleanCustomerId.length === 10
+    clientId && clientSecret && refreshToken && developerToken && cleanCustomerId && cleanCustomerId.length === 10
   );
 
-  // If Google Ads is NOT configured in .env, return explicit GOOGLE_ADS_NOT_CONFIGURED error
+  // If Google Ads is NOT configured in .env, return explicit GOOGLE_ADS_NOT_CONFIGURED error to avoid generating false metrics
   if (!isGoogleAdsConfigured) {
     const missingList: string[] = [];
     if (!clientId) missingList.push('CLIENT_ID');
     if (!clientSecret) missingList.push('CLIENT_SECRET');
     if (!refreshToken) missingList.push('REFRESH_TOKEN');
+    if (!developerToken) missingList.push('DEVELOPER_TOKEN');
     if (!cleanCustomerId || cleanCustomerId.length !== 10) missingList.push('CUSTOMER_ID');
 
     return {
@@ -556,11 +557,6 @@ export async function handleKeywordPlannerRequest(reqBody: {
       diagnostics: getKeywordPlannerDiagnostics(),
       results: []
     };
-  }
-
-  // Developer token is no longer strictly required for all flows, but if provided, use it
-  if (!developerToken) {
-    console.warn('⚠️ AVISO: GOOGLE_ADS_DEVELOPER_TOKEN ausente. Tentando acesso sem token (suporte limitado pós-sunset).');
   }
 
   // Otherwise, Google Ads is configured -> Attempt official Google Ads API execution
@@ -651,26 +647,23 @@ export async function handleKeywordPlannerRequest(reqBody: {
 
     const googleAdsHeaders: Record<string, string> = {
       'Authorization': `Bearer ${accessToken}`,
+      'developer-token': developerToken!,
       'Content-Type': 'application/json'
     };
-
-    if (developerToken) {
-      googleAdsHeaders['developer-token'] = developerToken;
-    }
 
     if (cleanLoginCustomerId && cleanLoginCustomerId.length === 10) {
       googleAdsHeaders['login-customer-id'] = cleanLoginCustomerId;
       console.log(`• Header 'login-customer-id' adicionado: ${cleanLoginCustomerId}`);
     }
 
-    const historicalUrl = `https://googleads.googleapis.com/v25/customers/${cleanCustomerId}:generateKeywordHistoricalMetrics`;
+    const historicalUrl = `https://googleads.googleapis.com/v18/customers/${cleanCustomerId}:generateKeywordHistoricalMetrics`;
     console.log(`• Endpoint URL: POST ${historicalUrl}`);
     console.log(`• Geo Target: ${geoTarget} (${location})`);
     console.log(`• Language Target: ${langTarget} (${language})`);
     console.log(`• Palavras-chave consultadas (${keywordList.length}):`, keywordList);
 
     console.log("\n--------------------------------------------------------------------------------");
-    console.log("🌐 [GOOGLE_ADS_API_STEP 4: DISPARO DA REQUISIÇÃO GOOGLE ADS API v25]");
+    console.log("🌐 [GOOGLE_ADS_API_STEP 4: DISPARO DA REQUISIÇÃO GOOGLE ADS API v18]");
     console.log("--------------------------------------------------------------------------------");
 
     const apiStartTime = Date.now();
@@ -764,7 +757,7 @@ export async function handleKeywordPlannerRequest(reqBody: {
       console.log("\n--------------------------------------------------------------------------------");
       console.log("🌐 [GOOGLE_ADS_API_STEP 5B: DISPARO DE IDEIAS DE PALAVRAS-CHAVE]");
       console.log("--------------------------------------------------------------------------------");
-      const ideasUrl = `https://googleads.googleapis.com/v25/customers/${cleanCustomerId}:generateKeywordIdeas`;
+      const ideasUrl = `https://googleads.googleapis.com/v18/customers/${cleanCustomerId}:generateKeywordIdeas`;
       console.log(`• ideasUrl: POST ${ideasUrl}`);
       try {
         const ideasResp = await fetch(ideasUrl, {

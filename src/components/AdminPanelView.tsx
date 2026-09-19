@@ -18,15 +18,11 @@ import {
   Search,
   Save,
   Check,
-  RotateCcw,
-  Ban,
-  Unlock,
-  UserPlus,
-  LayoutGrid
+  RotateCcw
 } from 'lucide-react';
 import { AuthUser, AppSettings, MemberAcademyData, ADMIN_EMAIL } from '../types';
 import { getStoredAcademyData, saveStoredAcademyData, resetStoredAcademyData } from '../data/academyData';
-import { getRegisteredUsersList, deleteUserFromDirectory, toggleUserBlockStatus, addNewUserManual } from '../services/authService';
+import { getRegisteredUsersList } from '../services/authService';
 
 interface AdminPanelViewProps {
   currentUser: AuthUser;
@@ -45,48 +41,15 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
 }) => {
   const isAdmin =
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis' | 'login'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis'>('overview');
   const [academyData, setAcademyData] = useState<MemberAcademyData>(getStoredAcademyData);
-  const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
+  const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList);
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
-  const [loginMedia, setLoginMedia] = useState<{ activeBackground: string; backgroundImage: string; backgroundVideo: string }>({ activeBackground: 'default', backgroundImage: '', backgroundVideo: '' });
-
-  React.useEffect(() => {
-    fetch('/api/admin/login-media')
-      .then(res => res.json())
-      .then(data => setLoginMedia(data))
-      .catch(console.error);
-  }, []);
-  const [newUser, setNewUser] = useState({ name: '', email: '' });
-  const [showAddUser, setShowAddUser] = useState(false);
-  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
 
   // Quick form for banners settings in admin
   const [adminBannerSpeed, setAdminBannerSpeed] = useState<number>(settings.bannerAutoplaySpeed || 5);
   const [adminEnableBanners, setAdminEnableBanners] = useState<boolean>(settings.enableBannerCarousel !== false);
   const [adminEnableQuickLogin, setAdminEnableQuickLogin] = useState<boolean>(settings.enableQuickLoginShortcuts !== false);
-
-  const refreshUsers = () => setRegisteredUsers(getRegisteredUsersList());
-
-  const handleAddNewUser = () => {
-    if (!newUser.name || !newUser.email) return;
-    const password = addNewUserManual(newUser.name, newUser.email);
-    setGeneratedPassword(password);
-    setNewUser({ name: '', email: '' });
-    refreshUsers();
-  };
-
-  const handleDeleteUser = (email: string) => {
-    if (confirm('Tem certeza que deseja excluir este usuário?')) {
-      deleteUserFromDirectory(email);
-      refreshUsers();
-    }
-  };
-
-  const handleToggleBlock = (email: string) => {
-    toggleUserBlockStatus(email);
-    refreshUsers();
-  };
 
   const handleSaveBannerConfig = () => {
     onSaveSettings({
@@ -193,8 +156,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           { id: 'academy', label: '🎓 Gerenciar Videoaulas & Curso', icon: Film },
           { id: 'banners', label: '⚙️ Ajustes & Monetização Global', icon: DollarSign },
           { id: 'users', label: '👥 Alunos & Usuários', icon: Users },
-          { id: 'apis', label: '🔑 Chaves & Integrações de APIs', icon: Key },
-          { id: 'login', label: '🖥️ Configuração Tela de Login', icon: LayoutGrid }
+          { id: 'apis', label: '🔑 Chaves & Integrações de APIs', icon: Key }
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -424,71 +386,28 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                 Lista de usuários que acessaram o aplicativo com suas contas Google ou e-mails.
               </p>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowAddUser(!showAddUser)}
-                className="bg-[#2563EB] hover:bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer"
-              >
-                <UserPlus className="w-4 h-4" />
-                Adicionar Manualmente
-              </button>
-              <span className="text-xs text-[#F5C542] font-mono font-bold bg-[#F5C542]/10 px-3 py-2 rounded-full border border-[#F5C542]/20">
-                {registeredUsers.length} usuários
-              </span>
-            </div>
+            <span className="text-xs text-[#F5C542] font-mono font-bold bg-[#F5C542]/10 px-3 py-1 rounded-full border border-[#F5C542]/20">
+              {registeredUsers.length} usuários
+            </span>
           </div>
-
-          {showAddUser && (
-            <div className="p-4 bg-[#181818] border border-[#282828] rounded-2xl space-y-3">
-              <h4 className="text-sm font-bold text-white">Adicionar Novo Usuário</h4>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Nome"
-                  value={newUser.name}
-                  onChange={(e) => setNewUser({...newUser, name: e.target.value})}
-                  className="bg-[#101010] border border-[#333] rounded-xl p-2.5 text-xs text-white flex-1"
-                />
-                <input
-                  type="email"
-                  placeholder="E-mail"
-                  value={newUser.email}
-                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                  className="bg-[#101010] border border-[#333] rounded-xl p-2.5 text-xs text-white flex-1"
-                />
-                <button
-                  onClick={handleAddNewUser}
-                  className="bg-[#22C55E] hover:bg-[#1fa851] text-black font-black px-4 py-2.5 rounded-xl text-xs"
-                >
-                  Adicionar
-                </button>
-              </div>
-              {generatedPassword && (
-                <div className="text-xs text-[#F5C542] bg-[#252008] p-2 rounded-lg border border-[#F5C542]/20">
-                  Usuário criado! Senha temporária: <strong>{generatedPassword}</strong> (Copie agora, ela não será exibida novamente)
-                </div>
-              )}
-            </div>
-          )}
 
           <div className="space-y-3">
             {registeredUsers.map((user, idx) => {
               const userIsAdmin = user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-              const isBlocked = (user as any).blocked;
               return (
                 <div
                   key={idx}
-                  className={`p-4 bg-[#181818] border rounded-2xl flex items-center justify-between gap-4 ${isBlocked ? 'border-red-900/50' : 'border-[#282828]'}`}
+                  className="p-4 bg-[#181818] border border-[#282828] rounded-2xl flex items-center justify-between gap-4"
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${
                         userIsAdmin
                           ? 'bg-[#F5C542] text-black shadow-md'
-                          : isBlocked ? 'bg-red-900 text-red-200' : 'bg-[#2563EB] text-white'
+                          : 'bg-[#2563EB] text-white'
                       }`}
                     >
-                      {userIsAdmin ? '👑' : isBlocked ? '🚫' : '👤'}
+                      {userIsAdmin ? '👑' : '👤'}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -497,35 +416,21 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                           className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${
                             userIsAdmin
                               ? 'bg-[#F5C542]/20 text-[#F5C542]'
-                              : isBlocked ? 'bg-red-900/20 text-red-400' : 'bg-blue-500/20 text-blue-400'
+                              : 'bg-blue-500/20 text-blue-400'
                           }`}
                         >
-                          {userIsAdmin ? 'Administrador Master' : isBlocked ? 'Bloqueado' : 'Usuário Gratuito'}
+                          {userIsAdmin ? 'Administrador Master' : 'Usuário Gratuito'}
                         </span>
                       </div>
                       <p className="text-xs text-[#8E8E8E]">{user.email}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {!userIsAdmin && (
-                      <>
-                        <button
-                          onClick={() => handleToggleBlock(user.email)}
-                          className={`p-2 rounded-xl border text-xs cursor-pointer ${isBlocked ? 'bg-emerald-900/20 border-emerald-500/30 text-emerald-400' : 'bg-[#202020] border-[#333] text-[#F5C542]'}`}
-                          title={isBlocked ? "Desbloquear" : "Bloquear"}
-                        >
-                          {isBlocked ? <Unlock className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user.email)}
-                          className="p-2 bg-[#202020] hover:bg-red-900/20 border border-[#333] hover:border-red-500/30 text-red-400 rounded-xl text-xs transition-colors cursor-pointer"
-                          title="Excluir"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
+                  <div className="text-right text-[11px] text-[#666]">
+                    <span>Último Acesso:</span>
+                    <p className="text-[#A1A1A1] font-mono">
+                      {new Date(user.lastLoginAt).toLocaleDateString('pt-BR')}
+                    </p>
                   </div>
                 </div>
               );
@@ -580,111 +485,6 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                 Mapeamento das tendências de alto giro e maiores pedidos na Shopee Brasil.
               </p>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 6: Login Media */}
-      {activeTab === 'login' && (
-        <div className="bg-[#121212] border border-[#222] rounded-3xl p-6 md:p-8 space-y-6 animate-in fade-in">
-          <div className="border-b border-[#222] pb-5">
-            <h3 className="text-lg font-black text-white">Configuração da Tela de Login</h3>
-            <p className="text-xs text-[#8E8E8E]">
-              Defina a mídia de fundo para a tela de acesso dos usuários.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Imagem */}
-            <div className="p-5 bg-[#181818] border border-[#222] rounded-2xl space-y-4">
-               <h4 className="text-sm font-bold text-white">Imagem de Fundo</h4>
-               <div className="aspect-video bg-black rounded-lg overflow-hidden border border-[#222]">
-                  {loginMedia.backgroundImage ? (
-                    <img src={loginMedia.backgroundImage} alt="Preview" className="w-full h-full object-cover" />
-                  ) : <div className="flex items-center justify-center h-full text-[#555] text-xs">Sem imagem</div>}
-               </div>
-               <input type="file" accept="image/*" onChange={async (e) => {
-                 if (e.target.files?.[0]) {
-                   const formData = new FormData();
-                   formData.append('media', e.target.files[0]);
-                   formData.append('activeBackground', 'image');
-                   try {
-                     const response = await fetch('/api/admin/login-media', { 
-                        method: 'POST', 
-                        body: formData, 
-                        headers: { 'x-admin-email': currentUser.email } 
-                     });
-                     if (!response.ok) throw new Error('Falha no upload da imagem');
-                     const data = await response.json();
-                     setLoginMedia(data.config);
-                     alert('Imagem salva com sucesso!');
-                   } catch (err) {
-                     console.error(err);
-                     alert('Erro ao salvar imagem. Verifique se o bucket GCS está configurado.');
-                   }
-                 }
-               }} />
-            </div>
-             {/* Vídeo */}
-            <div className="p-5 bg-[#181818] border border-[#222] rounded-2xl space-y-4">
-               <h4 className="text-sm font-bold text-white">Vídeo de Fundo</h4>
-               <div className="aspect-video bg-black rounded-lg overflow-hidden border border-[#222]">
-                  {loginMedia.backgroundVideo ? (
-                    <video src={loginMedia.backgroundVideo} className="w-full h-full object-cover" />
-                  ) : <div className="flex items-center justify-center h-full text-[#555] text-xs">Sem vídeo</div>}
-               </div>
-               <input type="file" accept="video/*" onChange={async (e) => {
-                 if (e.target.files?.[0]) {
-                   const formData = new FormData();
-                   formData.append('media', e.target.files[0]);
-                   formData.append('activeBackground', 'video');
-                   try {
-                     const response = await fetch('/api/admin/login-media', { 
-                        method: 'POST', 
-                        body: formData, 
-                        headers: { 'x-admin-email': currentUser.email } 
-                     });
-                     if (!response.ok) throw new Error('Falha no upload do vídeo');
-                     const data = await response.json();
-                     setLoginMedia(data.config);
-                     alert('Vídeo salvo com sucesso!');
-                   } catch (err) {
-                     console.error(err);
-                     alert('Erro ao salvar vídeo. Verifique se o bucket GCS está configurado.');
-                   }
-                 }
-               }} />
-               <div className="flex gap-2 mt-2">
-                 <input type="text" placeholder="Ou cole o link do YouTube aqui" className="flex-grow p-2 bg-[#222] rounded-lg text-xs text-white" id="youtubeUrlInput" />
-                 <button onClick={async () => {
-                    const urlInput = document.getElementById('youtubeUrlInput') as HTMLInputElement;
-                    if (urlInput && urlInput.value) {
-                        try {
-                             const response = await fetch('/api/admin/login-media', { 
-                                method: 'POST', 
-                                body: JSON.stringify({ activeBackground: 'video', youtubeUrl: urlInput.value }), 
-                                headers: { 'x-admin-email': currentUser.email, 'Content-Type': 'application/json' } 
-                             });
-                             if (!response.ok) throw new Error('Falha ao salvar link');
-                             const data = await response.json();
-                             setLoginMedia(data.config);
-                             alert('Link salvo com sucesso!');
-                        } catch (err) {
-                             console.error(err);
-                             alert('Erro ao salvar link.');
-                        }
-                    }
-                 }} className="p-2 bg-[#222] rounded-lg text-white">OK</button>
-               </div>
-            </div>
-          </div>
-          
-          <div className="flex gap-4">
-             <button onClick={() => {
-                fetch('/api/admin/login-media', { method: 'POST', body: JSON.stringify({ activeBackground: 'default' }), headers: { 'x-admin-email': currentUser.email, 'Content-Type': 'application/json' } })
-                .then(r => r.json())
-                .then(d => setLoginMedia(d.config));
-             }} className="px-4 py-2 bg-[#222] rounded-lg text-xs font-bold text-white">Restaurar Padrão</button>
           </div>
         </div>
       )}
