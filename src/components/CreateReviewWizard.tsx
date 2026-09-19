@@ -10,7 +10,7 @@ import {
 } from '../types';
 import { CATEGORIES, PLATFORMS } from '../data/initialData';
 import { ReviewRenderer } from './ReviewRenderer';
-import { matchProductImage } from '../utils/productImageMatcher';
+import { matchProductImage, validateAndNormalizeReviewImages } from '../utils/productImageMatcher';
 import {
   ArrowLeft,
   ArrowRight,
@@ -225,7 +225,7 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
 
   // Form State initialized with defaults matching the screenshot
   const [formData, setFormData] = useState<Review>(() => {
-    if (initialReview) return initialReview;
+    if (initialReview) return validateAndNormalizeReviewImages(initialReview);
 
     const defaultNiche = POPULAR_NICHES[0];
     return {
@@ -376,6 +376,13 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
       status: 'Publicado'
     };
   });
+
+  // Re-synchronize and validate consistency when initialReview prop changes
+  useEffect(() => {
+    if (initialReview) {
+      setFormData(validateAndNormalizeReviewImages(initialReview));
+    }
+  }, [initialReview]);
 
   // Auto-generate CTA button text when price changes
   const handlePriceChange = (priceVal: string) => {
@@ -2943,7 +2950,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => onSave(formData)}
+              onClick={() => onSave(validateAndNormalizeReviewImages(formData))}
               className="flex items-center gap-2 bg-[#22C55E] hover:bg-[#16A34A] text-black font-extrabold px-6 py-2.5 rounded-xl text-xs shadow-lg shadow-green-500/20 transition-all cursor-pointer hover:scale-[1.02]"
             >
               <Save className="w-4 h-4 stroke-[2.5]" />

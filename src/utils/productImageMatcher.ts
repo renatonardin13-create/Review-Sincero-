@@ -402,3 +402,50 @@ export function getProductPhotoOptions(productName: string, category?: string): 
 
   return options;
 }
+
+/**
+ * Validates and normalizes review image URLs for consistency between loaded reviews, wizard and renderer.
+ */
+export function validateAndNormalizeReviewImages<T extends { productName?: string; category?: string; mainImage?: string; images?: string[] }>(review: T): T {
+  if (!review) return review;
+
+  const smartMatch = matchProductImage(review.productName || '', review.category);
+  
+  // 1. Validate mainImage
+  let validMain = (review.mainImage || '').trim();
+  const isValidUrl = (url: string) => url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:');
+
+  if (!validMain || !isValidUrl(validMain)) {
+    validMain = smartMatch.mainImage;
+  }
+
+  // 2. Validate and deduplicate images array
+  const imageList: string[] = [validMain];
+
+  if (Array.isArray(review.images)) {
+    for (const img of review.images) {
+      if (typeof img === 'string') {
+        const trimmed = img.trim();
+        if (trimmed && isValidUrl(trimmed) && !imageList.includes(trimmed)) {
+          imageList.push(trimmed);
+        }
+      }
+    }
+  }
+
+  // 3. Ensure at least 3 high-quality gallery images matching the product
+  if (imageList.length < 3 && smartMatch.gallery) {
+    for (const gImg of smartMatch.gallery) {
+      if (!imageList.includes(gImg)) {
+        imageList.push(gImg);
+      }
+      if (imageList.length >= 4) break;
+    }
+  }
+
+  return {
+    ...review,
+    mainImage: validMain,
+    images: imageList
+  };
+}
