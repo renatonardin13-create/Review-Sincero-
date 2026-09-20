@@ -333,6 +333,9 @@ export interface LessonItem {
   materials?: LessonSupportMaterial[];
   promptTemplate?: string;
   order: number;
+  published?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CourseModule {

@@ -58,6 +58,11 @@ import {
   INITIAL_LESSONS
 } from '../data/academyData';
 import {
+  subscribeToAcademy,
+  saveAcademyLessonToFirestore,
+  deleteAcademyLessonFromFirestore
+} from '../services/academyService';
+import {
   extractYouTubeId,
   buildWhiteLabelEmbedUrl,
   getYouTubeThumbnail
@@ -134,6 +139,18 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
       activeLessonId
     });
   }, [academyData, activeLessonId]);
+
+  // Real-time Firestore subscription for academy lessons and modules
+  useEffect(() => {
+    const unsubscribe = subscribeToAcademy(({ modules, lessons }) => {
+      setAcademyData((prev) => ({
+        ...prev,
+        modules,
+        lessons
+      }));
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Load notes for active lesson
   useEffect(() => {
@@ -294,29 +311,28 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
 
     if (editingLessonId) {
       // Update
-      setAcademyData((prev) => ({
-        ...prev,
-        lessons: prev.lessons.map((l) => {
-          if (l.id === editingLessonId) {
-            return {
-              ...l,
-              title: formLessonTitle.trim(),
-              moduleId: formLessonModuleId || prev.modules[0]?.id || 'mod-1',
-              youtubeUrlOrId: formLessonYoutubeUrl.trim(),
-              youtubeId: cleanId,
-              duration: formLessonDuration.trim() || '10:00',
-              description: formLessonDescription.trim(),
-              keyTakeaways: takeawaysArray,
-              promptTemplate: formLessonPromptTemplate.trim(),
-              materials: formLessonMaterials
-            };
-          }
-          return l;
-        })
-      }));
+      const existing = academyData.lessons.find((l) => l.id === editingLessonId);
+      const updatedLesson = {
+        id: editingLessonId,
+        title: formLessonTitle.trim(),
+        moduleId: formLessonModuleId || academyData.modules[0]?.id || 'mod-1',
+        youtubeUrlOrId: formLessonYoutubeUrl.trim(),
+        youtubeId: cleanId,
+        duration: formLessonDuration.trim() || '10:00',
+        description: formLessonDescription.trim(),
+        keyTakeaways: takeawaysArray,
+        promptTemplate: formLessonPromptTemplate.trim(),
+        materials: formLessonMaterials,
+        order: existing?.order || academyData.lessons.length + 1,
+        published: existing?.published !== false,
+        createdAt: existing?.createdAt || new Date().toISOString()
+      };
+      saveAcademyLessonToFirestore(updatedLesson).catch((err) =>
+        console.error('[Academy] Error updating lesson:', err)
+      );
     } else {
       // Create new
-      const newLesson: LessonItem = {
+      const newLesson = {
         id: 'les-' + Date.now(),
         moduleId: formLessonModuleId || academyData.modules[0]?.id || 'mod-1',
         title: formLessonTitle.trim(),
@@ -327,13 +343,13 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
         keyTakeaways: takeawaysArray,
         promptTemplate: formLessonPromptTemplate.trim(),
         materials: formLessonMaterials,
-        order: academyData.lessons.length + 1
+        order: academyData.lessons.length + 1,
+        published: true,
+        createdAt: new Date().toISOString()
       };
-
-      setAcademyData((prev) => ({
-        ...prev,
-        lessons: [...prev.lessons, newLesson]
-      }));
+      saveAcademyLessonToFirestore(newLesson).catch((err) =>
+        console.error('[Academy] Error saving new lesson:', err)
+      );
       setActiveLessonId(newLesson.id);
     }
 
@@ -344,21 +360,9 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
   // Delete Lesson
   const handleDeleteLesson = (lessonId: string) => {
     if (confirm('Tem certeza que deseja excluir esta videoaula da sua área de membros?')) {
-      setAcademyData((prev) => {
-        const remaining = prev.lessons.filter((l) => l.id !== lessonId);
-        return {
-          ...prev,
-          lessons: remaining,
-          completedLessonIds: prev.completedLessonIds.filter((id) => id !== lessonId)
-        };
-      });
-
-      if (activeLessonId === lessonId) {
-        const remaining = academyData.lessons.filter((l) => l.id !== lessonId);
-        if (remaining.length > 0) {
-          setActiveLessonId(remaining[0].id);
-        }
-      }
+      deleteAcademyLessonFromFirestore(lessonId).catch((err) =>
+        console.error('[Academy] Error deleting lesson:', err)
+      );
     }
   };
 
@@ -418,7 +422,10 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
   // Filtered Lessons based on search
   const filteredModulesWithLessons = useMemo(() => {
     return academyData.modules.map((mod) => {
-      let modLessons = academyData.lessons.filter((l) => l.moduleId === mod.id);
+      let modLessons = academyData.lessons.filter((l) => {
+        if (!isAdmin && l.published === false) return false;
+        return l.moduleId === mod.id;
+      });
       if (lessonSearchQuery.trim()) {
         const q = lessonSearchQuery.toLowerCase();
         modLessons = modLessons.filter(
@@ -432,7 +439,7 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
         lessons: modLessons
       };
     });
-  }, [academyData.modules, academyData.lessons, lessonSearchQuery]);
+  }, [academyData.modules, academyData.lessons, lessonSearchQuery, isAdmin]);
 
   const activeLessonIsCompleted = activeLesson
     ? academyData.completedLessonIds.includes(activeLesson.id)

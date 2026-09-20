@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck,
   Crown,
@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { AuthUser, AppSettings, MemberAcademyData, ADMIN_EMAIL } from '../types';
 import { getStoredAcademyData, saveStoredAcademyData, resetStoredAcademyData } from '../data/academyData';
+import { subscribeToAcademy } from '../services/academyService';
 import { getRegisteredUsersList } from '../services/authService';
 import { isValidYoutubeUrl } from '../utils/urlUtils';
 import { storage } from '../lib/firebase';
@@ -59,6 +60,13 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
+
+  useEffect(() => {
+    const unsub = subscribeToAcademy(({ modules, lessons }) => {
+      setAcademyData((prev) => ({ ...prev, modules, lessons }));
+    });
+    return () => unsub();
+  }, []);
 
   const handleAddUser = () => {
       if (!newUserName || !newUserEmail) {
