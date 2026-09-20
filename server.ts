@@ -1270,6 +1270,64 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // -------------------------------------------------------------------------
+  // PRESENÇA GLOBAL EM TEMPO REAL (Compartilhada entre visitantes sem Math.random)
+  // -------------------------------------------------------------------------
+  const activeSessions = new Map<string, number>();
+  const SESSION_TTL_MS = 35000; // TTL de 35s para expiração automática
+
+  app.post("/api/presence/heartbeat", (req, res) => {
+    try {
+      const { sessionId } = req.body || {};
+      const now = Date.now();
+
+      if (sessionId && typeof sessionId === 'string' && sessionId.trim().length > 0) {
+        activeSessions.set(sessionId.trim(), now);
+      }
+
+      // Purge sessions older than TTL
+      for (const [id, lastSeen] of activeSessions.entries()) {
+        if (now - lastSeen > SESSION_TTL_MS) {
+          activeSessions.delete(id);
+        }
+      }
+
+      res.json({
+        ok: true,
+        online: true,
+        activeSessionCount: Math.max(1, activeSessions.size)
+      });
+    } catch {
+      res.json({ ok: true, online: true, activeSessionCount: 1 });
+    }
+  });
+
+  app.post("/api/presence/leave", (req, res) => {
+    try {
+      const { sessionId } = req.body || {};
+      if (sessionId && typeof sessionId === 'string') {
+        activeSessions.delete(sessionId.trim());
+      }
+      res.json({ ok: true, activeSessionCount: Math.max(1, activeSessions.size) });
+    } catch {
+      res.json({ ok: true });
+    }
+  });
+
+  app.get("/api/presence/count", (req, res) => {
+    const now = Date.now();
+    for (const [id, lastSeen] of activeSessions.entries()) {
+      if (now - lastSeen > SESSION_TTL_MS) {
+        activeSessions.delete(id);
+      }
+    }
+    res.json({
+      ok: true,
+      online: true,
+      activeSessionCount: Math.max(1, activeSessions.size)
+    });
+  });
+
   // Vite middleware for development or static serving for production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

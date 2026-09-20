@@ -1,49 +1,68 @@
-// Real presence tracker: tracks real sessions without artificial Math.random generation
+// Real presence tracker: tracks real global sessions across all visitors without Math.random
 
 interface PresenceState {
   isOnline: boolean;
   activeSessionCount: number;
 }
 
-const PRESENCE_STORAGE_KEY = 'rs_presence_heartbeats';
-const SESSION_ID = 'sess_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
-const HEARTBEAT_INTERVAL_MS = 15000;
-const SESSION_EXPIRY_MS = 45000;
+const HEARTBEAT_INTERVAL_MS = 12000;
+
+function getOrCreateSessionId(): string {
+  if (typeof window === 'undefined') return 'server_session';
+  try {
+    const existing = sessionStorage.getItem('rs_presence_session_id');
+    if (existing && existing.length > 5) return existing;
+  } catch {}
+
+  let newId: string;
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    newId = 'sess_' + crypto.randomUUID();
+  } else {
+    const now = Date.now().toString(36);
+    const perf = (typeof performance !== 'undefined' ? performance.now().toFixed(0) : '0');
+    newId = `sess_${now}_${perf}`;
+  }
+
+  try {
+    sessionStorage.setItem('rs_presence_session_id', newId);
+  } catch {}
+
+  return newId;
+}
 
 export function initPresenceTracker(onChange: (state: PresenceState) => void): () => void {
   let isSubscribed = true;
+  const sessionId = getOrCreateSessionId();
 
-  const updateHeartbeat = () => {
+  const sendHeartbeat = async () => {
+    if (!navigator.onLine) {
+      if (isSubscribed) {
+        onChange({ isOnline: false, activeSessionCount: 1 });
+      }
+      return;
+    }
+
     try {
-      const now = Date.now();
-      const raw = localStorage.getItem(PRESENCE_STORAGE_KEY);
-      const heartbeats: Record<string, number> = raw ? JSON.parse(raw) : {};
+      const resp = await fetch('/api/presence/heartbeat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
 
-      // Register this session
-      heartbeats[SESSION_ID] = now;
-
-      // Purge expired sessions
-      const validSessions: Record<string, number> = {};
-      let count = 0;
-      for (const [id, time] of Object.entries(heartbeats)) {
-        if (now - time < SESSION_EXPIRY_MS) {
-          validSessions[id] = time;
-          count++;
+      if (resp.ok) {
+        const data = await resp.json();
+        if (isSubscribed && typeof data.activeSessionCount === 'number') {
+          onChange({
+            isOnline: true,
+            activeSessionCount: Math.max(1, data.activeSessionCount)
+          });
         }
       }
-
-      localStorage.setItem(PRESENCE_STORAGE_KEY, JSON.stringify(validSessions));
-
-      if (isSubscribed) {
-        onChange({
-          isOnline: window.navigator.onLine,
-          activeSessionCount: Math.max(1, count)
-        });
-      }
     } catch {
+      // Fallback se rede local oscilar temporariamente
       if (isSubscribed) {
         onChange({
-          isOnline: window.navigator.onLine,
+          isOnline: navigator.onLine,
           activeSessionCount: 1
         });
       }
@@ -51,54 +70,37 @@ export function initPresenceTracker(onChange: (state: PresenceState) => void): (
   };
 
   // Initial heartbeat
-  updateHeartbeat();
+  sendHeartbeat();
 
-  const interval = setInterval(updateHeartbeat, HEARTBEAT_INTERVAL_MS);
-
-  const handleStorage = (e: StorageEvent) => {
-    if (e.key === PRESENCE_STORAGE_KEY && e.newValue) {
-      try {
-        const now = Date.now();
-        const data: Record<string, number> = JSON.parse(e.newValue);
-        let count = 0;
-        for (const [, time] of Object.entries(data)) {
-          if (now - time < SESSION_EXPIRY_MS) count++;
-        }
-        if (isSubscribed) {
-          onChange({
-            isOnline: window.navigator.onLine,
-            activeSessionCount: Math.max(1, count)
-          });
-        }
-      } catch {}
-    }
-  };
+  const interval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
 
   const handleOnlineStatus = () => {
     if (isSubscribed) {
-      updateHeartbeat();
+      sendHeartbeat();
     }
   };
 
-  window.addEventListener('storage', handleStorage);
+  const handlePageUnload = () => {
+    try {
+      if (navigator.sendBeacon) {
+        const blob = new Blob([JSON.stringify({ sessionId })], { type: 'application/json' });
+        navigator.sendBeacon('/api/presence/leave', blob);
+      }
+    } catch {}
+  };
+
   window.addEventListener('online', handleOnlineStatus);
   window.addEventListener('offline', handleOnlineStatus);
+  window.addEventListener('beforeunload', handlePageUnload);
+  window.addEventListener('pagehide', handlePageUnload);
 
   return () => {
     isSubscribed = false;
     clearInterval(interval);
-    window.removeEventListener('storage', handleStorage);
     window.removeEventListener('online', handleOnlineStatus);
     window.removeEventListener('offline', handleOnlineStatus);
-
-    // Remove session on leave
-    try {
-      const raw = localStorage.getItem(PRESENCE_STORAGE_KEY);
-      if (raw) {
-        const heartbeats: Record<string, number> = JSON.parse(raw);
-        delete heartbeats[SESSION_ID];
-        localStorage.setItem(PRESENCE_STORAGE_KEY, JSON.stringify(heartbeats));
-      }
-    } catch {}
+    window.removeEventListener('beforeunload', handlePageUnload);
+    window.removeEventListener('pagehide', handlePageUnload);
+    handlePageUnload();
   };
 }

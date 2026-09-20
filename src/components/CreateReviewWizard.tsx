@@ -1094,7 +1094,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
   };
 
   const handleOpenClaude = async () => {
-    // 1. Obter o prompt da fonte única generatedPrompt e copiar para clipboard
+    // 1. Obter exatamente o generatedPrompt atual da fonte única da verdade
     const success = await safeCopyToClipboard(generatedPrompt);
     setCopiedPrompt(true);
     setCopiedTarget('claude');
@@ -1102,7 +1102,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
     if (success) {
       setToastMessage({
         title: '✓ Prompt copiado! Cole no Claude com Ctrl+V.',
-        desc: 'Claude.ai aberto em nova aba. Pressione Ctrl+V no campo de mensagem para colar o PRD completo.',
+        desc: 'Pressione Ctrl+V no campo de mensagem para colar o PRD completo.',
         type: 'claude',
         action: {
           label: 'COPIAR NOVAMENTE',
@@ -1111,11 +1111,11 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
       });
     } else {
       setToastMessage({
-        title: 'Não foi possível copiar automaticamente.',
-        desc: 'O navegador bloqueou a área de transferência. Use o botão Copiar Prompt abaixo.',
+        title: 'Aviso da área de transferência',
+        desc: "Não foi possível copiar automaticamente. Clique em 'Copiar Apenas o Texto' para copiar o prompt.",
         type: 'error',
         action: {
-          label: 'COPIAR PROMPT',
+          label: 'Copiar Apenas o Texto',
           onClick: () => handleCopyPrompt()
         }
       });
@@ -1129,29 +1129,20 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
       setToastMessage(null);
     }, 7000);
 
-    // 2. Abrir rota oficial de novo chat no Claude sem URLs com query strings enormes que causam tela branca
+    // 2. Abrir Claude em nova aba de forma limpa e oficial
     window.open('https://claude.ai/new', '_blank', 'noopener,noreferrer');
   };
 
   const handleOpenChatGPT = async () => {
-    // 1. Obter o prompt da fonte única generatedPrompt e copiar para clipboard
+    // 1. Obter exatamente o generatedPrompt atual da fonte única da verdade
     const success = await safeCopyToClipboard(generatedPrompt);
     setCopiedPrompt(true);
     setCopiedTarget('chatgpt');
 
-    const encodedPrompt = encodeURIComponent(generatedPrompt);
-    // Limite seguro de URL para evitar erro HTTP 414 / tela branca no Cloudflare/ChatGPT (~1800 caracteres)
-    const canUseUrlPreFill = encodedPrompt.length <= 1800;
-    const chatGptUrl = canUseUrlPreFill
-      ? `https://chatgpt.com/?q=${encodedPrompt}`
-      : 'https://chatgpt.com/';
-
     if (success) {
       setToastMessage({
         title: '✓ Prompt copiado! Cole no ChatGPT com Ctrl+V.',
-        desc: canUseUrlPreFill
-          ? 'ChatGPT aberto em nova aba com o campo de mensagem preparado. Se necessário, use Ctrl+V.'
-          : 'Prompt copiado com sucesso! Pressione Ctrl+V no campo do ChatGPT para colar o PRD completo.',
+        desc: 'Pressione Ctrl+V no campo de mensagem para colar o PRD completo.',
         type: 'chatgpt',
         action: {
           label: 'COPIAR NOVAMENTE',
@@ -1160,11 +1151,11 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
       });
     } else {
       setToastMessage({
-        title: 'Não foi possível copiar automaticamente.',
-        desc: 'O navegador bloqueou a cópia. Use o botão Copiar Prompt para transferir o conteúdo.',
+        title: 'Aviso da área de transferência',
+        desc: "Não foi possível copiar automaticamente. Clique em 'Copiar Apenas o Texto' para copiar o prompt.",
         type: 'error',
         action: {
-          label: 'COPIAR PROMPT',
+          label: 'Copiar Apenas o Texto',
           onClick: () => handleCopyPrompt()
         }
       });
@@ -1178,8 +1169,8 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
       setToastMessage(null);
     }, 7000);
 
-    // 2. Abrir ChatGPT em nova aba utilizando URL segura e oficial
-    window.open(chatGptUrl, '_blank', 'noopener,noreferrer');
+    // 2. Abrir ChatGPT em nova aba de forma limpa e oficial
+    window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
   };
 
   const handleOpenV0 = async () => {

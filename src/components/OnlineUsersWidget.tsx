@@ -21,16 +21,16 @@ export const OnlineUsersWidget: React.FC = () => {
       </div>
       <Users className="w-4 h-4 text-[#F5C542]" />
       <div className="flex items-center gap-1 font-medium">
-        {presence.activeSessionCount > 1 ? (
+        {presence.isOnline ? (
           <>
             <span className="font-bold text-white text-sm">{presence.activeSessionCount}</span>
-            <span className="text-[#A1A1A1] text-[11px] hidden lg:inline">sessões ativas</span>
-            <span className="text-[#A1A1A1] text-[11px] lg:hidden">online</span>
+            <span className="text-[#A1A1A1] text-[11px] hidden sm:inline">
+              {presence.activeSessionCount === 1 ? 'pessoa usando agora' : 'pessoas usando agora'}
+            </span>
+            <span className="text-[#A1A1A1] text-[11px] sm:hidden">online</span>
           </>
         ) : (
-          <span className="text-[#A1A1A1] text-[11px]">
-            {presence.isOnline ? 'Conectado em tempo real' : 'Modo offline'}
-          </span>
+          <span className="text-[#A1A1A1] text-[11px]">Modo offline</span>
         )}
       </div>
     </div>
