@@ -168,9 +168,26 @@ export default function App() {
     }
   }, [reviews]);
 
+  // Fetch settings from server on mount so students see admin banners automatically
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.settings) {
+          setSettings(data.settings);
+        }
+      })
+      .catch(console.warn);
+  }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem('review_sincero_settings', JSON.stringify(settings));
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      }).catch(console.warn);
     } catch (e) {
       console.error(e);
     }

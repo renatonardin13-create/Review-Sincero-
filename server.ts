@@ -1363,6 +1363,28 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     }
   });
 
+  // Global App Settings (Banners & Configuration synchronization for students)
+  let globalAppSettings: any = null;
+
+  app.get("/api/settings", (req, res) => {
+    res.json({ success: true, settings: globalAppSettings });
+  });
+
+  app.post("/api/settings", (req, res) => {
+    try {
+      const newSettings = req.body;
+      if (!newSettings) {
+        return res.status(400).json({ error: "Configurações inválidas." });
+      }
+      globalAppSettings = newSettings;
+      console.log("[server] Configurações globais e banners sincronizados pelo Administrador.");
+      res.json({ success: true, settings: globalAppSettings });
+    } catch (err: any) {
+      console.error("[server] Error saving settings:", err);
+      res.status(500).json({ error: "Erro ao salvar configurações." });
+    }
+  });
+
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Review Sincero running on http://localhost:${PORT}`);
   });
