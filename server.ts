@@ -876,24 +876,7 @@ async function startServer() {
         }
       ];
 
-      discoveredProducts.forEach(p => {
-        if (!RECONCILED_CATALOG.find(c => c.productId === `disc-${p.source}-${p.externalId}`)) {
-          RECONCILED_CATALOG.push({
-            productId: `disc-${p.source}-${p.externalId}`,
-            platform: 'Mercado Livre',
-            canonicalTitle: p.title,
-            category: p.category,
-            realPrice: parseFloat(p.price.replace('R$', '').replace(',', '.')),
-            verifiedImageUrl: p.thumbnail,
-            affiliateUrl: p.permalink,
-            demandBadge: '💡 Descoberto',
-            soldQuantity: `+${p.soldQuantity || 0} vendidos`,
-            rating: 4.8,
-            reviewsCount: p.soldQuantity || 100,
-            conversionReason: `Descoberto via ${p.trendSource}.`,
-            technicalDescription: 'Produto descoberto manualmente.',
-          }
-      ];
+
 
       discoveredProducts.forEach(p => {
         if (!RECONCILED_CATALOG.find(c => c.productId === `disc-${p.source}-${p.externalId}`)) {
@@ -903,6 +886,7 @@ async function startServer() {
             canonicalTitle: p.title,
             category: p.category,
             realPrice: parseFloat(p.price.replace('R$', '').replace(',', '.')),
+            originalPrice: parseFloat(p.price.replace('R$', '').replace(',', '.')) * 1.2,
             verifiedImageUrl: p.thumbnail,
             affiliateUrl: p.permalink,
             demandBadge: '💡 Descoberto',
@@ -1337,7 +1321,7 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
       }));
 
       // Persistir com deduplicação
-      items.forEach(item => {
+      items.forEach((item: any) => {
         if (!discoveredProducts.find(p => p.source === item.source && p.externalId === item.externalId)) {
           discoveredProducts.push(item);
         } else {

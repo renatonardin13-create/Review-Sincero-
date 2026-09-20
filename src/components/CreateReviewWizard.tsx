@@ -1869,7 +1869,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, seoSettings: { ...prev.seoSettings, metaTitle: title } }))}
+                        onClick={() => setFormData(prev => ({ ...prev, seoSettings: { metaTitle: title, metaDescription: prev.seoSettings?.metaDescription || '' } }))}
                         className="block w-full text-left text-xs text-white p-2 hover:bg-[#334155] rounded-lg transition-colors"
                       >
                         {title}

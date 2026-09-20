@@ -43,8 +43,6 @@ export const TutorialView: React.FC<TutorialViewProps> = ({
     { id: 'members', label: '🎓 Área de Membros (Vídeos VIP)', icon: GraduationCap, badge: 'NOVO' },
     { id: 'quickstart', label: '⚡ Início Rápido (3 min)', icon: Zap },
     { id: 'generator', label: '🤖 Gerador com IA', icon: Sparkles },
-    { id: 'trends', label: '📈 Radar de Tendências', icon: TrendingUp },
-    { id: 'keywords', label: '🔍 Planejador de Palavras', icon: Search },
     { id: 'templates', label: '🎨 Templates de Conversão', icon: LayoutTemplate },
     { id: 'monetization', label: '💰 Banners & Monetização', icon: DollarSign },
     { id: 'export', label: '🚀 Exportar & Hospedar', icon: Download }

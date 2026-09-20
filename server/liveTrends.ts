@@ -391,7 +391,7 @@ export async function fetchShopeeLiveTrends(category = 'Tech'): Promise<Formatte
           indicator: `+${Math.floor(220 + Math.random() * 150)}% vendas recentes`,
           suggestedPrice: item.price,
           suggestedDescription: `Campeão absoluto de vendas na Shopee Brasil.`,
-          platform: 'Shopee',
+          platform: 'Shopee' as ("Mercado Livre" | "Shopee"),
           thumbnail: item.img,
           realUrl: resolveOfficialProductUrl({
             platform: 'Shopee',

@@ -198,13 +198,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <span>Produtos Campeões</span>
           </button>
 
-          <button
-            onClick={() => setCurrentView('comparar')}
-            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white hover:border-[#F5C542]/40 transition-all cursor-pointer"
-          >
-            <span className="text-sm">⚖️</span>
-            <span>Comparar Produtos</span>
-          </button>
+
 
           <button
             onClick={() => setCurrentView('trends')}
