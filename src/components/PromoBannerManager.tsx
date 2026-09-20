@@ -31,6 +31,7 @@ interface PromoBannerManagerProps {
   onUpdateAutoplaySpeed: (speed: number) => void;
   carouselEnabled: boolean;
   onUpdateCarouselEnabled: (enabled: boolean) => void;
+  onSaveAll?: () => void;
 }
 
 const PRESET_BACKGROUNDS = [
@@ -72,13 +73,35 @@ export const PromoBannerManager: React.FC<PromoBannerManagerProps> = ({
   autoplaySpeed,
   onUpdateAutoplaySpeed,
   carouselEnabled,
-  onUpdateCarouselEnabled
+  onUpdateCarouselEnabled,
+  onSaveAll
 }) => {
   const [editingBannerId, setEditingBannerId] = useState<string | null>(
     banners.length > 0 ? banners[0].id : null
   );
   const [showPresetModal, setShowPresetModal] = useState<boolean>(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [saveStatus, setSaveStatus] = useState<boolean>(false);
+
+  const handleSaveClick = () => {
+    if (onSaveAll) {
+      onSaveAll();
+    } else {
+      try {
+        fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            promoBanners: banners,
+            bannerAutoplaySpeed: autoplaySpeed,
+            enableBannerCarousel: carouselEnabled
+          })
+        }).catch(console.warn);
+      } catch (e) {}
+    }
+    setSaveStatus(true);
+    setTimeout(() => setSaveStatus(false), 3000);
+  };
 
   const activeEditingBanner =
     banners.find((b) => b.id === editingBannerId) || banners[0] || null;
@@ -204,8 +227,8 @@ export const PromoBannerManager: React.FC<PromoBannerManagerProps> = ({
             </p>
           </div>
 
-          {/* Master Enable/Disable Switch */}
-          <div className="flex flex-col items-end gap-2 shrink-0 w-full md:w-auto bg-[#181818] p-4 rounded-2xl border border-[#2E2E2E]">
+          {/* Master Enable/Disable Switch & Save Button */}
+          <div className="flex flex-col items-end gap-3 shrink-0 w-full md:w-auto bg-[#181818] p-4 rounded-2xl border border-[#2E2E2E]">
             <div className="flex items-center justify-between w-full md:w-auto gap-4">
               <span className="text-xs font-bold text-white">Exibir Slides no Dashboard</span>
               <button
@@ -225,6 +248,16 @@ export const PromoBannerManager: React.FC<PromoBannerManagerProps> = ({
             <span className="text-[11px] text-[#8E8E8E]">
               {carouselEnabled ? '✅ Slides ativos na página inicial' : '⏸️ Slides ocultos'}
             </span>
+            <button
+              type="button"
+              onClick={handleSaveClick}
+              className={`w-full mt-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all shadow-lg cursor-pointer ${
+                saveStatus ? 'bg-emerald-500 text-white' : 'bg-[#F5C542] hover:bg-[#FFD95A] text-black'
+              }`}
+            >
+              <Check className="w-4 h-4 stroke-[3]" />
+              <span>{saveStatus ? 'Salvo com Sucesso!' : 'Salvar Alterações'}</span>
+            </button>
           </div>
         </div>
 
