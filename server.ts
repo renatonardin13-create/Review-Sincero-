@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -1364,6 +1365,7 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
   });
 
   // Global App Settings (Banners & Configuration synchronization for students)
+  const settingsFilePath = path.join(process.cwd(), 'settings_store.json');
   let globalAppSettings: any = {
     siteName: 'Guia Sincero Tech',
     authorName: 'Carlos Mendonça',
@@ -1386,6 +1388,19 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     enableBannerCarousel: true
   };
 
+  try {
+    if (fs.existsSync(settingsFilePath)) {
+      const data = fs.readFileSync(settingsFilePath, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (parsed && parsed.promoBanners) {
+        globalAppSettings = parsed;
+        console.log("[server] Configurações e banners globais carregados de settings_store.json");
+      }
+    }
+  } catch (e) {
+    console.warn("[server] Não foi possível ler settings_store.json, usando padrão:", e);
+  }
+
   app.get("/api/settings", (req, res) => {
     res.json({ success: true, settings: globalAppSettings });
   });
@@ -1397,7 +1412,12 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
         return res.status(400).json({ error: "Configurações inválidas." });
       }
       globalAppSettings = newSettings;
-      console.log("[server] Configurações globais e banners sincronizados pelo Administrador.");
+      try {
+        fs.writeFileSync(settingsFilePath, JSON.stringify(globalAppSettings, null, 2), 'utf-8');
+      } catch (err) {
+        console.error("[server] Erro ao salvar settings_store.json:", err);
+      }
+      console.log("[server] Configurações globais e banners sincronizados e salvos pelo Administrador.");
       res.json({ success: true, settings: globalAppSettings });
     } catch (err: any) {
       console.error("[server] Error saving settings:", err);

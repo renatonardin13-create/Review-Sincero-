@@ -192,15 +192,26 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem('review_sincero_settings', JSON.stringify(settings));
-      fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
-      }).catch(console.warn);
     } catch (e) {
       console.error(e);
     }
   }, [settings]);
+
+  const handleSaveSettings = (newSettings: AppSettings) => {
+    setSettings(newSettings);
+    try {
+      localStorage.setItem('review_sincero_settings', JSON.stringify(newSettings));
+      if (isAdmin) {
+        fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newSettings)
+        }).catch(console.warn);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleSaveReview = (review: Review) => {
     if (review.id && reviews.some((r) => r.id === review.id)) {
@@ -461,7 +472,7 @@ export default function App() {
               <AdminPanelView
                 currentUser={currentUser!}
                 settings={settings}
-                onSaveSettings={setSettings}
+                onSaveSettings={handleSaveSettings}
                 onOpenVideoManager={() => setCurrentView('tutorial')}
                 onNavigateTo={setCurrentView}
               />
@@ -562,12 +573,12 @@ export default function App() {
           )}
 
           {currentView === 'settings' && (
-            <SettingsView settings={settings} onSaveSettings={setSettings} initialTab="general" />
+            <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="general" />
           )}
 
           {currentView === 'settings-banners' && (
             isAdmin ? (
-              <SettingsView settings={settings} onSaveSettings={setSettings} initialTab="banners" />
+              <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="banners" />
             ) : (
               <AccessRestrictedView
                 currentUser={currentUser}
