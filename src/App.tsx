@@ -220,8 +220,14 @@ export default function App() {
         try {
           const res = await fetch('/api/settings', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newSettings)
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-user-email': currentUser?.email || ''
+            },
+            body: JSON.stringify({
+              ...newSettings,
+              userEmail: currentUser?.email || ''
+            })
           });
           const ct = res.headers.get('content-type');
           if (res.ok && ct && ct.includes('application/json')) {
@@ -543,6 +549,7 @@ export default function App() {
                 setCurrentView('create');
               }}
               currentUser={currentUser || undefined}
+              isAdmin={isAdmin}
             />
           )}
 

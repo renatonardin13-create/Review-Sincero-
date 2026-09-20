@@ -1398,11 +1398,23 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
 
   app.post("/api/settings", (req, res) => {
     try {
+      const userEmail = req.headers['x-user-email'] || req.body?.userEmail || '';
+      const isAdmin = String(userEmail).toLowerCase().trim() === 'renatonardin13@gmail.com';
+      if (!isAdmin) {
+        return res.status(403).json({
+          success: false,
+          error: "Acesso negado. Apenas o administrador master pode atualizar as configurações globais e banners."
+        });
+      }
+
       const newSettings = req.body;
       if (!newSettings) {
         return res.status(400).json({ error: "Configurações inválidas." });
       }
-      globalAppSettings = newSettings;
+      globalAppSettings = {
+        ...globalAppSettings,
+        ...newSettings
+      };
       try {
         fs.writeFileSync(settingsFilePath, JSON.stringify(globalAppSettings, null, 2), 'utf-8');
       } catch (err) {

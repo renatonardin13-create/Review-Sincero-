@@ -30,12 +30,14 @@ interface TutorialViewProps {
   onNavigateTo: (viewId: string) => void;
   onNewReview: () => void;
   currentUser?: AuthUser;
+  isAdmin?: boolean;
 }
 
 export const TutorialView: React.FC<TutorialViewProps> = ({
   onNavigateTo,
   onNewReview,
-  currentUser
+  currentUser,
+  isAdmin = false
 }) => {
   const [activeTab, setActiveTab] = useState<string>('members');
 
@@ -44,7 +46,7 @@ export const TutorialView: React.FC<TutorialViewProps> = ({
     { id: 'quickstart', label: '⚡ Início Rápido (3 min)', icon: Zap },
     { id: 'generator', label: '🤖 Gerador com IA', icon: Sparkles },
     { id: 'templates', label: '🎨 Templates de Conversão', icon: LayoutTemplate },
-    { id: 'monetization', label: '💰 Banners & Monetização', icon: DollarSign },
+    ...(isAdmin ? [{ id: 'monetization', label: '💰 Banners & Monetização', icon: DollarSign }] : []),
     { id: 'export', label: '🚀 Exportar & Hospedar', icon: Download }
   ];
 
