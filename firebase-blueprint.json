@@ -65,7 +65,12 @@
       "description": "Global application configuration",
       "type": "object",
       "properties": {
-        "productNotificationIntervalMinutes": { "type": "number" }
+        "productNotificationIntervalMinutes": { "type": "number" },
+        "siteName": { "type": "string" },
+        "authorName": { "type": "string" },
+        "defaultTemplate": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "updatedBy": { "type": "string" }
       }
     }
   },

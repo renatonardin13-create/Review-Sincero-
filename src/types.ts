@@ -251,21 +251,6 @@ export interface Review {
   userId?: string;
 }
 
-export interface PromoBannerSlide {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string; // Imagem principal Desktop (1200 x 300 px)
-  desktopImageUrl?: string; // Imagem Desktop (1200 x 300 px)
-  mobileImageUrl?: string; // Imagem Mobile / Tablet (600 x 300 px)
-  affiliateUrl: string;
-  ctaText: string;
-  badgeText?: string;
-  badgeColor?: 'gold' | 'red' | 'green' | 'blue' | 'purple';
-  active: boolean;
-  targetBlank?: boolean;
-}
-
 export interface ProductNotification {
   id: string;
   name: string;
@@ -283,6 +268,8 @@ export interface AppSettings {
   siteName: string;
   logoUrl: string;
   authorName: string;
+  authorAvatarUrl?: string;
+  authorBio?: string;
   defaultTemplate: TemplateType;
   socialLinks: {
     instagram?: string;
@@ -292,9 +279,6 @@ export interface AppSettings {
   };
   contactEmail: string;
   exportWithSeoTags: boolean;
-  promoBanners?: PromoBannerSlide[];
-  bannerAutoplaySpeed?: number; // em segundos (ex: 5)
-  enableBannerCarousel?: boolean; // exibir carrossel no dashboard
   enableQuickLoginShortcuts?: boolean; // exibir atalhos de login rápido na tela de login
   productNotificationIntervalMinutes?: number; // 2, 5, 10, 15 (default 5)
   usageLimits?: {

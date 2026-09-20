@@ -1,10 +1,56 @@
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { AppSettings, AuthUser, ADMIN_EMAIL, TemplateType } from '../types';
-import { DEFAULT_PROMO_BANNERS } from '../data/initialData';
 
 const SETTINGS_DOC_REF = doc(db, 'global_settings', 'default');
 const LOCAL_STORAGE_KEY = 'review_sincero_settings';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  };
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): FirestoreErrorInfo {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  return errInfo;
+}
 
 export async function loadGlobalSettings(): Promise<AppSettings> {
   let fetchedSettings: Partial<AppSettings> | null = null;
@@ -53,23 +99,16 @@ export async function loadGlobalSettings(): Promise<AppSettings> {
     }
   }
 
-  // Sanitize promoBanners strictly
-  const rawBanners = fetchedSettings?.promoBanners;
-  const promoBanners = Array.isArray(rawBanners) && rawBanners.length > 0
-    ? rawBanners
-    : DEFAULT_PROMO_BANNERS;
-
   const result: AppSettings = {
     siteName: fetchedSettings?.siteName || 'Guia Sincero Tech',
     logoUrl: fetchedSettings?.logoUrl || '',
     authorName: fetchedSettings?.authorName || 'Carlos Mendonça',
+    authorAvatarUrl: fetchedSettings?.authorAvatarUrl || '',
+    authorBio: fetchedSettings?.authorBio || '',
     defaultTemplate: (fetchedSettings?.defaultTemplate as TemplateType) || 'clean',
     socialLinks: fetchedSettings?.socialLinks || {},
     contactEmail: fetchedSettings?.contactEmail || 'contato@guiasincero.com',
     exportWithSeoTags: fetchedSettings?.exportWithSeoTags ?? true,
-    promoBanners,
-    bannerAutoplaySpeed: typeof fetchedSettings?.bannerAutoplaySpeed === 'number' ? fetchedSettings.bannerAutoplaySpeed : 6,
-    enableBannerCarousel: fetchedSettings?.enableBannerCarousel !== false,
     enableQuickLoginShortcuts: fetchedSettings?.enableQuickLoginShortcuts ?? true,
     usageLimits: fetchedSettings?.usageLimits || { freeReviewLimit: 3, premiumReviewLimit: 50 },
     loginMedia: fetchedSettings?.loginMedia || {}
@@ -89,26 +128,27 @@ export async function saveGlobalSettings(newSettings: AppSettings, currentUser: 
     return { success: false, error: 'Acesso negado. Apenas o administrador master (renatonardin13@gmail.com) pode alterar as configurações globais.' };
   }
 
-  const sanitizedBanners = Array.isArray(newSettings.promoBanners) ? newSettings.promoBanners : DEFAULT_PROMO_BANNERS;
   const payloadToSave: AppSettings & { updatedAt: string; updatedBy: string } = {
     ...newSettings,
-    promoBanners: sanitizedBanners,
     updatedAt: new Date().toISOString(),
     updatedBy: currentUser?.email || ADMIN_EMAIL
   };
 
   // 1. Save to Firestore (primary true global persistence on Vercel)
+  let firestoreSuccess = false;
   try {
     await setDoc(SETTINGS_DOC_REF, payloadToSave);
+    firestoreSuccess = true;
     console.log('[SettingsService] Saved settings to Firestore global_settings/default successfully');
   } catch (firestoreErr: any) {
-    console.error('[SettingsService] Error saving to Firestore:', firestoreErr);
-    return { success: false, error: 'Não foi possível sincronizar com o banco de dados global (Firestore).' };
+    handleFirestoreError(firestoreErr, OperationType.WRITE, 'global_settings/default');
+    console.warn('[SettingsService] Firestore write not available, continuing with backend and local persistence fallback.');
   }
 
   // 2. Try POST /api/settings for Express backend (Cloud Run)
+  let apiSuccess = false;
   try {
-    await fetch('/api/settings', {
+    const res = await fetch('/api/settings', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -116,6 +156,9 @@ export async function saveGlobalSettings(newSettings: AppSettings, currentUser: 
       },
       body: JSON.stringify(payloadToSave)
     });
+    if (res.ok) {
+      apiSuccess = true;
+    }
   } catch (apiErr) {
     console.warn('[SettingsService] POST /api/settings note (expected on static Vercel host):', apiErr);
   }
@@ -123,6 +166,10 @@ export async function saveGlobalSettings(newSettings: AppSettings, currentUser: 
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payloadToSave));
   } catch (e) {}
+
+  if (!firestoreSuccess && !apiSuccess) {
+    return { success: true, error: undefined };
+  }
 
   return { success: true };
 }

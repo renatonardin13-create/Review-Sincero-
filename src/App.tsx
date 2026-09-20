@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Review, AppSettings, TrendItem, AuthUser, ADMIN_EMAIL } from './types';
-import { SAMPLE_REVIEWS, DEFAULT_SETTINGS, DEFAULT_PROMO_BANNERS } from './data/initialData';
+import { SAMPLE_REVIEWS, DEFAULT_SETTINGS } from './data/initialData';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { Dashboard } from './components/Dashboard';
@@ -33,7 +33,6 @@ const VIEW_TO_PATH: Record<string, string> = {
   'trends': '/analisar-tendencias',
   'settings': '/settings',
   'admin': '/adm',
-  'settings-banners': '/adm/banners',
   'login': '/login'
 };
 
@@ -49,7 +48,6 @@ const PATH_TO_VIEW: Record<string, string> = {
   '/settings': 'settings',
   '/adm': 'admin',
   '/admin': 'admin',
-  '/adm/banners': 'settings-banners',
   '/login': 'login'
 };
 
@@ -92,7 +90,7 @@ export default function App() {
         return;
       }
 
-      if ((path === '/adm' || path === '/adm/banners' || path === '/admin') && !userIsAdmin) {
+      if ((path === '/adm' || path === '/admin') && !userIsAdmin) {
         window.history.replaceState(null, '', '/aluno');
         setCurrentView('dashboard');
         return;
@@ -169,16 +167,15 @@ export default function App() {
     }
   }, [reviews]);
 
-  // Fetch global settings on mount and poll periodically so students see admin banners automatically
+  // Fetch global settings on mount and poll periodically
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         const loaded = await loadGlobalSettings();
-        if (loaded && Array.isArray(loaded.promoBanners)) {
+        if (loaded) {
           setSettings(prev => ({
             ...prev,
-            ...loaded,
-            promoBanners: loaded.promoBanners
+            ...loaded
           }));
         }
       } catch (e) {
@@ -200,18 +197,13 @@ export default function App() {
   }, [settings]);
 
   const handleSaveSettings = async (newSettings: AppSettings) => {
-    const sanitizedSettings: AppSettings = {
-      ...newSettings,
-      promoBanners: Array.isArray(newSettings.promoBanners) ? newSettings.promoBanners : DEFAULT_PROMO_BANNERS
-    };
-
-    setSettings(sanitizedSettings);
+    setSettings(newSettings);
 
     if (isAdmin) {
       try {
-        const res = await saveGlobalSettings(sanitizedSettings, currentUser);
+        const res = await saveGlobalSettings(newSettings, currentUser);
         if (res.success) {
-          alert("Banners e configurações salvos e sincronizados globalmente com sucesso!");
+          alert("Configurações salvas e sincronizadas globalmente com sucesso!");
         } else {
           alert("Não foi possível sincronizar as configurações globais: " + (res.error || 'Erro desconhecido.'));
         }
@@ -573,22 +565,8 @@ export default function App() {
 
           {currentView === 'settings' && (
             <SettingsErrorBoundary>
-              <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="general" isAdmin={isAdmin} />
+              <SettingsView settings={settings} onSaveSettings={handleSaveSettings} isAdmin={isAdmin} />
             </SettingsErrorBoundary>
-          )}
-
-          {currentView === 'settings-banners' && (
-            isAdmin ? (
-              <SettingsErrorBoundary>
-                <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="banners" isAdmin={isAdmin} />
-              </SettingsErrorBoundary>
-            ) : (
-              (() => {
-                window.history.replaceState(null, '', '/aluno');
-                setCurrentView('dashboard');
-                return null;
-              })()
-            )
           )}
         </main>
       </div>

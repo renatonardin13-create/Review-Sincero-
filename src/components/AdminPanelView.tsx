@@ -3,7 +3,6 @@ import {
   ShieldCheck,
   Crown,
   Film,
-  DollarSign,
   Users,
   Key,
   BarChart3,
@@ -49,7 +48,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
 }) => {
   const isAdmin =
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-  const [activeTab, setActiveTab] = useState<'overview' | 'banners' | 'users' | 'apis' | 'login' | 'notifications' | 'system-updates'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'apis' | 'login' | 'notifications' | 'system-updates'>('overview');
   const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -76,9 +75,6 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
       });
   };
 
-  // Quick form for banners settings in admin
-  const [adminBannerSpeed, setAdminBannerSpeed] = useState<number>(settings.bannerAutoplaySpeed || 5);
-  const [adminEnableBanners, setAdminEnableBanners] = useState<boolean>(settings.enableBannerCarousel !== false);
   const [adminEnableQuickLogin, setAdminEnableQuickLogin] = useState<boolean>(settings.enableQuickLoginShortcuts !== false);
   const [adminLoginMedia, setAdminLoginMedia] = useState(settings.loginMedia || {
     backgroundImageUrl: '',
@@ -88,31 +84,29 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
     console.log("Upload triggered");
     const file = e.target.files?.[0];
     if (!file) {
-        console.log("No file selected");
-        return;
+      console.log("No file selected");
+      return;
     }
 
     console.log("File selected: ", file.name);
 
     const storageRef = ref(storage, `login-backgrounds/${file.name}`);
     try {
-        console.log("Uploading...");
-        const snapshot = await uploadBytes(storageRef, file);
-        console.log("Upload successful, getting URL...");
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        console.log("Download URL: ", downloadURL);
-        setAdminLoginMedia({ ...adminLoginMedia, backgroundImageUrl: downloadURL });
+      console.log("Uploading...");
+      const snapshot = await uploadBytes(storageRef, file);
+      console.log("Upload successful, getting URL...");
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log("Download URL: ", downloadURL);
+      setAdminLoginMedia({ ...adminLoginMedia, backgroundImageUrl: downloadURL });
     } catch (error) {
-        console.error("Error uploading image: ", error);
-        alert("Erro ao fazer upload da imagem: " + (error instanceof Error ? error.message : String(error)));
+      console.error("Error uploading image: ", error);
+      alert("Erro ao fazer upload da imagem: " + (error instanceof Error ? error.message : String(error)));
     }
   };
 
   const handleSaveAllConfig = () => {
     onSaveSettings({
       ...settings,
-      bannerAutoplaySpeed: adminBannerSpeed,
-      enableBannerCarousel: adminEnableBanners,
       enableQuickLoginShortcuts: adminEnableQuickLogin,
       loginMedia: adminLoginMedia
     });
@@ -159,7 +153,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
             </h1>
 
             <p className="text-xs md:text-sm text-[#D4D4D4] leading-relaxed">
-              Gerencie os banners de monetização do app gratuito, monitore os alunos cadastrados e ajuste as chaves de integração.
+              Monitore os alunos cadastrados, configure notificações e ajuste as chaves de integração.
             </p>
           </div>
         </div>
@@ -174,9 +168,9 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           </div>
 
           <div className="bg-[#100D04] border border-[#3E3416] rounded-2xl p-4">
-            <span className="text-[11px] text-[#A1A1A1] font-medium block">💰 Banners em Slides</span>
+            <span className="text-[11px] text-[#A1A1A1] font-medium block">⚡ Status do Sistema</span>
             <span className="text-xl font-black text-[#38BDF8] mt-1 block">
-              {settings.promoBanners?.filter((b) => b.active).length || 0} Ativos
+              Operacional
             </span>
           </div>
         </div>
@@ -188,7 +182,6 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           { id: 'overview', label: '📊 Visão Geral', icon: BarChart3 },
           { id: 'notifications', label: '🔔 Notificações de Produtos', icon: Bell },
           { id: 'system-updates', label: '🔔 Atualizações do Sistema', icon: Bell },
-          { id: 'banners', label: '⚙️ Ajustes & Monetização Global', icon: DollarSign },
           { id: 'login', label: '🖼️ Tela de Login', icon: Film },
           { id: 'users', label: '👥 Alunos & Usuários', icon: Users },
           { id: 'apis', label: '🔑 Chaves & Integrações de APIs', icon: Key }
@@ -215,56 +208,30 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
       {/* Tab 1: Overview */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-1 gap-6 animate-in fade-in">
-          {/* Banner Monetization Card */}
           <div className="bg-[#121212] border border-[#222] rounded-3xl p-6 md:p-8 space-y-4">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-[#22C55E]" />
-              <span>Monetização do App Gratuito</span>
+              <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
+              <span>Controle Administrativo do Review Sincero</span>
             </h3>
             <p className="text-xs text-[#A1A1A1] leading-relaxed max-w-2xl">
-              Insira seus banners de produtos afiliados (Hotmart, Shopee, Mercado Livre). Todos os usuários gratuitos verão seus slides no topo do Dashboard.
+              Utilize as abas acima para gerenciar os alunos cadastrados, disparar notificações de produtos em alta e configurar as chaves de integração do sistema.
             </p>
             <div className="flex flex-wrap gap-2 pt-2">
               <button
-                onClick={() => onNavigateTo('settings-banners')}
+                onClick={() => setActiveTab('notifications')}
                 className="bg-[#102416] hover:bg-[#183621] border border-[#22C55E]/40 text-[#22C55E] font-bold px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer flex items-center gap-2"
               >
-                <Sparkles className="w-4 h-4" />
-                <span>Configurar Banners em Slides</span>
+                <Bell className="w-4 h-4" />
+                <span>Notificações de Produtos</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('users')}
+                className="bg-[#1C180C] hover:bg-[#2A2208] border border-[#F5C542]/40 text-[#F5C542] font-bold px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer flex items-center gap-2"
+              >
+                <Users className="w-4 h-4" />
+                <span>Gerenciar Alunos</span>
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 3: Banners */}
-      {activeTab === 'banners' && (
-        <div className="bg-[#121212] border border-[#222] rounded-3xl p-6 md:p-8 space-y-6 animate-in fade-in">
-          {/* ... existing banner content ... */}
-          <div className="flex items-center justify-between pt-2">
-            <button
-              onClick={() => onNavigateTo('settings-banners')}
-              className="text-xs text-[#F5C542] hover:underline font-bold flex items-center gap-1 cursor-pointer"
-            >
-              <span>Gerenciar Imagens & Links dos Slides →</span>
-            </button>
-
-            <button
-              onClick={handleSaveAllConfig}
-              className="bg-[#22C55E] hover:bg-[#1fa851] text-black font-black px-6 py-2.5 rounded-xl text-xs transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-[#22C55E]/15"
-            >
-              {savedSuccess ? (
-                <>
-                  <Check className="w-4 h-4 stroke-[3]" />
-                  <span>Configurações Salvas!</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Salvar Configuração</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
       )}

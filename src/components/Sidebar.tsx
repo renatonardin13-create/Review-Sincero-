@@ -10,7 +10,6 @@ import {
   Menu,
   X,
   Sparkles,
-  DollarSign,
   Search,
   Scale,
   Calculator,
@@ -145,25 +144,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span className="truncate">Área Administrativa</span>
                   <span className="ml-auto text-[9px] bg-[#F5C542] text-black font-black px-1.5 py-0.5 rounded uppercase">
                     ADM
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentView('settings-banners');
-                    setMobileOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all group cursor-pointer ${
-                    currentView === 'settings-banners'
-                      ? 'bg-[#2A2208] text-[#F5C542] border border-[#F5C542]/50 shadow-md shadow-[#F5C542]/10'
-                      : 'text-[#F5C542]/80 hover:text-[#F5C542] hover:bg-[#1A1608]'
-                  }`}
-                >
-                  <DollarSign className="w-4 h-4 text-[#F5C542]" />
-                  <span className="truncate">Gerenciar Banners</span>
-                  <span className="ml-auto text-[9px] bg-emerald-500/20 text-emerald-400 font-black px-1.5 py-0.5 rounded uppercase">
-                    Banners
                   </span>
                 </button>
               </div>

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Review, AppSettings, AuthUser, ADMIN_EMAIL } from '../types';
-import { DEFAULT_PROMO_BANNERS } from '../data/initialData';
 import {
   Plus,
   FileText,
@@ -14,13 +13,11 @@ import {
   ExternalLink,
   ShieldCheck,
   Sparkles,
-  DollarSign,
   Crown,
   User,
   Zap,
   Lock
 } from 'lucide-react';
-import { PromoBannerCarousel } from './PromoBannerCarousel';
 
 interface DashboardProps {
   reviews: Review[];
@@ -126,18 +123,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* =========================================================================
-          PROMOTIONAL BANNER SLIDES CAROUSEL (Requested for monetization)
-         ========================================================================= */}
-      {settings?.enableBannerCarousel !== false && (
-        <PromoBannerCarousel
-          banners={Array.isArray(settings?.promoBanners) && settings.promoBanners.length > 0 ? settings.promoBanners : DEFAULT_PROMO_BANNERS}
-          autoplaySpeed={settings?.bannerAutoplaySpeed || 6}
-          enabled={true}
-          onManageClick={currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() ? () => setCurrentView('settings-banners') : undefined}
-        />
-      )}
-
       {/* Hero Banner inside Dashboard - Matching PageAI (Screenshot 7) */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#121212] via-[#0E0E0E] to-[#080808] border border-[#222222] p-8 md:p-14 text-center space-y-8 shadow-2xl">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#F5C542]/5 rounded-full blur-3xl pointer-events-none" />
@@ -207,16 +192,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <span className="text-sm">🔥</span>
             <span>Meli & Shopee Trends</span>
           </button>
-
-          {isAdmin && (
-            <button
-              onClick={() => setCurrentView('settings-banners')}
-              className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white transition-all cursor-pointer"
-            >
-              <DollarSign className="w-3.5 h-3.5 text-[#F5C542]" />
-              <span>Banners em Slides</span>
-            </button>
-          )}
         </div>
       </div>
 

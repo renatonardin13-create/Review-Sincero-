@@ -1355,37 +1355,21 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     }
   });
 
-  // Global App Settings (Banners & Configuration synchronization for students)
+  // Global App Settings (Configuration synchronization for students)
   const settingsFilePath = path.join(process.cwd(), 'settings_store.json');
   let globalAppSettings: any = {
     siteName: 'Guia Sincero Tech',
     authorName: 'Carlos Mendonça',
-    promoBanners: [
-      {
-        id: 'banner-01',
-        title: 'Comunidade VIP de Afiliados Pro',
-        subtitle: 'Aprenda as melhores estratégias para vender todos os dias no Mercado Livre, Shopee e Produtos Físicos com comissões de até 70%.',
-        imageUrl: 'https://images.unsplash.com/photo-1552581234-26160f608093?auto=format&fit=crop&w=1600&q=80',
-        desktopImageUrl: 'https://images.unsplash.com/photo-1552581234-26160f608093?auto=format&fit=crop&w=1600&q=80',
-        mobileImageUrl: 'https://images.unsplash.com/photo-1552581234-26160f608093?auto=format&fit=crop&w=800&q=80',
-        ctaText: 'Quero Acessar Agora',
-        ctaUrl: 'https://pay.hotmart.com',
-        badge: '🔥 OFERTA EXCLUSIVA',
-        active: true,
-        targetBlank: true
-      }
-    ],
-    bannerAutoplaySpeed: 6,
-    enableBannerCarousel: true
+    enableQuickLoginShortcuts: true
   };
 
   try {
     if (fs.existsSync(settingsFilePath)) {
       const data = fs.readFileSync(settingsFilePath, 'utf-8');
       const parsed = JSON.parse(data);
-      if (parsed && parsed.promoBanners) {
+      if (parsed) {
         globalAppSettings = parsed;
-        console.log("[server] Configurações e banners globais carregados de settings_store.json");
+        console.log("[server] Configurações globais carregadas de settings_store.json");
       }
     }
   } catch (e) {
@@ -1403,7 +1387,7 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
       if (!isAdmin) {
         return res.status(403).json({
           success: false,
-          error: "Acesso negado. Apenas o administrador master pode atualizar as configurações globais e banners."
+          error: "Acesso negado. Apenas o administrador master pode atualizar as configurações globais."
         });
       }
 
@@ -1420,7 +1404,7 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
       } catch (err) {
         console.error("[server] Erro ao salvar settings_store.json:", err);
       }
-      console.log("[server] Configurações globais e banners sincronizados e salvos pelo Administrador.");
+      console.log("[server] Configurações globais sincronizadas e salvas pelo Administrador.");
       res.json({ success: true, settings: globalAppSettings });
     } catch (err: any) {
       console.error("[server] Error saving settings:", err);

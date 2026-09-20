@@ -1,4 +1,4 @@
-import { CategoryType, PlatformType, Review, AppSettings, TrendItem, PromoBannerSlide } from '../types';
+import { CategoryType, PlatformType, Review, AppSettings, TrendItem } from '../types';
 
 export const CATEGORIES: CategoryType[] = [
   'Tech',
@@ -27,51 +27,6 @@ export const PLATFORMS: PlatformType[] = [
   'Outra plataforma'
 ];
 
-export const DEFAULT_PROMO_BANNERS: PromoBannerSlide[] = [
-  {
-    id: 'banner-01',
-    title: 'Comunidade VIP de Afiliados Pro',
-    description: 'Aprenda as melhores estratégias para vender todos os dias no Mercado Livre, Shopee e Produtos Físicos com comissões de até 70%.',
-    imageUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80',
-    desktopImageUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80',
-    mobileImageUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=600&q=80',
-    affiliateUrl: 'https://exemplo.com/afiliados-pro',
-    ctaText: 'Quero Acessar Agora',
-    badgeText: '🔥 OFERTA EXCLUSIVA',
-    badgeColor: 'gold',
-    active: true,
-    targetBlank: true
-  },
-  {
-    id: 'banner-02',
-    title: 'Kit Suplementos Performance & Foco',
-    description: 'Creatina Creapure + Whey Isolado com cupom exclusivo de 35% OFF e frete grátis para todo o Brasil.',
-    imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80',
-    desktopImageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80',
-    mobileImageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80',
-    affiliateUrl: 'https://exemplo.com/suplementos-oferta',
-    ctaText: 'Pegar Cupom 35% OFF',
-    badgeText: '⚡ 35% DE DESCONTO',
-    badgeColor: 'red',
-    active: true,
-    targetBlank: true
-  },
-  {
-    id: 'banner-03',
-    title: 'Smartwatch Pro Ultra Séries 9',
-    description: 'Monitor cardíaco, GPS integrado, bateria de 7 dias e compatível com Android e iOS por menos de R$ 150 na Shopee.',
-    imageUrl: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1200&q=80',
-    desktopImageUrl: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1200&q=80',
-    mobileImageUrl: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=600&q=80',
-    affiliateUrl: 'https://exemplo.com/smartwatch-shopee',
-    ctaText: 'Ver Produto na Shopee',
-    badgeText: '⭐ MAIS VENDIDO',
-    badgeColor: 'blue',
-    active: true,
-    targetBlank: true
-  }
-];
-
 export const DEFAULT_SETTINGS: AppSettings = {
   siteName: 'Guia Sincero Tech',
   logoUrl: '',
@@ -84,9 +39,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   contactEmail: 'contato@guiasincero.com.br',
   exportWithSeoTags: true,
-  promoBanners: DEFAULT_PROMO_BANNERS,
-  bannerAutoplaySpeed: 6,
-  enableBannerCarousel: true,
   enableQuickLoginShortcuts: true,
   usageLimits: {
     freeReviewLimit: 3,

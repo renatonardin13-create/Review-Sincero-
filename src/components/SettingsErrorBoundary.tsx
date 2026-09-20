@@ -20,7 +20,7 @@ export class SettingsErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("[SettingsErrorBoundary] Erro capturado no gerenciador de banners:", error, errorInfo);
+    console.error("[SettingsErrorBoundary] Erro capturado nas configurações:", error, errorInfo);
   }
 
   private handleReload = () => {
@@ -34,9 +34,9 @@ export class SettingsErrorBoundary extends Component<Props, State> {
           <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 mb-4 border border-red-500/20">
             <AlertTriangle className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold mb-2">Erro ao carregar o gerenciador de banners.</h2>
+          <h2 className="text-xl font-bold mb-2">Erro ao carregar as configurações.</h2>
           <p className="text-gray-400 text-center max-w-md mb-6 text-sm">
-            Ocorreu uma exceção inesperada ao renderizar as configurações ou o gerenciador de slides. Nossos dados foram protegidos.
+            Ocorreu uma exceção inesperada ao renderizar as configurações. Nossos dados foram protegidos.
           </p>
           <button
             onClick={this.handleReload}
