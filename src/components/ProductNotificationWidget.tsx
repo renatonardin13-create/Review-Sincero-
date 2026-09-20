@@ -46,7 +46,7 @@ export const ProductNotificationWidget: React.FC<ProductNotificationWidgetProps>
       if (notifications.length > 0 && !dismissedCurrent) {
         setIsVisible(true);
       }
-    }, 10000);
+    }, 1000);
 
     const timer = setInterval(() => {
       setDismissedCurrent(false);
