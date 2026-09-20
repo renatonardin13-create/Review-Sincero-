@@ -584,28 +584,6 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
             <span className="text-[11px] font-bold truncate">Gerador</span>
           </button>
 
-          {/* 4. Radar de Tendência */}
-          <button
-            type="button"
-            onClick={() => onNavigateTo?.('trends')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-emerald-400/40 transition-all group cursor-pointer"
-            title="Análise de tendências do Mercado Livre e Shopee"
-          >
-            <TrendingUp className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform mb-1" />
-            <span className="text-[11px] font-bold truncate">Tendência</span>
-          </button>
-
-          {/* 5. Planejador */}
-          <button
-            type="button"
-            onClick={() => onNavigateTo?.('keyword-planner')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-amber-400/40 transition-all group cursor-pointer"
-            title="Planejador de Palavras-Chave de alta conversão"
-          >
-            <Search className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform mb-1" />
-            <span className="text-[11px] font-bold truncate">Planejador</span>
-          </button>
-
           {/* 6. Template */}
           <button
             type="button"
@@ -637,17 +615,6 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
           >
             <Award className="w-4 h-4 text-[#F5C542] group-hover:scale-110 transition-transform mb-1" />
             <span className="text-[11px] font-bold truncate">Campeões</span>
-          </button>
-
-          {/* 9. Comparar Produto */}
-          <button
-            type="button"
-            onClick={() => onNavigateTo?.('comparar')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-blue-400/40 transition-all group cursor-pointer"
-            title="Comparador Lado a Lado de Produtos"
-          >
-            <Sliders className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform mb-1" />
-            <span className="text-[11px] font-bold truncate">Comparar</span>
           </button>
         </div>
       </div>
