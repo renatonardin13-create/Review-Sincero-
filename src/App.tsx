@@ -212,19 +212,33 @@ export default function App() {
     }
   }, [settings]);
 
-  const handleSaveSettings = (newSettings: AppSettings) => {
+  const handleSaveSettings = async (newSettings: AppSettings) => {
     setSettings(newSettings);
     try {
       localStorage.setItem('review_sincero_settings', JSON.stringify(newSettings));
       if (isAdmin) {
-        fetch('/api/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newSettings)
-        }).then(res => {
+        try {
+          const res = await fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newSettings)
+          });
           const ct = res.headers.get('content-type');
-          if (ct && ct.includes('application/json')) return res.json();
-        }).catch(() => {});
+          if (res.ok && ct && ct.includes('application/json')) {
+            const data = await res.json();
+            if (data && data.success) {
+              console.log("[App] Configurações e banners salvos e sincronizados globalmente no servidor.");
+              alert("Banners e configurações salvos e sincronizados globalmente com sucesso!");
+              return;
+            }
+          }
+          alert("Atenção: O banner foi salvo localmente, mas a sincronização global no servidor falhou (resposta não confirmada).");
+        } catch (apiErr) {
+          console.error("[App] Erro ao sincronizar configurações globalmente:", apiErr);
+          alert("Atenção: O banner foi salvo apenas no navegador local (localStorage), pois o servidor não pôde ser contatado para sincronização global.");
+        }
+      } else {
+        alert("Configurações salvas com sucesso!");
       }
     } catch (e) {
       console.error(e);

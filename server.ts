@@ -1270,15 +1270,6 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // Catch-all 404 for any other API route
-  app.all("/api/*", (req, res) => {
-    res.status(404).json({
-      ok: false,
-      code: "API_ROUTE_NOT_FOUND",
-      message: `O endpoint '${req.originalUrl}' não existe neste servidor.`
-    });
-  });
-
   // Vite middleware for development or static serving for production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -1423,6 +1414,15 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
       console.error("[server] Error saving settings:", err);
       res.status(500).json({ error: "Erro ao salvar configurações." });
     }
+  });
+
+  // Catch-all 404 for any other API route
+  app.all("/api/*", (req, res) => {
+    res.status(404).json({
+      ok: false,
+      code: "API_ROUTE_NOT_FOUND",
+      message: `O endpoint '${req.originalUrl}' não existe neste servidor.`
+    });
   });
 
   app.listen(PORT, "0.0.0.0", () => {
