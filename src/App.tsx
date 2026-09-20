@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Review, AppSettings, TrendItem, AuthUser, ADMIN_EMAIL } from './types';
-import { SAMPLE_REVIEWS, DEFAULT_SETTINGS } from './data/initialData';
+import { SAMPLE_REVIEWS, DEFAULT_SETTINGS, DEFAULT_PROMO_BANNERS } from './data/initialData';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { Dashboard } from './components/Dashboard';
@@ -18,6 +18,8 @@ import { AccessRestrictedView } from './components/AccessRestrictedView';
 import { AuthModal } from './components/AuthModal';
 import { LoginView } from './components/LoginView';
 import { getStoredUser, saveStoredUser, logoutUser } from './services/authService';
+import { loadGlobalSettings, saveGlobalSettings } from './services/settingsService';
+import { SettingsErrorBoundary } from './components/SettingsErrorBoundary';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 
 const VIEW_TO_PATH: Record<string, string> = {
@@ -168,39 +170,25 @@ export default function App() {
     }
   }, [reviews]);
 
-  // Fetch settings from server on mount and poll periodically so students see admin banners automatically
+  // Fetch global settings on mount and poll periodically so students see admin banners automatically
   useEffect(() => {
-    const fetchSettings = () => {
-      fetch('/api/settings')
-        .then(res => {
-          const contentType = res.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            return res.json();
-          }
-          throw new Error('Not JSON response');
-        })
-        .then(data => {
-          if (data && data.success && data.settings) {
-            setSettings(prev => ({
-              ...prev,
-              ...data.settings
-            }));
-          }
-        })
-        .catch(() => {
-          // Fallback to localStorage if API is unavailable (e.g. Vercel static deployment)
-          try {
-            const saved = localStorage.getItem('review_sincero_settings');
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              setSettings(prev => ({ ...prev, ...parsed }));
-            }
-          } catch (e) {}
-        });
+    const fetchSettings = async () => {
+      try {
+        const loaded = await loadGlobalSettings();
+        if (loaded && Array.isArray(loaded.promoBanners)) {
+          setSettings(prev => ({
+            ...prev,
+            ...loaded,
+            promoBanners: loaded.promoBanners
+          }));
+        }
+      } catch (e) {
+        console.warn("[App] Could not load global settings:", e);
+      }
     };
 
     fetchSettings();
-    const interval = setInterval(fetchSettings, 10000);
+    const interval = setInterval(fetchSettings, 15000);
     return () => clearInterval(interval);
   }, []);
 
@@ -213,41 +201,27 @@ export default function App() {
   }, [settings]);
 
   const handleSaveSettings = async (newSettings: AppSettings) => {
-    setSettings(newSettings);
-    try {
-      localStorage.setItem('review_sincero_settings', JSON.stringify(newSettings));
-      if (isAdmin) {
-        try {
-          const res = await fetch('/api/settings', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'x-user-email': currentUser?.email || ''
-            },
-            body: JSON.stringify({
-              ...newSettings,
-              userEmail: currentUser?.email || ''
-            })
-          });
-          const ct = res.headers.get('content-type');
-          if (res.ok && ct && ct.includes('application/json')) {
-            const data = await res.json();
-            if (data && data.success) {
-              console.log("[App] Configurações e banners salvos e sincronizados globalmente no servidor.");
-              alert("Banners e configurações salvos e sincronizados globalmente com sucesso!");
-              return;
-            }
-          }
-          alert("Atenção: O banner foi salvo localmente, mas a sincronização global no servidor falhou (resposta não confirmada).");
-        } catch (apiErr) {
-          console.error("[App] Erro ao sincronizar configurações globalmente:", apiErr);
-          alert("Atenção: O banner foi salvo apenas no navegador local (localStorage), pois o servidor não pôde ser contatado para sincronização global.");
+    const sanitizedSettings: AppSettings = {
+      ...newSettings,
+      promoBanners: Array.isArray(newSettings.promoBanners) ? newSettings.promoBanners : DEFAULT_PROMO_BANNERS
+    };
+
+    setSettings(sanitizedSettings);
+
+    if (isAdmin) {
+      try {
+        const res = await saveGlobalSettings(sanitizedSettings, currentUser);
+        if (res.success) {
+          alert("Banners e configurações salvos e sincronizados globalmente com sucesso!");
+        } else {
+          alert("Não foi possível sincronizar as configurações globais: " + (res.error || 'Erro desconhecido.'));
         }
-      } else {
-        alert("Configurações salvas com sucesso!");
+      } catch (e: any) {
+        console.error("[App] Erro ao sincronizar globalmente:", e);
+        alert("Não foi possível sincronizar as configurações globais.");
       }
-    } catch (e) {
-      console.error(e);
+    } else {
+      alert("Acesso negado. Apenas o administrador pode alterar as configurações globais.");
     }
   };
 
@@ -612,12 +586,16 @@ export default function App() {
           )}
 
           {currentView === 'settings' && (
-            <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="general" isAdmin={isAdmin} />
+            <SettingsErrorBoundary>
+              <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="general" isAdmin={isAdmin} />
+            </SettingsErrorBoundary>
           )}
 
           {currentView === 'settings-banners' && (
             isAdmin ? (
-              <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="banners" isAdmin={isAdmin} />
+              <SettingsErrorBoundary>
+                <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="banners" isAdmin={isAdmin} />
+              </SettingsErrorBoundary>
             ) : (
               (() => {
                 window.history.replaceState(null, '', '/aluno');
