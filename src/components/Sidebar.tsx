@@ -36,7 +36,7 @@ interface SidebarProps {
   onLogout?: () => void;
   unreadNotifsCount?: number;
   onOpenNotifications?: () => void;
-  isPublicUserRoute?: boolean;
+  currentPath?: string;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -50,19 +50,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLogout,
   unreadNotifsCount = 0,
   onOpenNotifications,
-  isPublicUserRoute = true
+  currentPath
 }) => {
   const isAdmin =
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
-  // Rota pública /usuario: experiência estritamente limpa para o visitante/aluno
-  const isPublic =
-    isPublicUserRoute ||
-    (typeof window !== 'undefined' &&
-      (window.location.pathname.startsWith('/usuario') ||
-        window.location.pathname === '/' ||
-        window.location.pathname === '/aluno' ||
-        currentView !== 'admin'));
+  const pathname = currentPath || (typeof window !== 'undefined' ? window.location.pathname : '');
+  const isPublicUser = pathname.startsWith('/usuario');
 
   const principalItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -75,7 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const ferramentasItems = [
     { id: 'campeoes', label: 'Produtos Campeões', icon: Trophy, badge: 'TOP' },
     { id: 'settings', label: 'Perfil & Config', icon: User },
-    ...(!isPublic
+    ...(!isPublicUser
       ? [
           {
             id: 'login',
@@ -142,8 +136,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation Items */}
         <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
-          {/* ADMIN SECTION (Visible only in Administrative Area) */}
-          {!isPublic && isAdmin && (
+          {/* ADMIN SECTION (Visible on /admin, /adm, and all non-/usuario routes) */}
+          {!isPublicUser && (
             <div className="space-y-1">
               <span className="px-3 text-[10px] font-black tracking-wider text-[#F5C542] uppercase flex items-center gap-1.5">
                 <Crown className="w-3 h-3" />
@@ -262,69 +256,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           )}
 
-          {isPublic ? (
-            <div className="w-full p-2.5 rounded-2xl border border-emerald-500/30 bg-[#111815] text-left flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                👤
-              </div>
-              <div className="overflow-hidden flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-white truncate">
-                    Visitante
-                  </span>
-                  <span className="text-[8px] font-black px-1.5 py-0.2 rounded uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    ACESSO LIVRE
-                  </span>
-                </div>
-                <p className="text-[9px] text-[#8E8E8E] truncate">
-                  Sem cadastro ou senha
-                </p>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={onOpenAuthModal}
-              className={`w-full p-2.5 rounded-2xl border text-left flex items-center gap-2.5 transition-all cursor-pointer ${
+          <button
+            type="button"
+            onClick={onOpenAuthModal}
+            className={`w-full p-2.5 rounded-2xl border text-left flex items-center gap-2.5 transition-all cursor-pointer ${
+              isAdmin
+                ? 'bg-[#1C1809] border-[#F5C542]/30 hover:border-[#F5C542]'
+                : 'bg-[#121824] border-[#2563EB]/30 hover:border-[#2563EB]'
+            }`}
+          >
+            <div
+              className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
                 isAdmin
-                  ? 'bg-[#1C1809] border-[#F5C542]/30 hover:border-[#F5C542]'
-                  : 'bg-[#121824] border-[#2563EB]/30 hover:border-[#2563EB]'
+                  ? 'bg-[#F5C542] text-black'
+                  : 'bg-[#2563EB] text-white'
               }`}
             >
-              <div
-                className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
-                  isAdmin ? 'bg-[#F5C542] text-black' : 'bg-[#2563EB] text-white'
-                }`}
-              >
-                {isAdmin ? '👑' : '👤'}
-              </div>
+              {isAdmin ? '👑' : '👤'}
+            </div>
 
-              <div className="overflow-hidden flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-white truncate">
-                    {currentUser ? currentUser.name.split(' ')[0] : 'Visitante'}
-                  </span>
-                  <span
-                    className={`text-[8px] font-black px-1.5 py-0.2 rounded uppercase ${
-                      isAdmin
-                        ? 'bg-[#F5C542] text-black'
-                        : currentUser
-                        ? 'bg-[#2563EB] text-white'
-                        : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    }`}
-                  >
-                    {isAdmin ? 'ADMIN' : currentUser ? 'CONECTADO' : 'ACESSO LIVRE'}
-                  </span>
-                </div>
-                <p className="text-[9px] text-[#8E8E8E] truncate">
-                  {currentUser?.email || 'Nenhum cadastro exigido'}
-                </p>
+            <div className="overflow-hidden flex-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-white truncate">
+                  {currentUser ? currentUser.name.split(' ')[0] : 'Visitante'}
+                </span>
+                <span
+                  className={`text-[8px] font-black px-1.5 py-0.2 rounded uppercase ${
+                    isAdmin
+                      ? 'bg-[#F5C542] text-black'
+                      : currentUser
+                      ? 'bg-[#2563EB] text-white'
+                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  }`}
+                >
+                  {isAdmin ? 'ADMIN' : currentUser ? 'CONECTADO' : 'ACESSO LIVRE'}
+                </span>
               </div>
-            </button>
-          )}
+              <p className="text-[9px] text-[#8E8E8E] truncate">
+                {currentUser?.email || 'Nenhum cadastro exigido'}
+              </p>
+            </div>
+          </button>
 
-          {/* Item inferior: Login Administrativo (/admin) - Oculto na rota /usuario */}
-          {!isPublic && (
+          {!isPublicUser && (
             <button
               type="button"
               onClick={() => setCurrentView('login')}
@@ -335,7 +309,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           )}
 
-          {!isPublic && currentUser && onLogout && (
+          {currentUser && onLogout && (
             <button
               type="button"
               onClick={onLogout}

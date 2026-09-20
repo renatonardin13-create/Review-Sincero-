@@ -30,7 +30,6 @@ interface DashboardProps {
   onDuplicateReview: (review: Review) => void;
   onDeleteReview: (id: string) => void;
   setCurrentView: (view: string) => void;
-  isPublicUserRoute?: boolean;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -43,8 +42,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onViewReview,
   onDuplicateReview,
   onDeleteReview,
-  setCurrentView,
-  isPublicUserRoute = true
+  setCurrentView
 }) => {
   const totalReviews = reviews.length;
   const publishedReviews = reviews.filter((r) => r.status === 'Publicado').length;
@@ -58,58 +56,53 @@ export const Dashboard: React.FC<DashboardProps> = ({
     currentUser?.role === 'admin' ||
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
-  const isPublic =
-    isPublicUserRoute ||
-    (typeof window !== 'undefined' &&
-      (window.location.pathname.startsWith('/usuario') ||
-        window.location.pathname === '/' ||
-        window.location.pathname === '/aluno'));
+  const isPublicUser = typeof window !== 'undefined' && window.location.pathname.startsWith('/usuario');
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* User Access Profile Status Card */}
-      <div
-        className={`p-4 md:p-5 rounded-3xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all shadow-xl ${
-          isAdmin
-            ? 'bg-gradient-to-r from-[#1C1809] via-[#151307] to-[#0D0D0D] border-[#F5C542]/40 shadow-[#F5C542]/5'
-            : 'bg-gradient-to-r from-[#0F172A] via-[#0B1120] to-[#0D0D0D] border-[#2563EB]/40 shadow-[#2563EB]/5'
-        }`}
-      >
-        <div className="flex items-center gap-3.5">
-          <div
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shrink-0 shadow-lg ${
-              isAdmin && !isPublic
-                ? 'bg-[#F5C542] text-black shadow-[#F5C542]/20'
-                : 'bg-emerald-600 text-white shadow-emerald-600/20'
-            }`}
-          >
-            {isAdmin && !isPublic ? <Crown className="w-6 h-6" /> : <User className="w-6 h-6" />}
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
-                Perfil Ativo:
-              </span>
-              <span
-                className={`text-xs font-black px-2.5 py-0.5 rounded-full uppercase border ${
-                  isAdmin && !isPublic
-                    ? 'bg-[#F5C542]/20 text-[#F5C542] border-[#F5C542]/40'
-                    : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                }`}
-              >
-                {isAdmin && !isPublic ? '👑 Administrador Master (Acesso Total)' : '⚡ Acesso Público (Visitante / Aluno)'}
-              </span>
+      {/* User Access Profile Status Card (Visible on /admin, /adm, and non-/usuario routes) */}
+      {!isPublicUser && (
+        <div
+          className={`p-4 md:p-5 rounded-3xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all shadow-xl ${
+            isAdmin
+              ? 'bg-gradient-to-r from-[#1C1809] via-[#151307] to-[#0D0D0D] border-[#F5C542]/40 shadow-[#F5C542]/5'
+              : 'bg-gradient-to-r from-[#0F172A] via-[#0B1120] to-[#0D0D0D] border-[#2563EB]/40 shadow-[#2563EB]/5'
+          }`}
+        >
+          <div className="flex items-center gap-3.5">
+            <div
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shrink-0 shadow-lg ${
+                isAdmin
+                  ? 'bg-[#F5C542] text-black shadow-[#F5C542]/20'
+                  : 'bg-[#2563EB] text-white shadow-[#2563EB]/20'
+              }`}
+            >
+              {isAdmin ? <Crown className="w-6 h-6" /> : <User className="w-6 h-6" />}
             </div>
-            <p className="text-xs text-[#A1A1A1] mt-1">
-              {isAdmin && !isPublic
-                ? `Olá ${currentUser?.name || 'Renato Nardin'}, você possui privilégios totais de gestão e controle administrativo.`
-                : `Olá Aluno, você tem acesso gratuito aos geradores e recursos essenciais.`}
-            </p>
-          </div>
-        </div>
 
-        {!isPublic && (
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-white uppercase tracking-wider">
+                  Perfil Ativo:
+                </span>
+                <span
+                  className={`text-xs font-black px-2.5 py-0.5 rounded-full uppercase border ${
+                    isAdmin
+                      ? 'bg-[#F5C542]/20 text-[#F5C542] border-[#F5C542]/40'
+                      : 'bg-[#2563EB]/20 text-[#38BDF8] border-[#2563EB]/40'
+                  }`}
+                >
+                  {isAdmin ? '👑 Administrador Master (Acesso Total)' : '👤 Usuário Comum (Plano Gratuito)'}
+                </span>
+              </div>
+              <p className="text-xs text-[#A1A1A1] mt-1">
+                {isAdmin
+                  ? `Olá ${currentUser?.name || 'Renato Nardin'}, você possui privilégios totais de gestão e controle administrativo.`
+                  : `Olá ${currentUser?.name || 'Aluno'}, você tem acesso gratuito aos geradores e recursos essenciais.`}
+              </p>
+            </div>
+          </div>
+
           <div className="flex items-center gap-2.5 w-full md:w-auto">
             {isAdmin ? (
               <button
@@ -131,8 +124,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </button>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Hero Banner inside Dashboard - Matching PageAI (Screenshot 7) */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#121212] via-[#0E0E0E] to-[#080808] border border-[#222222] p-8 md:p-14 text-center space-y-8 shadow-2xl">
