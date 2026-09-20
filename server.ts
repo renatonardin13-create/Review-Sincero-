@@ -873,59 +873,48 @@ async function startServer() {
           conversionReason: 'O suplemento proteico mais consumido do Brasil. Selo de qualidade líder com 21g de proteína e 4.8g de BCAAs por dose.',
           technicalDescription: 'Pouch econômico de 900g com matéria-prima de alto valor biológico. 21g de proteína concentrada do soro do leite por porção de 30g, ideal para recuperação e construção muscular.',
           isHighTicket: false
-        },
-        {
-          productId: 'champ-shopee-maquina-t9',
-          platform: 'Shopee',
-          canonicalTitle: 'Máquina de Cortar Cabelo e Barbeador Vintage T9 Dragão Sem Fio Recarregável USB',
-          category: 'Beleza e skincare',
-          realPrice: 34.90,
-          originalPrice: 59.90,
-          verifiedImageUrl: 'https://images.unsplash.com/photo-1621607512214-68297480165e?auto=format&fit=crop&w=800&q=80',
-          affiliateUrl: 'https://shopee.com.br/search?keyword=maquina%20t9%20vintage%20dragao',
-          demandBadge: '⚡ Giro Rápido',
-          soldQuantity: '+180.000 vendidos',
-          rating: 4.7,
-          reviewsCount: 52000,
-          conversionReason: 'Fenômeno de vendas no TikTok e Shopee. Preço de compra espontânea sem atrito.',
-          technicalDescription: 'Corpo metálico trabalhado em alto relevo dourado, lâmina T de aço carbono afiada para acabamentos precisos e desenhos, bateria recarregável com autonomia de 120 minutos e 4 pentes guia.',
-          isHighTicket: false
-        },
-        {
-          productId: 'champ-meli-olympikus-corre3',
-          platform: 'Mercado Livre',
-          canonicalTitle: 'Tênis Esportivo Olympikus Corre 3 Amortecimento com Placa de Propulsão',
-          category: 'Esporte',
-          realPrice: 399.90,
-          originalPrice: 499.90,
-          verifiedImageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
-          affiliateUrl: 'https://lista.mercadolivre.com.br/tenis-olympikus-corre-3',
-          demandBadge: '💰 Alta Comissão',
-          soldQuantity: '+30.000 vendidos',
-          rating: 4.9,
-          reviewsCount: 8900,
-          conversionReason: 'Tênis nacional de corrida mais elogiado do mercado. Grande interesse por reviews de amortecimento e durabilidade.',
-          technicalDescription: 'Drop de 8mm, tecnologia de amortecimento Eleva Pro para máxima resposta e resiliência, sola com borracha Gripper e Grippter Plus antiderrapante desenvolvida junto à USP.',
-          isHighTicket: true
-        },
-        {
-          productId: 'champ-shopee-mini-processador',
-          platform: 'Shopee',
-          canonicalTitle: 'Mini Processador e Triturador de Alimentos Elétrico USB Portátil 250ml Inox',
-          category: 'Casa e cozinha',
-          realPrice: 29.90,
-          originalPrice: 49.90,
-          verifiedImageUrl: 'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?auto=format&fit=crop&w=800&q=80',
-          affiliateUrl: 'https://shopee.com.br/search?keyword=mini%20processador%20eletrico%20usb',
-          demandBadge: '🔥 Top 1 Bestseller',
-          soldQuantity: '+140.000 vendidos',
-          rating: 4.8,
-          reviewsCount: 39800,
-          conversionReason: 'Produto prático que viraliza com facilidade em vídeos de cozinha prática no Reels e Shorts.',
-          technicalDescription: 'Recarregável via cabo USB com copo de 250ml em acrílico reforçado livre de BPA, lâmina tripla de aço inoxidável 304 que pica alho, cebola e temperos em 5 segundos.',
-          isHighTicket: false
         }
       ];
+
+      discoveredProducts.forEach(p => {
+        if (!RECONCILED_CATALOG.find(c => c.productId === `disc-${p.source}-${p.externalId}`)) {
+          RECONCILED_CATALOG.push({
+            productId: `disc-${p.source}-${p.externalId}`,
+            platform: 'Mercado Livre',
+            canonicalTitle: p.title,
+            category: p.category,
+            realPrice: parseFloat(p.price.replace('R$', '').replace(',', '.')),
+            verifiedImageUrl: p.thumbnail,
+            affiliateUrl: p.permalink,
+            demandBadge: '💡 Descoberto',
+            soldQuantity: `+${p.soldQuantity || 0} vendidos`,
+            rating: 4.8,
+            reviewsCount: p.soldQuantity || 100,
+            conversionReason: `Descoberto via ${p.trendSource}.`,
+            technicalDescription: 'Produto descoberto manualmente.',
+          }
+      ];
+
+      discoveredProducts.forEach(p => {
+        if (!RECONCILED_CATALOG.find(c => c.productId === `disc-${p.source}-${p.externalId}`)) {
+          RECONCILED_CATALOG.push({
+            productId: `disc-${p.source}-${p.externalId}`,
+            platform: 'Mercado Livre',
+            canonicalTitle: p.title,
+            category: p.category,
+            realPrice: parseFloat(p.price.replace('R$', '').replace(',', '.')),
+            verifiedImageUrl: p.thumbnail,
+            affiliateUrl: p.permalink,
+            demandBadge: '💡 Descoberto',
+            soldQuantity: `+${p.soldQuantity || 0} vendidos`,
+            rating: 4.8,
+            reviewsCount: p.soldQuantity || 100,
+            conversionReason: `Descoberto via ${p.trendSource}.`,
+            technicalDescription: 'Produto descoberto manualmente.',
+            isHighTicket: false
+          });
+        }
+      });
 
       const reconciledItems = RECONCILED_CATALOG.map((item, idx) => {
         const commMin = (item.realPrice * 0.10).toFixed(2).replace('.', ',');
@@ -1303,7 +1292,6 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
 
   // API Route: Descobrir e persistir produtos descobertos no Mercado Livre
   let discoveredProducts: any[] = [];
-
   app.post("/api/marketplace/discover", async (req, res) => {
     try {
       const { termo, categoria, usuario } = req.body;
@@ -1313,7 +1301,6 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
 
       console.log(`[server] Registro de descoberta: ${termo} em ${categoria} por ${usuario}`);
 
-      // Simulação de busca na API do Meli (reutilizando a lógica existente de search)
       const meliSearchUrl = `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}&limit=10`;
       const resp = await fetch(meliSearchUrl, {
         headers: {
@@ -1322,29 +1309,39 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
         }
       });
 
-      let items: any[] = [];
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.results) {
-          items = data.results.map((item: any, idx: number) => ({
-            id: `disc-${item.id}`,
-            title: item.title,
-            category: categoria,
-            platform: 'Mercado Livre',
-            price: item.price ? `R$ ${item.price.toFixed(2).replace('.', ',')}` : 'R$ --',
-            rawPrice: item.price,
-            productImage: item.thumbnail?.replace('-I.jpg', '-O.jpg'),
-            affiliateUrl: item.permalink,
-            technicalDescription: 'Produto descoberto através de pesquisa manual no sistema.',
-            soldQuantity: item.sold_quantity
-          }));
-        }
+      if (!resp.ok) {
+        return res.status(resp.status).json({ error: "Não foi possível consultar o Mercado Livre agora." });
+      }
+      
+      const data = await resp.json();
+      if (!data.results || data.results.length === 0) {
+        return res.json({ success: true, total: 0, items: [] });
       }
 
-      // Persistir no nosso store em memória (backend)
+      const items = data.results.map((item: any) => ({
+        source: 'mercadolivre',
+        externalId: item.id,
+        title: item.title,
+        category: categoria,
+        categoryId: item.category_id,
+        price: item.price ? `R$ ${item.price.toFixed(2).replace('.', ',')}` : 'R$ --',
+        currency: item.currency_id,
+        thumbnail: item.thumbnail?.replace('-I.jpg', '-O.jpg'),
+        permalink: item.permalink,
+        sellerId: item.seller?.id,
+        soldQuantity: item.sold_quantity,
+        discoveredBy: usuario || 'admin',
+        discoveredAt: new Date().toISOString(),
+        searchTerm: termo,
+        trendSource: 'api_manual_search'
+      }));
+
+      // Persistir com deduplicação
       items.forEach(item => {
-        if (!discoveredProducts.find(p => p.id === item.id)) {
+        if (!discoveredProducts.find(p => p.source === item.source && p.externalId === item.externalId)) {
           discoveredProducts.push(item);
+        } else {
+            console.log(`[server] Produto ${item.source}:${item.externalId} já está em Produtos Campeões.`);
         }
       });
 
