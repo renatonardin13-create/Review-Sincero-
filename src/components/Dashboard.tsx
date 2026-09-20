@@ -134,7 +134,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           banners={settings.promoBanners}
           autoplaySpeed={settings.bannerAutoplaySpeed || 6}
           enabled={settings.enableBannerCarousel !== false}
-          onManageClick={() => setCurrentView('settings-banners')}
+          onManageClick={currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() ? () => setCurrentView('settings-banners') : undefined}
         />
       )}
 

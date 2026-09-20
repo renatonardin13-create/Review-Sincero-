@@ -1364,7 +1364,27 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
   });
 
   // Global App Settings (Banners & Configuration synchronization for students)
-  let globalAppSettings: any = null;
+  let globalAppSettings: any = {
+    siteName: 'Guia Sincero Tech',
+    authorName: 'Carlos Mendonça',
+    promoBanners: [
+      {
+        id: 'banner-01',
+        title: 'Comunidade VIP de Afiliados Pro',
+        subtitle: 'Aprenda as melhores estratégias para vender todos os dias no Mercado Livre, Shopee e Produtos Físicos com comissões de até 70%.',
+        imageUrl: 'https://images.unsplash.com/photo-1552581234-26160f608093?auto=format&fit=crop&w=1600&q=80',
+        desktopImageUrl: 'https://images.unsplash.com/photo-1552581234-26160f608093?auto=format&fit=crop&w=1600&q=80',
+        mobileImageUrl: 'https://images.unsplash.com/photo-1552581234-26160f608093?auto=format&fit=crop&w=800&q=80',
+        ctaText: 'Quero Acessar Agora',
+        ctaUrl: 'https://pay.hotmart.com',
+        badge: '🔥 OFERTA EXCLUSIVA',
+        active: true,
+        targetBlank: true
+      }
+    ],
+    bannerAutoplaySpeed: 6,
+    enableBannerCarousel: true
+  };
 
   app.get("/api/settings", (req, res) => {
     res.json({ success: true, settings: globalAppSettings });

@@ -543,8 +543,8 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
               className="w-full bg-[#0A0A0A] border border-[#262626] focus:border-[#FFE600] rounded-xl px-4 py-2.5 text-xs text-white outline-none"
             >
               <option value="all">Todas as Categorias (MLB)</option>
-              {meliCategoriesList.map((cat: any) => (
-                <option key={cat.id} value={cat.name || cat.id}>
+              {meliCategoriesList.map((cat: any, idx: number) => (
+                <option key={`${cat.id}-${idx}`} value={cat.name || cat.id}>
                   {cat.name || cat.id}
                 </option>
               ))}

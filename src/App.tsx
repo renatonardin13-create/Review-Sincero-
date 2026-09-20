@@ -168,16 +168,25 @@ export default function App() {
     }
   }, [reviews]);
 
-  // Fetch settings from server on mount so students see admin banners automatically
+  // Fetch settings from server on mount and poll periodically so students see admin banners automatically
   useEffect(() => {
-    fetch('/api/settings')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.settings) {
-          setSettings(data.settings);
-        }
-      })
-      .catch(console.warn);
+    const fetchSettings = () => {
+      fetch('/api/settings')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.settings) {
+            setSettings(prev => ({
+              ...prev,
+              ...data.settings
+            }));
+          }
+        })
+        .catch(console.warn);
+    };
+
+    fetchSettings();
+    const interval = setInterval(fetchSettings, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
