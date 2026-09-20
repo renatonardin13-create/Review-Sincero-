@@ -367,6 +367,33 @@ async function startServer() {
     }
   });
 
+  // API Route: Real Mercado Livre Categories Endpoint
+  app.get("/api/meli/categories", async (req, res) => {
+    try {
+      const resp = await fetch('https://api.mercadolibre.com/sites/MLB/categories', {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json'
+        }
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        return res.json({ success: true, categories: data });
+      }
+      const categories = Object.keys(MELI_CATEGORY_MAP).map((name) => ({
+        id: MELI_CATEGORY_MAP[name],
+        name: name
+      }));
+      res.json({ success: true, categories });
+    } catch (err) {
+      const categories = Object.keys(MELI_CATEGORY_MAP).map((name) => ({
+        id: MELI_CATEGORY_MAP[name],
+        name: name
+      }));
+      res.json({ success: true, categories });
+    }
+  });
+
   // API Route: Real Mercado Livre Brasil Trends Endpoint (Direct live link to tendencias.mercadolivre.com.br)
   app.get("/api/meli/trends", async (req, res) => {
     try {

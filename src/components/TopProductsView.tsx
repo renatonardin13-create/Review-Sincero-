@@ -14,6 +14,7 @@ import {
   CheckCircle,
   CheckCircle2,
   ShoppingBag,
+  ShoppingCart,
   Zap,
   Tag,
   RefreshCw,
@@ -30,6 +31,7 @@ import {
 } from '../services/reconciliationService';
 
 interface TopProductsViewProps {
+  currentUser?: { id?: string; email?: string; name?: string };
   onUseProductForReview: (product: {
     productName: string;
     productPrice: string;
@@ -42,6 +44,7 @@ interface TopProductsViewProps {
 }
 
 export const TopProductsView: React.FC<TopProductsViewProps> = ({
+  currentUser,
   onUseProductForReview,
   onSwitchToComparator
 }) => {
@@ -52,6 +55,15 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
   const [liveTrends, setLiveTrends] = useState<any[]>([]);
   const [isLoadingTrends, setIsLoadingTrends] = useState<boolean>(false);
   
+  // Discovery state
+  const [discoveryTerm, setDiscoveryTerm] = useState<string>('');
+  const [discoveryCategory, setDiscoveryCategory] = useState<string>('all');
+  const [meliCategoriesList, setMeliCategoriesList] = useState<any[]>([]);
+  const [meliTrendsList, setMeliTrendsList] = useState<any[]>([]);
+  const [isFetchingMeliTrends, setIsFetchingMeliTrends] = useState<boolean>(false);
+  const [discoveryResults, setDiscoveryResults] = useState<any[]>([]);
+  const [importStatusMap, setImportStatusMap] = useState<Record<string, string>>({});
+
   // Reconciled products list
   const [rawProducts, setRawProducts] = useState<any[]>(() => Object.values(AUTHORITATIVE_MARKETPLACE_CATALOG));
   const [liveSearchResults, setLiveSearchResults] = useState<any[]>([]);
@@ -60,7 +72,7 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
   const [lastReconciledAt, setLastReconciledAt] = useState<string>(() => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
   const [selectedProductForModal, setSelectedProductForModal] = useState<ReconciledChampionProduct | null>(null);
 
-  // Fetch verified reconciled catalogue from API service on mount
+  // Fetch verified reconciled catalogue & official categories on mount
   const fetchReconciledCatalogFromApi = useCallback(async () => {
     setIsReconciling(true);
     try {
@@ -81,6 +93,17 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
 
   useEffect(() => {
     fetchReconciledCatalogFromApi();
+    
+    // Fetch official MELI categories
+    fetch('/api/meli/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (data.categories && Array.isArray(data.categories)) {
+          setMeliCategoriesList(data.categories);
+        }
+      })
+      .catch(console.warn);
+
     setIsLoadingTrends(true);
     fetch('/api/trends/live?platform=all')
       .then(res => res.json())
@@ -110,6 +133,75 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
       .catch(console.error)
       .finally(() => setIsLoadingTrends(false));
   }, [fetchReconciledCatalogFromApi]);
+
+  const handleFetchMeliTrends = async () => {
+    setIsFetchingMeliTrends(true);
+    try {
+      const res = await fetch('/api/meli/trends');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.items && Array.isArray(data.items)) {
+          setMeliTrendsList(data.items);
+        }
+      }
+    } catch (err) {
+      console.warn('Erro ao buscar tendências:', err);
+    } finally {
+      setIsFetchingMeliTrends(false);
+    }
+  };
+
+  const handleDiscoverSearch = async (termOverride?: string) => {
+    const term = typeof termOverride === 'string' ? termOverride : discoveryTerm;
+    if (!term.trim()) return;
+
+    setIsSearchingLive(true);
+    try {
+      const res = await fetch('/api/marketplace/discover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          termo: term,
+          categoria: discoveryCategory !== 'all' ? discoveryCategory : 'Tech',
+          usuario: currentUser?.id || currentUser?.email || 'admin'
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.items && data.items.length > 0) {
+          setDiscoveryResults(data.items);
+          fetchReconciledCatalogFromApi();
+        } else {
+          setDiscoveryResults([]);
+        }
+      }
+    } catch (err) {
+      console.warn('Erro na busca de descoberta do Mercado Livre:', err);
+    } finally {
+      setIsSearchingLive(false);
+    }
+  };
+
+  const handleImportDiscoveredProduct = async (item: any) => {
+    const extId = item.externalId || item.id;
+    try {
+      const res = await fetch('/api/marketplace/discover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          termo: item.searchTerm || item.title.split(' ')[0],
+          categoria: item.category || discoveryCategory || 'Tech',
+          usuario: currentUser?.id || currentUser?.email || 'admin'
+        })
+      });
+      if (res.ok) {
+        setImportStatusMap(prev => ({ ...prev, [extId]: 'success' }));
+        fetchReconciledCatalogFromApi();
+      }
+    } catch (err) {
+      console.warn('Erro ao importar produto:', err);
+    }
+  };
 
   /**
    * Authoritative Mapping & Validation Function:
@@ -406,42 +498,191 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
         </div>
       </div>
       
-      {/* Descobrir no Mercado Livre */}
-      <div className="p-6 rounded-3xl bg-[#121212] border border-[#242424] space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-          <Search className="w-4 h-4 text-[#F5C542]" />
-          <span>Descobrir no Mercado Livre</span>
-        </h3>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <input
-            id="termo"
-            type="text"
-            placeholder="Termo de busca"
-            className="flex-1 bg-[#0A0A0A] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white"
-          />
-          <input
-            id="categoria"
-            type="text"
-            placeholder="Categoria"
-            className="flex-1 bg-[#0A0A0A] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white"
-          />
-          <button
-            onClick={async () => {
-              const termo = (document.getElementById('termo') as HTMLInputElement).value;
-              const categoria = (document.getElementById('categoria') as HTMLInputElement).value;
-              if (!termo || !categoria) return;
-              await fetch('/api/marketplace/discover', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ termo, categoria, usuario: 'admin' })
-              });
-              fetchReconciledCatalogFromApi();
-            }}
-            className="px-4 py-2.5 rounded-xl bg-[#F5C542] text-black font-black text-xs hover:bg-[#e5b738]"
-          >
-            Buscar no Mercado Livre
-          </button>
+      {/* Descobrir produtos no Mercado Livre */}
+      <div className="p-6 rounded-3xl bg-[#121212] border border-[#242424] space-y-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#222]">
+          <div>
+            <h3 className="text-base font-black text-white flex items-center gap-2">
+              <Search className="w-5 h-5 text-[#FFE600]" />
+              <span>Descobrir produtos no Mercado Livre</span>
+            </h3>
+            <p className="text-xs text-[#9A9A9A] mt-1">
+              Consulte tendências oficiais, selecione categorias e importe produtos reais para os Produtos Campeões com 1 clique.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <a
+              href="https://tendencias.mercadolivre.com.br/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FFE600]/10 hover:bg-[#FFE600]/20 text-[#FFE600] border border-[#FFE600]/30 text-xs font-bold transition-all"
+            >
+              <span>Ver tendências no Mercado Livre</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-[11px] font-bold text-[#888] mb-1">Termo / Tendência</label>
+            <input
+              type="text"
+              value={discoveryTerm}
+              onChange={(e) => setDiscoveryTerm(e.target.value)}
+              placeholder="Ex: Escova secadora, Smartwatch, Whey..."
+              className="w-full bg-[#0A0A0A] border border-[#262626] focus:border-[#FFE600] rounded-xl px-4 py-2.5 text-xs text-white outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-[#888] mb-1">Categoria do Mercado Livre</label>
+            <select
+              value={discoveryCategory}
+              onChange={(e) => setDiscoveryCategory(e.target.value)}
+              className="w-full bg-[#0A0A0A] border border-[#262626] focus:border-[#FFE600] rounded-xl px-4 py-2.5 text-xs text-white outline-none"
+            >
+              <option value="all">Todas as Categorias (MLB)</option>
+              {meliCategoriesList.map((cat: any) => (
+                <option key={cat.id} value={cat.name || cat.id}>
+                  {cat.name || cat.id}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              onClick={() => handleDiscoverSearch()}
+              disabled={isSearchingLive || !discoveryTerm.trim()}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#FFE600] hover:bg-[#ebd500] text-black font-black text-xs transition-all shadow-md cursor-pointer disabled:opacity-50"
+            >
+              {isSearchingLive ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+              <span>Buscar tendência</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleFetchMeliTrends}
+              disabled={isFetchingMeliTrends}
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#202020] hover:bg-[#2A2A2A] text-white border border-[#333] text-xs font-bold transition-all cursor-pointer"
+              title="Carregar tendências oficiais"
+            >
+              <TrendingUp className="w-3.5 h-3.5 text-[#FFE600]" />
+              <span>{isFetchingMeliTrends ? 'Carregando...' : 'Ver tendências'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Live Meli Trends Chips */}
+        {meliTrendsList.length > 0 && (
+          <div className="space-y-2 pt-2">
+            <span className="text-xs font-bold text-[#FFE600] flex items-center gap-1.5">
+              <Flame className="w-3.5 h-3.5 text-orange-500" />
+              <span>Tendências Oficiais do Mercado Livre (Clique para buscar):</span>
+            </span>
+            <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-2 bg-[#0A0A0A] rounded-xl border border-[#222]">
+              {meliTrendsList.map((trend: any, idx: number) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    const term = trend.title || trend.keyword || trend;
+                    setDiscoveryTerm(term);
+                    handleDiscoverSearch(term);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-[#181818] hover:bg-[#252525] text-white text-xs font-medium border border-[#333] transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <TrendingUp className="w-3 h-3 text-[#FFE600]" />
+                  <span>{trend.title || trend.keyword || trend}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Discovery Results Preview */}
+        {discoveryResults.length > 0 && (
+          <div className="space-y-3 pt-3 border-t border-[#222]">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-[#FFE600]" />
+                <span>Produtos Encontrados no Mercado Livre ({discoveryResults.length})</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setDiscoveryResults([])}
+                className="text-xs text-[#888] hover:text-white"
+              >
+                Limpar Resultados
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {discoveryResults.map((item, idx) => {
+                const extId = item.externalId || item.id;
+                const isImported = importStatusMap[extId] === 'success';
+
+                return (
+                  <div key={idx} className="bg-[#181818] border border-[#2A2A2A] rounded-2xl p-4 space-y-3 flex flex-col justify-between">
+                    <div className="w-full h-36 bg-white rounded-xl p-2 flex items-center justify-center overflow-hidden relative">
+                      <img
+                        src={item.thumbnail || item.productImage}
+                        alt={item.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-contain"
+                      />
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] font-bold text-[#FFE600]">
+                        Mercado Livre
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5 flex-1">
+                      <h4 className="text-xs font-bold text-white line-clamp-2">{item.title}</h4>
+                      <div className="text-sm font-black text-[#22C55E]">
+                        {item.price || 'R$ --'}
+                      </div>
+                      {item.soldQuantity && (
+                        <div className="text-[10px] text-[#888]">
+                          +{item.soldQuantity} vendidos
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleImportDiscoveredProduct(item)}
+                        className={`w-full py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          isImported
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-[#FFE600] hover:bg-[#ebd500] text-black shadow-md'
+                        }`}
+                      >
+                        <ShoppingCart className="w-3.5 h-3.5" />
+                        <span>
+                          {isImported
+                            ? '✓ Produto adicionado aos Produtos Campeões'
+                            : '🛒 Importar produto'}
+                        </span>
+                      </button>
+
+                      <a
+                        href={item.permalink || item.affiliateUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-1.5 rounded-xl bg-[#222] hover:bg-[#2A2A2A] text-[#CCC] hover:text-white text-[11px] font-bold text-center block"
+                      >
+                        Ver no Mercado Livre ↗
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {liveSearchResults.length > 0 && (

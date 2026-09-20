@@ -450,6 +450,7 @@ export default function App() {
 
           {currentView === 'campeoes' && (
             <TopProductsView
+              currentUser={currentUser || undefined}
               onUseProductForReview={handleUseChampionProduct}
               onSwitchToComparator={(title) => setCurrentView('comparar')}
             />
