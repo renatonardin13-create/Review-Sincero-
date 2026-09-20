@@ -30,6 +30,7 @@ interface DashboardProps {
   onDuplicateReview: (review: Review) => void;
   onDeleteReview: (id: string) => void;
   setCurrentView: (view: string) => void;
+  isPublicUserRoute?: boolean;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -42,7 +43,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onViewReview,
   onDuplicateReview,
   onDeleteReview,
-  setCurrentView
+  setCurrentView,
+  isPublicUserRoute = true
 }) => {
   const totalReviews = reviews.length;
   const publishedReviews = reviews.filter((r) => r.status === 'Publicado').length;
@@ -55,6 +57,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const isAdmin =
     currentUser?.role === 'admin' ||
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+
+  const isPublic =
+    isPublicUserRoute ||
+    (typeof window !== 'undefined' &&
+      (window.location.pathname.startsWith('/usuario') ||
+        window.location.pathname === '/' ||
+        window.location.pathname === '/aluno'));
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -69,12 +78,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex items-center gap-3.5">
           <div
             className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shrink-0 shadow-lg ${
-              isAdmin
+              isAdmin && !isPublic
                 ? 'bg-[#F5C542] text-black shadow-[#F5C542]/20'
-                : 'bg-[#2563EB] text-white shadow-[#2563EB]/20'
+                : 'bg-emerald-600 text-white shadow-emerald-600/20'
             }`}
           >
-            {isAdmin ? <Crown className="w-6 h-6" /> : <User className="w-6 h-6" />}
+            {isAdmin && !isPublic ? <Crown className="w-6 h-6" /> : <User className="w-6 h-6" />}
           </div>
 
           <div>
@@ -84,43 +93,45 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </span>
               <span
                 className={`text-xs font-black px-2.5 py-0.5 rounded-full uppercase border ${
-                  isAdmin
+                  isAdmin && !isPublic
                     ? 'bg-[#F5C542]/20 text-[#F5C542] border-[#F5C542]/40'
-                    : 'bg-[#2563EB]/20 text-[#38BDF8] border-[#2563EB]/40'
+                    : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
                 }`}
               >
-                {isAdmin ? '👑 Administrador Master (Acesso Total)' : '👤 Usuário Comum (Plano Gratuito)'}
+                {isAdmin && !isPublic ? '👑 Administrador Master (Acesso Total)' : '⚡ Acesso Público (Visitante / Aluno)'}
               </span>
             </div>
             <p className="text-xs text-[#A1A1A1] mt-1">
-              {isAdmin
+              {isAdmin && !isPublic
                 ? `Olá ${currentUser?.name || 'Renato Nardin'}, você possui privilégios totais de gestão e controle administrativo.`
-                : `Olá ${currentUser?.name || 'Aluno'}, você tem acesso gratuito aos geradores e recursos essenciais.`}
+                : `Olá Aluno, você tem acesso gratuito aos geradores e recursos essenciais.`}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 w-full md:w-auto">
-          {isAdmin ? (
-            <button
-              type="button"
-              onClick={() => setCurrentView('admin')}
-              className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-[#F5C542] hover:bg-[#F5C542]/90 text-black font-black text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-[#F5C542]/20 transition-transform active:scale-95"
-            >
-              <Crown className="w-4 h-4" />
-              <span>Abrir Painel Admin</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={onOpenAuthModal}
-              className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-[#38BDF8]/30 text-[#38BDF8] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
-            >
-              <Zap className="w-4 h-4 text-[#F5C542]" />
-              <span>Alternar Perfil / Login</span>
-            </button>
-          )}
-        </div>
+        {!isPublic && (
+          <div className="flex items-center gap-2.5 w-full md:w-auto">
+            {isAdmin ? (
+              <button
+                type="button"
+                onClick={() => setCurrentView('admin')}
+                className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-[#F5C542] hover:bg-[#F5C542]/90 text-black font-black text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-[#F5C542]/20 transition-transform active:scale-95"
+              >
+                <Crown className="w-4 h-4" />
+                <span>Abrir Painel Admin</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onOpenAuthModal}
+                className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-[#38BDF8]/30 text-[#38BDF8] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+              >
+                <Zap className="w-4 h-4 text-[#F5C542]" />
+                <span>Alternar Perfil / Login</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Hero Banner inside Dashboard - Matching PageAI (Screenshot 7) */}
