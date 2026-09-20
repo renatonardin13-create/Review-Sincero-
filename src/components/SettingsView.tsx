@@ -8,14 +8,16 @@ interface SettingsViewProps {
   settings: AppSettings;
   onSaveSettings: (newSettings: AppSettings) => void;
   initialTab?: 'general' | 'banners';
+  isAdmin?: boolean;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   settings,
   onSaveSettings,
-  initialTab = 'general'
+  initialTab = 'general',
+  isAdmin = false
 }) => {
-  const [activeTab, setActiveTab] = useState<'general' | 'banners'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'general' | 'banners'>(isAdmin ? initialTab : 'general');
   const [form, setForm] = useState<AppSettings>({
     ...settings,
     promoBanners: settings.promoBanners || DEFAULT_PROMO_BANNERS,
@@ -54,9 +56,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   return (
     <div className="max-w-4xl space-y-8 animate-in fade-in duration-300 pb-20">
       <div>
-        <h2 className="text-2xl font-extrabold text-white">Configurações & Monetização</h2>
+        <h2 className="text-2xl font-extrabold text-white">Configurações & Perfil</h2>
         <p className="text-sm text-[#A1A1A1] mt-1">
-          Gerencie os dados do seu site de reviews e configure os banners promocionais em slides para vender produtos como afiliado ou produtor.
+          {isAdmin 
+            ? "Gerencie os dados do seu site de reviews e configure os banners promocionais em slides para vender produtos como afiliado ou produtor."
+            : "Gerencie as configurações gerais da sua conta e preferências do sistema."}
         </p>
       </div>
 
@@ -67,37 +71,39 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 p-1.5 bg-[#121212] border border-[#222] rounded-2xl max-w-md">
-        <button
-          type="button"
-          onClick={() => setActiveTab('general')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'general'
-              ? 'bg-[#F5C542] text-[#080808] shadow-md'
-              : 'text-[#A1A1A1] hover:text-white'
-          }`}
-        >
-          <User className="w-4 h-4" />
-          <span>Geral & Perfil</span>
-        </button>
+      {/* Tabs (Admin Only) */}
+      {isAdmin && (
+        <div className="flex items-center gap-2 p-1.5 bg-[#121212] border border-[#222] rounded-2xl max-w-md">
+          <button
+            type="button"
+            onClick={() => setActiveTab('general')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'general'
+                ? 'bg-[#F5C542] text-[#080808] shadow-md'
+                : 'text-[#A1A1A1] hover:text-white'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>Geral & Perfil</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('banners')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
-            activeTab === 'banners'
-              ? 'bg-[#F5C542] text-[#080808] shadow-md'
-              : 'text-[#A1A1A1] hover:text-white'
-          }`}
-        >
-          <DollarSign className="w-4 h-4" />
-          <span>Banners em Slides</span>
-          <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-[#22C55E]/20 text-[#22C55E] font-black">
-            Vendas
-          </span>
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('banners')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
+              activeTab === 'banners'
+                ? 'bg-[#F5C542] text-[#080808] shadow-md'
+                : 'text-[#A1A1A1] hover:text-white'
+            }`}
+          >
+            <DollarSign className="w-4 h-4" />
+            <span>Banners em Slides</span>
+            <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-[#22C55E]/20 text-[#22C55E] font-black">
+              Vendas
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* General Tab */}
       {activeTab === 'general' && (

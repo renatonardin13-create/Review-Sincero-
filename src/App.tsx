@@ -591,12 +591,12 @@ export default function App() {
           )}
 
           {currentView === 'settings' && (
-            <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="general" />
+            <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="general" isAdmin={isAdmin} />
           )}
 
           {currentView === 'settings-banners' && (
             isAdmin ? (
-              <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="banners" />
+              <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="banners" isAdmin={isAdmin} />
             ) : (
               <AccessRestrictedView
                 currentUser={currentUser}

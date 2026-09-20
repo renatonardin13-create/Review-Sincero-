@@ -595,16 +595,17 @@ export const MembersAcademyView: React.FC<MembersAcademyViewProps> = ({
             <span className="text-[11px] font-bold truncate">Templates</span>
           </button>
 
-          {/* 7. Banner */}
-          <button
-            type="button"
-            onClick={() => onNavigateTo?.('settings-banners')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-emerald-400/40 transition-all group cursor-pointer"
-            title="Configurar Banners em Slides e Anúncios"
-          >
-            <DollarSign className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform mb-1" />
-            <span className="text-[11px] font-bold truncate">Banners</span>
-          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => onNavigateTo?.('settings-banners')}
+              className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#131B2A] hover:bg-[#1E293B] text-white border border-[#24334A] hover:border-emerald-400/40 transition-all group cursor-pointer"
+              title="Configurar Banners em Slides e Anúncios"
+            >
+              <DollarSign className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform mb-1" />
+              <span className="text-[11px] font-bold truncate">Banners</span>
+            </button>
+          )}
 
           {/* 8. Produtos Campeões */}
           <button

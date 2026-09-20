@@ -216,13 +216,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <span>Tutorial & Como Usar</span>
           </button>
 
-          <button
-            onClick={() => setCurrentView('settings-banners')}
-            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white transition-all cursor-pointer"
-          >
-            <DollarSign className="w-3.5 h-3.5 text-[#F5C542]" />
-            <span>Banners em Slides</span>
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setCurrentView('settings-banners')}
+              className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white transition-all cursor-pointer"
+            >
+              <DollarSign className="w-3.5 h-3.5 text-[#F5C542]" />
+              <span>Banners em Slides</span>
+            </button>
+          )}
         </div>
       </div>
 
