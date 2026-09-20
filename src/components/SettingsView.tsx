@@ -18,12 +18,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   isAdmin = false
 }) => {
   const [activeTab, setActiveTab] = useState<'general' | 'banners'>(isAdmin ? initialTab : 'general');
-  const [form, setForm] = useState<AppSettings>({
+  const [form, setForm] = useState<AppSettings>(() => ({
     ...settings,
-    promoBanners: settings.promoBanners || DEFAULT_PROMO_BANNERS,
+    promoBanners: Array.isArray(settings.promoBanners) ? settings.promoBanners : DEFAULT_PROMO_BANNERS,
     bannerAutoplaySpeed: settings.bannerAutoplaySpeed || 6,
     enableBannerCarousel: settings.enableBannerCarousel !== false
-  });
+  }));
+
+  React.useEffect(() => {
+    setForm(prev => ({
+      ...settings,
+      promoBanners: Array.isArray(settings.promoBanners) ? settings.promoBanners : (Array.isArray(prev.promoBanners) ? prev.promoBanners : DEFAULT_PROMO_BANNERS),
+      bannerAutoplaySpeed: settings.bannerAutoplaySpeed ?? prev.bannerAutoplaySpeed ?? 6,
+      enableBannerCarousel: settings.enableBannerCarousel ?? prev.enableBannerCarousel ?? true
+    }));
+  }, [settings]);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -225,7 +234,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* Banners & Monetization Tab */}
       {activeTab === 'banners' && (
         <PromoBannerManager
-          banners={form.promoBanners || DEFAULT_PROMO_BANNERS}
+          banners={Array.isArray(form.promoBanners) ? form.promoBanners : DEFAULT_PROMO_BANNERS}
           onUpdateBanners={handleUpdateBanners}
           autoplaySpeed={form.bannerAutoplaySpeed || 6}
           onUpdateAutoplaySpeed={handleUpdateSpeed}

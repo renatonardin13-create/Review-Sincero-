@@ -132,7 +132,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
          ========================================================================= */}
       {settings?.enableBannerCarousel !== false && (
         <PromoBannerCarousel
-          banners={settings?.promoBanners && settings.promoBanners.length > 0 ? settings.promoBanners : DEFAULT_PROMO_BANNERS}
+          banners={Array.isArray(settings?.promoBanners) && settings.promoBanners.length > 0 ? settings.promoBanners : DEFAULT_PROMO_BANNERS}
           autoplaySpeed={settings?.bannerAutoplaySpeed || 6}
           enabled={true}
           onManageClick={currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() ? () => setCurrentView('settings-banners') : undefined}

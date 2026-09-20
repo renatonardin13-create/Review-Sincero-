@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PromoBannerSlide } from '../types';
+import { DEFAULT_PROMO_BANNERS } from '../data/initialData';
 import {
   Plus,
   Trash2,
@@ -68,7 +69,7 @@ const PRESET_BACKGROUNDS = [
 ];
 
 export const PromoBannerManager: React.FC<PromoBannerManagerProps> = ({
-  banners,
+  banners: propsBanners,
   onUpdateBanners,
   autoplaySpeed,
   onUpdateAutoplaySpeed,
@@ -76,6 +77,7 @@ export const PromoBannerManager: React.FC<PromoBannerManagerProps> = ({
   onUpdateCarouselEnabled,
   onSaveAll
 }) => {
+  const banners = Array.isArray(propsBanners) ? propsBanners : DEFAULT_PROMO_BANNERS;
   const [editingBannerId, setEditingBannerId] = useState<string | null>(
     banners.length > 0 ? banners[0].id : null
   );
