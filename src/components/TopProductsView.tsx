@@ -628,7 +628,7 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
                   <div key={idx} className="bg-[#181818] border border-[#2A2A2A] rounded-2xl p-4 space-y-3 flex flex-col justify-between">
                     <div className="w-full h-36 bg-white rounded-xl p-2 flex items-center justify-center overflow-hidden relative">
                       <img
-                        src={item.thumbnail || item.productImage}
+                        src={item.thumbnail || item.productImage || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=600&q=80'}
                         alt={item.title}
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-contain"
@@ -741,7 +741,7 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
             {/* Product Packshot Image strictly synchronized with productId */}
             <div className="w-full h-48 rounded-2xl bg-white p-3 border border-[#2A2A2A] flex items-center justify-center overflow-hidden relative shadow-inner">
               <img
-                src={prod.productImage}
+                src={prod.productImage || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80'}
                 alt={prod.title}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
@@ -886,7 +886,7 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
             <div className="flex gap-4 items-center bg-[#1a1a1a] p-4 rounded-2xl border border-[#2a2a2a]">
               <div className="w-20 h-20 bg-white rounded-xl p-2 shrink-0 flex items-center justify-center">
                 <img
-                  src={selectedProductForModal.productImage}
+                  src={selectedProductForModal.productImage || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=400&q=80'}
                   alt={selectedProductForModal.title}
                   className="w-full h-full object-contain"
                 />

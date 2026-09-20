@@ -142,7 +142,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
             >
               <div className="relative h-48 bg-[#0D0D0D] overflow-hidden">
                 <img
-                  src={rev.mainImage || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80'}
+                  src={(rev.mainImage && rev.mainImage.trim()) || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80'}
                   alt={rev.productName}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   onError={(e) => {

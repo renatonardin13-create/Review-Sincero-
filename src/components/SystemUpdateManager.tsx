@@ -233,9 +233,9 @@ export const SystemUpdateManager: React.FC<SystemUpdateManagerProps> = ({
                   <div className="w-10 h-10 rounded-xl bg-[#27272a] text-[#F5C542] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 font-mono">
                     {item.version}
                   </div>
-                  {item.imageUrl ? (
+                  {item.imageUrl && item.imageUrl.trim() ? (
                     <img 
-                      src={item.imageUrl} 
+                      src={item.imageUrl.trim()} 
                       alt={item.title} 
                       className="w-14 h-14 rounded-xl object-cover border border-[#27272a] bg-[#18181b] shrink-0"
                     />

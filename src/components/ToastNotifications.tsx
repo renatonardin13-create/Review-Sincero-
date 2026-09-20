@@ -103,11 +103,11 @@ export const ToastNotifications: React.FC<ToastNotificationsProps> = ({ currentU
             {toast.message}
           </p>
 
-          {toast.imageUrl && (
+          {toast.imageUrl && toast.imageUrl.trim() ? (
             <div className="mb-3 rounded-xl overflow-hidden border border-[#2A2A2E] h-28 relative z-10">
-              <img src={toast.imageUrl} alt={toast.title} className="w-full h-full object-cover" />
+              <img src={toast.imageUrl.trim()} alt={toast.title} className="w-full h-full object-cover" />
             </div>
-          )}
+          ) : null}
 
           <div className="flex items-center justify-between gap-2 relative z-10 pt-1 border-t border-[#222]">
             <span className="text-[10px] text-gray-500">

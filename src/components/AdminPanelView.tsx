@@ -272,8 +272,8 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
             <div className="space-y-2">
                 <label className="text-xs font-bold text-white block">Preview (Simulação):</label>
                 <div className="w-full aspect-video bg-[#000] rounded-2xl border border-[#222] overflow-hidden relative flex items-center justify-center">
-                   {adminLoginMedia.backgroundImageUrl ? (
-                      <img src={adminLoginMedia.backgroundImageUrl} alt="Preview" className="w-full h-full object-cover" />
+                   {adminLoginMedia.backgroundImageUrl && adminLoginMedia.backgroundImageUrl.trim() ? (
+                      <img src={adminLoginMedia.backgroundImageUrl.trim()} alt="Preview" className="w-full h-full object-cover" />
                    ) : (
                       <div className="text-xs text-[#555]">Fundo Padrão</div>
                    )}

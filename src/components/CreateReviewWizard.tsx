@@ -2149,9 +2149,9 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                 {formData.images.map((img, idx) => (
                   <div key={idx} className="space-y-2">
                     <div className="aspect-square bg-[#080808] border border-[#262626] rounded-xl overflow-hidden relative group flex items-center justify-center">
-                      {img ? (
+                      {img && img.trim() ? (
                         <img
-                          src={img}
+                          src={img.trim()}
                           alt={`Foto ${idx + 1}`}
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -2734,9 +2734,9 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                           className="flex-1 bg-[#07090F] border border-[#1E293B] rounded-xl px-4 py-3 text-xs font-mono text-white placeholder-[#555] focus:outline-none focus:border-[#3B82F6] transition-colors truncate"
                         />
                         <div className="w-11 h-11 rounded-xl bg-[#07090F] border border-[#1E293B] overflow-hidden flex items-center justify-center shrink-0">
-                          {t.photo ? (
+                          {t.photo && t.photo.trim() ? (
                             <img
-                              src={t.photo}
+                              src={t.photo.trim()}
                               alt="Preview"
                               className="w-full h-full object-cover"
                               onError={(e) => {

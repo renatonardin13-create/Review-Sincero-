@@ -301,7 +301,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <td className="py-4 pr-4">
                       <div className="flex items-center gap-3">
                         <img
-                          src={rev.mainImage || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=120&q=80'}
+                          src={(rev.mainImage && rev.mainImage.trim()) || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=120&q=80'}
                           alt={rev.productName}
                           className="w-11 h-11 rounded-xl object-cover border border-[#2A2A2A] bg-[#0D0D0D]"
                           onError={(e) => {

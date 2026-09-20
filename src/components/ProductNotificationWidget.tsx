@@ -107,9 +107,9 @@ export const ProductNotificationWidget: React.FC<ProductNotificationWidgetProps>
 
         {/* Content with Image and Info */}
         <div className="flex items-center gap-3 relative z-10">
-          {currentProduct.imageUrl ? (
+          {currentProduct.imageUrl && currentProduct.imageUrl.trim() ? (
             <img 
-              src={currentProduct.imageUrl} 
+              src={currentProduct.imageUrl.trim()} 
               alt={currentProduct.name}
               className="w-16 h-16 md:w-20 md:h-20 rounded-xl object-cover border border-[#27272a] shrink-0 bg-[#18181b]"
               onError={(e) => {

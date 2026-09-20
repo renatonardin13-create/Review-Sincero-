@@ -308,9 +308,9 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
                   <div className="w-8 h-8 rounded-lg bg-[#27272a] text-[#F5C542] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
                     #{item.order}
                   </div>
-                  {item.imageUrl ? (
+                  {item.imageUrl && item.imageUrl.trim() ? (
                     <img 
-                      src={item.imageUrl} 
+                      src={item.imageUrl.trim()} 
                       alt={item.name} 
                       className="w-12 h-12 rounded-xl object-cover border border-[#27272a] bg-[#18181b] shrink-0"
                     />

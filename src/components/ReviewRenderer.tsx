@@ -73,14 +73,15 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
     // If only 1 image, append smart matching gallery photos so the user has a rich visual gallery of the actual product
     if (list.length < 2 && smartMatch.gallery) {
       smartMatch.gallery.forEach(img => {
-        if (!list.includes(img)) list.push(img);
+        if (img && img.trim() && !list.includes(img.trim())) list.push(img.trim());
       });
     }
 
-    return list;
+    return list.filter(img => Boolean(img && img.trim()));
   }, [review.mainImage, review.images, review.productName, review.category, smartMatch]);
 
-  const activeImage = allImages[activeImageIndex] || allImages[0] || smartMatch.mainImage;
+  const defaultPackshot = smartMatch.mainImage || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80';
+  const activeImage = allImages[activeImageIndex] || allImages[0] || defaultPackshot;
 
   const toggleFaq = (id: string) => {
     setOpenFaq(openFaq === id ? null : id);

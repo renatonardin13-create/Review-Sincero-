@@ -546,7 +546,7 @@ Para quem prioriza DESEMPENHO E RECURSOS, a melhor escolha é ${products[1].name
                 >
                   <div className="w-12 h-12 bg-white rounded-lg p-1 shrink-0 flex items-center justify-center">
                     <img
-                      src={item.thumbnail}
+                      src={item.thumbnail || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=200&q=80'}
                       alt={item.title}
                       className="w-full h-full object-contain"
                       referrerPolicy="no-referrer"
@@ -602,7 +602,7 @@ Para quem prioriza DESEMPENHO E RECURSOS, a melhor escolha é ${products[1].name
             <div className="space-y-4">
               <div className="w-full h-52 rounded-2xl bg-white p-3 border border-[#2A2A2A] flex items-center justify-center overflow-hidden relative group shadow-inner">
                 <img
-                  src={prod.image}
+                  src={prod.image || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80'}
                   alt={prod.name}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"

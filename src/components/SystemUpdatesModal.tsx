@@ -128,11 +128,11 @@ export const SystemUpdatesModal: React.FC<SystemUpdatesModalProps> = ({
 
                       <p className="text-xs md:text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{item.message}</p>
 
-                      {item.imageUrl && (
+                      {item.imageUrl && item.imageUrl.trim() ? (
                         <div className="mt-2 rounded-xl overflow-hidden border border-[#27272a] max-h-60 bg-black">
-                          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                          <img src={item.imageUrl.trim()} alt={item.title} className="w-full h-full object-cover" />
                         </div>
-                      )}
+                      ) : null}
 
                       {item.ctaUrl && (
                         <div className="pt-2">

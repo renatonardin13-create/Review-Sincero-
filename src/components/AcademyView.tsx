@@ -101,7 +101,25 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
 
   // Helper to render video embed cleanly
   const renderVideoPlayer = (lesson: AcademyLesson) => {
-    const youtubeId = extractYoutubeId(lesson.videoUrl);
+    const videoUrl = (lesson.videoUrl || '').trim();
+
+    if (!videoUrl) {
+      return (
+        <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-[#111115] border border-[#222] shadow-2xl flex flex-col items-center justify-center p-6 text-center space-y-3">
+          <div className="w-14 h-14 rounded-2xl bg-[#F5C542]/10 border border-[#F5C542]/30 flex items-center justify-center text-[#F5C542]">
+            <Video className="w-7 h-7" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-white font-bold text-base">Vídeo em Preparação</h4>
+            <p className="text-xs text-gray-400 max-w-sm">
+              O link de vídeo desta aula será liberado em breve.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    const youtubeId = extractYoutubeId(videoUrl);
 
     if (youtubeId) {
       return (
@@ -117,11 +135,11 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
       );
     }
 
-    // Generic iframe fallback (Vimeo, custom host)
+    // Generic iframe fallback (Vimeo, custom host) only if non-empty URL
     return (
       <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black border border-[#222] shadow-2xl">
         <iframe
-          src={lesson.videoUrl}
+          src={videoUrl}
           title={lesson.title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
