@@ -511,6 +511,7 @@ export default function App() {
           currentUser={currentUser || undefined}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
           onNavigate={handleNavigateFromNotification}
+          currentPath={typeof window !== 'undefined' ? window.location.pathname : ''}
         />
 
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">

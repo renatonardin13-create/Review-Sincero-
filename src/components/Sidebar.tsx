@@ -256,47 +256,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={onOpenAuthModal}
-            className={`w-full p-2.5 rounded-2xl border text-left flex items-center gap-2.5 transition-all cursor-pointer ${
-              isAdmin
-                ? 'bg-[#1C1809] border-[#F5C542]/30 hover:border-[#F5C542]'
-                : 'bg-[#121824] border-[#2563EB]/30 hover:border-[#2563EB]'
-            }`}
-          >
-            <div
-              className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+          {!isPublicUser && (
+            <button
+              type="button"
+              onClick={onOpenAuthModal}
+              className={`w-full p-2.5 rounded-2xl border text-left flex items-center gap-2.5 transition-all cursor-pointer ${
                 isAdmin
-                  ? 'bg-[#F5C542] text-black'
-                  : 'bg-[#2563EB] text-white'
+                  ? 'bg-[#1C1809] border-[#F5C542]/30 hover:border-[#F5C542]'
+                  : 'bg-[#121824] border-[#2563EB]/30 hover:border-[#2563EB]'
               }`}
             >
-              {isAdmin ? '👑' : '👤'}
-            </div>
-
-            <div className="overflow-hidden flex-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-white truncate">
-                  {currentUser ? currentUser.name.split(' ')[0] : 'Visitante'}
-                </span>
-                <span
-                  className={`text-[8px] font-black px-1.5 py-0.2 rounded uppercase ${
-                    isAdmin
-                      ? 'bg-[#F5C542] text-black'
-                      : currentUser
-                      ? 'bg-[#2563EB] text-white'
-                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                  }`}
-                >
-                  {isAdmin ? 'ADMIN' : currentUser ? 'CONECTADO' : 'ACESSO LIVRE'}
-                </span>
+              <div
+                className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                  isAdmin
+                    ? 'bg-[#F5C542] text-black'
+                    : 'bg-[#2563EB] text-white'
+                }`}
+              >
+                {isAdmin ? '👑' : '👤'}
               </div>
-              <p className="text-[9px] text-[#8E8E8E] truncate">
-                {currentUser?.email || 'Nenhum cadastro exigido'}
-              </p>
-            </div>
-          </button>
+
+              <div className="overflow-hidden flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-white truncate">
+                    {currentUser ? currentUser.name.split(' ')[0] : 'Visitante'}
+                  </span>
+                  <span
+                    className={`text-[8px] font-black px-1.5 py-0.2 rounded uppercase ${
+                      isAdmin
+                        ? 'bg-[#F5C542] text-black'
+                        : currentUser
+                        ? 'bg-[#2563EB] text-white'
+                        : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    }`}
+                  >
+                    {isAdmin ? 'ADMIN' : currentUser ? 'CONECTADO' : 'ACESSO LIVRE'}
+                  </span>
+                </div>
+                <p className="text-[9px] text-[#8E8E8E] truncate">
+                  {currentUser?.email || 'Nenhum cadastro exigido'}
+                </p>
+              </div>
+            </button>
+          )}
 
           {!isPublicUser && (
             <button

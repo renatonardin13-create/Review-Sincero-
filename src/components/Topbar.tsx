@@ -14,6 +14,7 @@ interface TopbarProps {
   currentUser?: AuthUser;
   onOpenAuthModal?: () => void;
   onNavigate?: (view: string, targetId?: string) => void;
+  currentPath?: string;
 }
 
 export const Topbar: React.FC<TopbarProps> = ({
@@ -24,7 +25,8 @@ export const Topbar: React.FC<TopbarProps> = ({
   authorName,
   currentUser,
   onOpenAuthModal,
-  onNavigate
+  onNavigate,
+  currentPath
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
@@ -32,6 +34,9 @@ export const Topbar: React.FC<TopbarProps> = ({
 
   const isAdmin =
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+
+  const pathname = currentPath || (typeof window !== 'undefined' ? window.location.pathname : '');
+  const isPublicUser = pathname.startsWith('/usuario');
 
   useEffect(() => {
     // Escutar notificações em tempo real
@@ -101,52 +106,54 @@ export const Topbar: React.FC<TopbarProps> = ({
           </div>
 
           {/* User Account / Profile Badge with 1-Click Role Switcher */}
-          <button
-            type="button"
-            onClick={onOpenAuthModal}
-            className={`flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl border transition-all cursor-pointer ${
-              isAdmin
-                ? 'bg-[#1C1809] border-[#F5C542]/40 hover:border-[#F5C542]'
-                : currentUser
-                ? 'bg-[#121926] border-[#2563EB]/40 hover:border-[#2563EB]'
-                : 'bg-[#111815] border-emerald-500/30 hover:border-emerald-500/50'
-            }`}
-            title="Status de acesso à plataforma"
-          >
-            <div
-              className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+          {!isPublicUser && (
+            <button
+              type="button"
+              onClick={onOpenAuthModal}
+              className={`flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl border transition-all cursor-pointer ${
                 isAdmin
-                  ? 'bg-[#F5C542] text-black shadow-md shadow-[#F5C542]/20'
+                  ? 'bg-[#1C1809] border-[#F5C542]/40 hover:border-[#F5C542]'
                   : currentUser
-                  ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/20'
-                  : 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                  ? 'bg-[#121926] border-[#2563EB]/40 hover:border-[#2563EB]'
+                  : 'bg-[#111815] border-emerald-500/30 hover:border-emerald-500/50'
               }`}
+              title="Status de acesso à plataforma"
             >
-              {isAdmin ? '👑' : currentUser ? '👤' : '⚡'}
-            </div>
-
-            <div className="text-left hidden md:block">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-white truncate max-w-[130px]">
-                  {currentUser ? currentUser.name.split(' ')[0] : 'Visitante'}
-                </span>
-                <span
-                  className={`text-[9px] font-black px-1.5 py-0.2 rounded uppercase ${
-                    isAdmin
-                      ? 'bg-[#F5C542] text-black'
-                      : currentUser
-                      ? 'bg-[#2563EB] text-white'
-                      : 'bg-emerald-500 text-black'
-                  }`}
-                >
-                  {isAdmin ? 'ADMIN' : currentUser ? 'CONECTADO' : 'ACESSO LIVRE'}
-                </span>
+              <div
+                className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+                  isAdmin
+                    ? 'bg-[#F5C542] text-black shadow-md shadow-[#F5C542]/20'
+                    : currentUser
+                    ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/20'
+                    : 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                }`}
+              >
+                {isAdmin ? '👑' : currentUser ? '👤' : '⚡'}
               </div>
-              <p className="text-[10px] text-[#A1A1A1] truncate max-w-[140px]">
-                {currentUser?.email || 'Sem cadastro obrigatório'}
-              </p>
-            </div>
-          </button>
+
+              <div className="text-left hidden md:block">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-white truncate max-w-[130px]">
+                    {currentUser ? currentUser.name.split(' ')[0] : 'Visitante'}
+                  </span>
+                  <span
+                    className={`text-[9px] font-black px-1.5 py-0.2 rounded uppercase ${
+                      isAdmin
+                        ? 'bg-[#F5C542] text-black'
+                        : currentUser
+                        ? 'bg-[#2563EB] text-white'
+                        : 'bg-emerald-500 text-black'
+                    }`}
+                  >
+                    {isAdmin ? 'ADMIN' : currentUser ? 'CONECTADO' : 'ACESSO LIVRE'}
+                  </span>
+                </div>
+                <p className="text-[10px] text-[#A1A1A1] truncate max-w-[140px]">
+                  {currentUser?.email || 'Sem cadastro obrigatório'}
+                </p>
+              </div>
+            </button>
+          )}
 
           {/* CTA Nova Review */}
           <button
