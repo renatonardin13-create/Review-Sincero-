@@ -21,6 +21,7 @@ import { getStoredUser, saveStoredUser, logoutUser } from './services/authServic
 import { loadGlobalSettings, saveGlobalSettings } from './services/settingsService';
 import { SettingsErrorBoundary } from './components/SettingsErrorBoundary';
 import { ProductNotificationWidget } from './components/ProductNotificationWidget';
+import { ToastNotifications } from './components/ToastNotifications';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 
 const VIEW_TO_PATH: Record<string, string> = {
@@ -609,6 +610,7 @@ export default function App() {
       </div>
 
       <ProductNotificationWidget intervalMinutes={settings.productNotificationIntervalMinutes || 5} />
+      <ToastNotifications currentUser={currentUser} />
 
       {/* User Authentication & Role Switcher Modal */}
       <AuthModal
