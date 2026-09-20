@@ -5,14 +5,14 @@ import {
   Trash2, 
   Edit3, 
   CheckCircle2, 
-  XCircle, 
   ExternalLink, 
   Clock, 
   Save, 
   ArrowUp, 
   ArrowDown, 
   AlertCircle,
-  Sparkles
+  Sparkles,
+  Image as ImageIcon
 } from 'lucide-react';
 import { ProductNotification, AuthUser, AppSettings } from '../types';
 import { 
@@ -22,6 +22,7 @@ import {
   validateProductUrl, 
   subscribeToProductNotifications 
 } from '../services/productNotificationService';
+import { ProductNotificationWidget } from './ProductNotificationWidget';
 
 interface ProductNotificationManagerProps {
   currentUser: AuthUser;
@@ -44,7 +45,9 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState<string>('');
+  const [formImageUrl, setFormImageUrl] = useState<string>('');
   const [formUrl, setFormUrl] = useState<string>('');
+  const [formCtaText, setFormCtaText] = useState<string>('Ver produto');
   const [formActive, setFormActive] = useState<boolean>(true);
   const [formOrder, setFormOrder] = useState<number>(1);
 
@@ -83,7 +86,9 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
   const handleOpenAdd = () => {
     setEditingId(null);
     setFormName('');
+    setFormImageUrl('');
     setFormUrl('');
+    setFormCtaText('Ver produto');
     setFormActive(true);
     setFormOrder(notifications.length > 0 ? Math.max(...notifications.map(n => n.order)) + 1 : 1);
     setErrorMsg('');
@@ -93,7 +98,9 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
   const handleOpenEdit = (item: ProductNotification) => {
     setEditingId(item.id);
     setFormName(item.name);
+    setFormImageUrl(item.imageUrl || '');
     setFormUrl(item.url);
+    setFormCtaText(item.ctaText || 'Ver produto');
     setFormActive(item.active);
     setFormOrder(item.order);
     setErrorMsg('');
@@ -109,6 +116,12 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
       return;
     }
 
+    const imgVal = validateProductUrl(formImageUrl);
+    if (!imgVal.valid) {
+      setErrorMsg('A foto do produto (URL da imagem) é obrigatória e deve iniciar com http:// ou https://.');
+      return;
+    }
+
     const val = validateProductUrl(formUrl);
     if (!val.valid) {
       setErrorMsg(val.error || 'URL inválida.');
@@ -118,7 +131,9 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
     const payload: Partial<ProductNotification> = {
       id: editingId || undefined,
       name: formName.trim(),
+      imageUrl: formImageUrl.trim(),
       url: formUrl.trim(),
+      ctaText: formCtaText.trim() || 'Ver produto',
       active: formActive,
       order: Number(formOrder) || 1
     };
@@ -169,7 +184,6 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
     if (targetIndex < 0 || targetIndex >= sorted.length) return;
 
     const targetItem = sorted[targetIndex];
-    // swap orders
     const tempOrder = item.order;
     item.order = targetItem.order;
     targetItem.order = tempOrder;
@@ -179,6 +193,20 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
 
     const updated = await fetchProductNotifications();
     setNotifications(updated);
+  };
+
+  // Preview item for live preview widget
+  const previewNotification: ProductNotification = {
+    id: 'preview-id',
+    name: formName.trim() || 'Nome do produto em destaque',
+    imageUrl: formImageUrl.trim() || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=300&q=80',
+    url: formUrl.trim() || 'https://example.com',
+    ctaText: formCtaText.trim() || 'Ver produto',
+    active: true,
+    order: 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdBy: currentUser.email
   };
 
   return (
@@ -191,9 +219,9 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
               <Bell className="w-3.5 h-3.5" />
               <span>Central de Notificações</span>
             </div>
-            <h2 className="text-xl md:text-2xl font-extrabold text-white">Notificações Flutuantes de Produtos</h2>
+            <h2 className="text-xl md:text-2xl font-extrabold text-white">Notificações Flutuantes de Produtos com Foto</h2>
             <p className="text-sm text-[#A1A1A1]">
-              Cadastre produtos afiliados que serão exibidos automaticamente em formato de notificação flutuante para todos os usuários em rotação contínua.
+              Cadastre produtos afiliados com imagem e CTA personalizado para exibição em rotação contínua.
             </p>
           </div>
           <button
@@ -280,6 +308,17 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
                   <div className="w-8 h-8 rounded-lg bg-[#27272a] text-[#F5C542] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
                     #{item.order}
                   </div>
+                  {item.imageUrl ? (
+                    <img 
+                      src={item.imageUrl} 
+                      alt={item.name} 
+                      className="w-12 h-12 rounded-xl object-cover border border-[#27272a] bg-[#18181b] shrink-0"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-[#1e1e24] flex items-center justify-center text-gray-500 shrink-0">
+                      <ImageIcon className="w-5 h-5" />
+                    </div>
+                  )}
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <h4 className="font-bold text-white text-base">{item.name}</h4>
@@ -287,15 +326,20 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
                         {item.active ? 'Ativo' : 'Inativo'}
                       </span>
                     </div>
-                    <a 
-                      href={item.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-xs text-[#A1A1A1] hover:text-[#F5C542] flex items-center gap-1.5 truncate max-w-md font-mono"
-                    >
-                      <span>{item.url}</span>
-                      <ExternalLink className="w-3 h-3 shrink-0" />
-                    </a>
+                    <div className="flex items-center gap-3 text-xs text-[#A1A1A1]">
+                      <a 
+                        href={item.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="hover:text-[#F5C542] flex items-center gap-1 truncate max-w-xs font-mono"
+                      >
+                        <span>{item.url}</span>
+                        <ExternalLink className="w-3 h-3 shrink-0" />
+                      </a>
+                      <span className="px-2 py-0.5 rounded bg-[#1e1e24] text-[#F5C542] font-medium">
+                        CTA: {item.ctaText || 'Ver produto'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -348,10 +392,10 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
         )}
       </div>
 
-      {/* Modal Create / Edit */}
+      {/* Modal Create / Edit with Live Preview */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#121214] border border-[#27272a] rounded-3xl p-6 md:p-8 max-w-lg w-full space-y-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto animate-in fade-in">
+          <div className="bg-[#121214] border border-[#27272a] rounded-3xl p-6 md:p-8 max-w-2xl w-full space-y-6 shadow-2xl relative my-8">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#F5C542]" />
@@ -372,72 +416,119 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
               </div>
             )}
 
-            <form onSubmit={handleSubmitForm} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Nome do Produto *</label>
-                <input
-                  type="text"
-                  required
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Ex: Fone Bluetooth Pro 5.0"
-                  className="w-full bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C542]"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Link do Produto (URL) *</label>
-                <input
-                  type="url"
-                  required
-                  value={formUrl}
-                  onChange={(e) => setFormUrl(e.target.value)}
-                  placeholder="https://exemplo.com/produto-afiliado"
-                  className="w-full bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C542]"
-                />
-                <p className="text-[11px] text-gray-500">Deve iniciar obrigatoriamente com http:// ou https://.</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form onSubmit={handleSubmitForm} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Ordem de Exibição</label>
+                  <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Foto do Produto (URL da Imagem) *</label>
                   <input
-                    type="number"
-                    value={formOrder}
-                    onChange={(e) => setFormOrder(Number(e.target.value))}
+                    type="url"
+                    required
+                    value={formImageUrl}
+                    onChange={(e) => setFormImageUrl(e.target.value)}
+                    placeholder="https://exemplo.com/foto.jpg"
+                    className="w-full bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C542]"
+                  />
+                  <p className="text-[11px] text-gray-500">Deve iniciar com http:// ou https://</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Nome do Produto *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    placeholder="Ex: Fone Bluetooth Pro 5.0"
                     className="w-full bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C542]"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Status Inicial</label>
-                  <select
-                    value={formActive ? 'true' : 'false'}
-                    onChange={(e) => setFormActive(e.target.value === 'true')}
+                  <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Link do Produto (URL) *</label>
+                  <input
+                    type="url"
+                    required
+                    value={formUrl}
+                    onChange={(e) => setFormUrl(e.target.value)}
+                    placeholder="https://exemplo.com/produto-afiliado"
                     className="w-full bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C542]"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Texto do CTA (Botão)</label>
+                  <input
+                    type="text"
+                    value={formCtaText}
+                    onChange={(e) => setFormCtaText(e.target.value)}
+                    placeholder="Ver produto"
+                    className="w-full bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C542]"
+                  />
+                  <p className="text-[11px] text-gray-500">Padrão: "Ver produto"</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Ordem</label>
+                    <input
+                      type="number"
+                      value={formOrder}
+                      onChange={(e) => setFormOrder(Number(e.target.value))}
+                      className="w-full bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C542]"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Status</label>
+                    <select
+                      value={formActive ? 'true' : 'false'}
+                      onChange={(e) => setFormActive(e.target.value === 'true')}
+                      className="w-full bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C542]"
+                    >
+                      <option value="true">Ativo</option>
+                      <option value="false">Inativo</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#27272a]">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-5 py-2.5 rounded-xl bg-[#27272a] hover:bg-[#3f3f46] text-white font-semibold text-sm transition-all cursor-pointer"
                   >
-                    <option value="true">Ativo na rotação</option>
-                    <option value="false">Inativo (Pausado)</option>
-                  </select>
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-bold text-sm transition-all shadow-lg shadow-[#F5C542]/10 cursor-pointer"
+                  >
+                    {editingId ? 'Salvar Alterações' : 'Cadastrar Produto'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Live Preview Column */}
+              <div className="bg-[#18181b] border border-[#27272a] rounded-2xl p-5 flex flex-col justify-between">
+                <div>
+                  <span className="text-xs font-bold text-[#F5C542] uppercase tracking-wider block mb-3">
+                    👁️ Preview em Tempo Real (Widget do Usuário)
+                  </span>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Esta é exatamente a aparência que o usuário visualizará no canto inferior da tela.
+                  </p>
+                </div>
+                <div className="py-6 flex items-center justify-center">
+                  <ProductNotificationWidget 
+                    previewItem={previewNotification} 
+                    onClosePreview={() => {}} 
+                  />
+                </div>
+                <div className="text-[11px] text-gray-500 text-center">
+                  O botão fechar (×) e o CTA funcionam interativamente.
                 </div>
               </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#27272a]">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl bg-[#27272a] hover:bg-[#3f3f46] text-white font-semibold text-sm transition-all cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-bold text-sm transition-all shadow-lg shadow-[#F5C542]/10 cursor-pointer"
-                >
-                  {editingId ? 'Salvar Alterações' : 'Cadastrar Produto'}
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

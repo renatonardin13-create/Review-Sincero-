@@ -269,7 +269,9 @@ export interface PromoBannerSlide {
 export interface ProductNotification {
   id: string;
   name: string;
+  imageUrl: string;
   url: string;
+  ctaText?: string;
   active: boolean;
   order: number;
   createdAt: string;

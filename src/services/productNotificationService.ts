@@ -8,7 +8,6 @@ import {
   doc, 
   query, 
   orderBy, 
-  Timestamp, 
   onSnapshot 
 } from 'firebase/firestore';
 import { ProductNotification, AuthUser, ADMIN_EMAIL } from '../types';
@@ -18,7 +17,6 @@ const COLLECTION_NAME = 'product_notifications';
 export function normalizeUrl(url: string): string {
   if (!url) return '';
   let trimmed = url.trim();
-  // remove trailing slash
   trimmed = trimmed.replace(/\/+$/, '');
   return trimmed.toLowerCase();
 }
@@ -55,7 +53,9 @@ export async function fetchProductNotifications(): Promise<ProductNotification[]
       items.push({
         id: docSnap.id,
         name: data.name || '',
+        imageUrl: data.imageUrl || '',
         url: data.url || '',
+        ctaText: data.ctaText || 'Ver produto',
         active: data.active !== false,
         order: typeof data.order === 'number' ? data.order : 0,
         createdAt: data.createdAt || new Date().toISOString(),
@@ -66,7 +66,6 @@ export async function fetchProductNotifications(): Promise<ProductNotification[]
     return items;
   } catch (e) {
     console.warn('[ProductNotificationService] Error fetching product notifications:', e);
-    // Fallback localStorage cache
     try {
       const cached = localStorage.getItem('review_sincero_product_notifications');
       if (cached) {
@@ -87,7 +86,9 @@ export function subscribeToProductNotifications(callback: (notifications: Produc
         items.push({
           id: docSnap.id,
           name: data.name || '',
+          imageUrl: data.imageUrl || '',
           url: data.url || '',
+          ctaText: data.ctaText || 'Ver produto',
           active: data.active !== false,
           order: typeof data.order === 'number' ? data.order : 0,
           createdAt: data.createdAt || new Date().toISOString(),
@@ -123,36 +124,43 @@ export async function saveProductNotification(
     return { success: false, error: 'O nome do produto é obrigatório.' };
   }
 
+  const imgValidation = validateProductUrl(item.imageUrl || '');
+  if (!imgValidation.valid) {
+    return { success: false, error: 'A foto do produto (URL da imagem) é obrigatória e deve iniciar com http:// ou https://.' };
+  }
+
   const urlValidation = validateProductUrl(item.url || '');
   if (!urlValidation.valid) {
     return { success: false, error: urlValidation.error };
   }
 
   const normUrl = normalizeUrl(item.url!);
-  // Check duplication
   const duplicate = existingList.find(p => p.id !== item.id && normalizeUrl(p.url) === normUrl);
   if (duplicate) {
     return { success: false, error: `Já existe um produto cadastrado com esta mesma URL (${duplicate.name}).` };
   }
 
+  const ctaText = item.ctaText && item.ctaText.trim() ? item.ctaText.trim() : 'Ver produto';
   const now = new Date().toISOString();
 
   try {
     if (item.id) {
-      // Update
       const docRef = doc(db, COLLECTION_NAME, item.id);
       await updateDoc(docRef, {
         name: item.name.trim(),
+        imageUrl: item.imageUrl!.trim(),
         url: item.url!.trim(),
+        ctaText,
         active: item.active !== false,
         order: typeof item.order === 'number' ? item.order : 0,
         updatedAt: now
       });
     } else {
-      // Create
       await addDoc(collection(db, COLLECTION_NAME), {
         name: item.name.trim(),
+        imageUrl: item.imageUrl!.trim(),
         url: item.url!.trim(),
+        ctaText,
         active: item.active !== false,
         order: typeof item.order === 'number' ? item.order : (existingList.length + 1),
         createdAt: now,
