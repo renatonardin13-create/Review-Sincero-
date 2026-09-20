@@ -421,14 +421,14 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Foto do Produto (URL da Imagem) *</label>
                   <input
-                    type="url"
+                    type="text"
                     required
                     value={formImageUrl}
                     onChange={(e) => setFormImageUrl(e.target.value)}
-                    placeholder="https://exemplo.com/foto.jpg"
+                    placeholder="https://exemplo.com/foto.webp"
                     className="w-full bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C542]"
                   />
-                  <p className="text-[11px] text-gray-500">Deve iniciar com http:// ou https://</p>
+                  <p className="text-[11px] text-gray-500">Deve iniciar com http:// ou https:// (suporta .webp, .jpg, .png, etc.)</p>
                 </div>
 
                 <div className="space-y-1.5">
@@ -446,7 +446,7 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Link do Produto (URL) *</label>
                   <input
-                    type="url"
+                    type="text"
                     required
                     value={formUrl}
                     onChange={(e) => setFormUrl(e.target.value)}

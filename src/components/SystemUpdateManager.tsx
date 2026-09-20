@@ -368,10 +368,10 @@ export const SystemUpdateManager: React.FC<SystemUpdateManagerProps> = ({
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">URL da Imagem (Opcional)</label>
                 <input
-                  type="url"
+                  type="text"
                   value={formImageUrl}
                   onChange={(e) => setFormImageUrl(e.target.value)}
-                  placeholder="https://exemplo.com/banner.jpg"
+                  placeholder="https://exemplo.com/banner.webp"
                   className="w-full bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C542]"
                 />
               </div>
@@ -391,10 +391,10 @@ export const SystemUpdateManager: React.FC<SystemUpdateManagerProps> = ({
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">URL do CTA (Opcional)</label>
                   <input
-                    type="url"
+                    type="text"
                     value={formCtaUrl}
                     onChange={(e) => setFormCtaUrl(e.target.value)}
-                    placeholder="https://exemplo.com/link"
+                    placeholder="https://exemplo.com/link.webp"
                     className="w-full bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C542]"
                   />
                 </div>
