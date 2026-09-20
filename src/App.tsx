@@ -467,8 +467,6 @@ export default function App() {
     );
   }
 
-  const isPublicUserRoute = currentView !== 'admin' && currentView !== 'login';
-
   return (
     <div className="min-h-screen bg-[#080808] text-white flex font-sans selection:bg-[#F5C542] selection:text-[#080808]">
       {/* Sidebar */}
@@ -486,7 +484,6 @@ export default function App() {
         onLogout={handleLogout}
         unreadNotifsCount={unreadNotifsCount}
         onOpenNotifications={() => setIsNotificationsModalOpen(true)}
-        isPublicUserRoute={isPublicUserRoute}
       />
 
       {/* Main Layout Area */}
@@ -503,7 +500,6 @@ export default function App() {
           currentUser={currentUser || undefined}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
           onNavigate={handleNavigateFromNotification}
-          isPublicUserRoute={isPublicUserRoute}
         />
 
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
@@ -535,7 +531,6 @@ export default function App() {
               onDuplicateReview={handleDuplicateReview}
               onDeleteReview={handleDeleteReview}
               setCurrentView={setCurrentView}
-              isPublicUserRoute={isPublicUserRoute}
             />
           )}
 
