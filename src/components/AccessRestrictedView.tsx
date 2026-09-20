@@ -64,7 +64,6 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
           </h4>
           <ul className="text-xs text-[#A1A1A1] space-y-1.5 list-disc list-inside">
             <li>Geração completa de Reviews com Inteligência Artificial</li>
-            <li>Acesso às Aulas e Tutoriais na Área de Membros</li>
             <li>Calculadora de Comissões e Lucro Real</li>
             <li>Comparador de Produtos e Catálogo de Campeões</li>
           </ul>

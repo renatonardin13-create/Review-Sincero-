@@ -14,7 +14,6 @@ import {
   ExternalLink,
   ShieldCheck,
   Sparkles,
-  BookOpen,
   DollarSign,
   Crown,
   User,
@@ -207,14 +206,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
           >
             <span className="text-sm">🔥</span>
             <span>Meli & Shopee Trends</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView('tutorial')}
-            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#1C1C1C] text-[#22C55E] border border-[#22C55E]/30 hover:bg-[#22C55E]/10 transition-all cursor-pointer"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-[#22C55E]" />
-            <span>Tutorial & Como Usar</span>
           </button>
 
           {isAdmin && (

@@ -14,7 +14,6 @@ import {
   Search,
   Scale,
   Calculator,
-  BookOpen,
   Trophy,
   Crown,
   User,
@@ -51,7 +50,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const principalItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'tutorial', label: 'Área de Membros & Aulas', icon: BookOpen, badge: 'VIP' },
     { id: 'reviews', label: 'Meus Reviews', icon: FileText },
     { id: 'create', label: 'Criar Review', icon: PlusCircle, action: onNewReview },
     { id: 'templates', label: 'Templates', icon: LayoutTemplate }
@@ -197,9 +195,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }`}
                     />
                     <span className="truncate">{item.label}</span>
-                    {item.badge && (
+                    {(item as any).badge && (
                       <span className="ml-auto text-[9px] bg-[#F5C542]/20 text-[#F5C542] font-black px-1.5 py-0.5 rounded uppercase">
-                        {item.badge}
+                        {(item as any).badge}
                       </span>
                     )}
                     {/* Badge removed */}

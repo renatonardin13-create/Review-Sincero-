@@ -26,9 +26,7 @@ import {
   Upload,
   Bell
 } from 'lucide-react';
-import { AuthUser, AppSettings, MemberAcademyData, ADMIN_EMAIL } from '../types';
-import { getStoredAcademyData, saveStoredAcademyData, resetStoredAcademyData } from '../data/academyData';
-import { subscribeToAcademy } from '../services/academyService';
+import { AuthUser, AppSettings, ADMIN_EMAIL } from '../types';
 import { getRegisteredUsersList } from '../services/authService';
 import { isValidYoutubeUrl } from '../utils/urlUtils';
 import { storage } from '../lib/firebase';
@@ -40,7 +38,6 @@ interface AdminPanelViewProps {
   currentUser: AuthUser;
   settings: AppSettings;
   onSaveSettings: (settings: AppSettings) => void;
-  onOpenVideoManager: () => void;
   onNavigateTo: (viewId: string) => void;
 }
 
@@ -48,25 +45,16 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   currentUser,
   settings,
   onSaveSettings,
-  onOpenVideoManager,
   onNavigateTo
 }) => {
   const isAdmin =
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis' | 'login' | 'notifications' | 'system-updates'>('overview');
-  const [academyData, setAcademyData] = useState<MemberAcademyData>(getStoredAcademyData);
+  const [activeTab, setActiveTab] = useState<'overview' | 'banners' | 'users' | 'apis' | 'login' | 'notifications' | 'system-updates'>('overview');
   const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
-
-  useEffect(() => {
-    const unsub = subscribeToAcademy(({ modules, lessons }) => {
-      setAcademyData((prev) => ({ ...prev, modules, lessons }));
-    });
-    return () => unsub();
-  }, []);
 
   const handleAddUser = () => {
       if (!newUserName || !newUserEmail) {
@@ -171,46 +159,21 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
             </h1>
 
             <p className="text-xs md:text-sm text-[#D4D4D4] leading-relaxed">
-              Gerencie todas as videoaulas do curso, controle os banners de monetização do app gratuito, monitore os alunos cadastrados e ajuste as chaves de integração.
+              Gerencie os banners de monetização do app gratuito, monitore os alunos cadastrados e ajuste as chaves de integração.
             </p>
-          </div>
-
-          {/* Quick Action */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            <button
-              onClick={onOpenVideoManager}
-              className="flex items-center gap-2 bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-5 py-3 rounded-2xl text-xs shadow-xl shadow-[#F5C542]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Subir Nova Videoaula</span>
-            </button>
           </div>
         </div>
 
         {/* Quick Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 mt-6 border-t border-[#2E2812]">
-          <div className="bg-[#100D04] border border-[#3E3416] rounded-2xl p-3.5">
-            <span className="text-[11px] text-[#A1A1A1] font-medium block">🎬 Total de Aulas</span>
-            <span className="text-xl font-black text-white mt-1 block">
-              {academyData.lessons.length} Videoaulas
-            </span>
-          </div>
-
-          <div className="bg-[#100D04] border border-[#3E3416] rounded-2xl p-3.5">
-            <span className="text-[11px] text-[#A1A1A1] font-medium block">📚 Módulos VIP</span>
-            <span className="text-xl font-black text-[#F5C542] mt-1 block">
-              {academyData.modules.length} Módulos
-            </span>
-          </div>
-
-          <div className="bg-[#100D04] border border-[#3E3416] rounded-2xl p-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-6 mt-6 border-t border-[#2E2812]">
+          <div className="bg-[#100D04] border border-[#3E3416] rounded-2xl p-4">
             <span className="text-[11px] text-[#A1A1A1] font-medium block">👥 Alunos / Logins</span>
             <span className="text-xl font-black text-[#22C55E] mt-1 block">
               {registeredUsers.length} Cadastrados
             </span>
           </div>
 
-          <div className="bg-[#100D04] border border-[#3E3416] rounded-2xl p-3.5">
+          <div className="bg-[#100D04] border border-[#3E3416] rounded-2xl p-4">
             <span className="text-[11px] text-[#A1A1A1] font-medium block">💰 Banners em Slides</span>
             <span className="text-xl font-black text-[#38BDF8] mt-1 block">
               {settings.promoBanners?.filter((b) => b.active).length || 0} Ativos
@@ -223,7 +186,6 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
       <div className="flex items-center gap-2 p-1.5 bg-[#121212] border border-[#242424] rounded-2xl overflow-x-auto">
         {[
           { id: 'overview', label: '📊 Visão Geral', icon: BarChart3 },
-          { id: 'academy', label: '🎓 Gerenciar Videoaulas & Curso', icon: Film },
           { id: 'notifications', label: '🔔 Notificações de Produtos', icon: Bell },
           { id: 'system-updates', label: '🔔 Atualizações do Sistema', icon: Bell },
           { id: 'banners', label: '⚙️ Ajustes & Monetização Global', icon: DollarSign },
@@ -252,42 +214,14 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
 
       {/* Tab 1: Overview */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in">
-          {/* Quick Access Card */}
-          <div className="bg-[#121212] border border-[#222] rounded-3xl p-6 space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Film className="w-4 h-4 text-[#F5C542]" />
-              <span>Gestão Rápida da Área de Membros</span>
-            </h3>
-            <p className="text-xs text-[#A1A1A1] leading-relaxed">
-              Todas as videoaulas hospedadas no YouTube aparecem no player integrado sem logo ou links externos para os alunos.
-            </p>
-            <div className="flex flex-wrap gap-2 pt-2">
-              <button
-                onClick={onOpenVideoManager}
-                className="bg-[#1C1809] hover:bg-[#2A230B] border border-[#F5C542]/40 text-[#F5C542] font-bold px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer flex items-center gap-2"
-              >
-                <PlusCircle className="w-4 h-4" />
-                <span>Adicionar Aula</span>
-              </button>
-
-              <button
-                onClick={() => onNavigateTo('tutorial')}
-                className="bg-[#181818] hover:bg-[#222] border border-[#2E2E2E] text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer flex items-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>Ver Área de Membros como Aluno</span>
-              </button>
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 animate-in fade-in">
           {/* Banner Monetization Card */}
-          <div className="bg-[#121212] border border-[#222] rounded-3xl p-6 space-y-4">
+          <div className="bg-[#121212] border border-[#222] rounded-3xl p-6 md:p-8 space-y-4">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-[#22C55E]" />
               <span>Monetização do App Gratuito</span>
             </h3>
-            <p className="text-xs text-[#A1A1A1] leading-relaxed">
+            <p className="text-xs text-[#A1A1A1] leading-relaxed max-w-2xl">
               Insira seus banners de produtos afiliados (Hotmart, Shopee, Mercado Livre). Todos os usuários gratuitos verão seus slides no topo do Dashboard.
             </p>
             <div className="flex flex-wrap gap-2 pt-2">
@@ -299,64 +233,6 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                 <span>Configurar Banners em Slides</span>
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 2: Academy Management */}
-      {activeTab === 'academy' && (
-        <div className="bg-[#121212] border border-[#222] rounded-3xl p-6 md:p-8 space-y-6 animate-in fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#222] pb-5">
-            <div>
-              <h3 className="text-lg font-black text-white">Videoaulas Cadastradas na Área de Membros</h3>
-              <p className="text-xs text-[#8E8E8E]">
-                Edite, exclua ou organize as aulas exibidas para os alunos.
-              </p>
-            </div>
-
-            <button
-              onClick={onOpenVideoManager}
-              className="bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-black px-5 py-2.5 rounded-xl text-xs transition-all flex items-center gap-2 cursor-pointer shrink-0"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Nova Videoaula</span>
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {academyData.lessons.map((lesson) => {
-              const mod = academyData.modules.find((m) => m.id === lesson.moduleId);
-              return (
-                <div
-                  key={lesson.id}
-                  className="p-4 bg-[#181818] border border-[#282828] rounded-2xl flex items-center justify-between gap-4"
-                >
-                  <div className="space-y-1 overflow-hidden">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-[#F5C542] px-2 py-0.5 rounded bg-[#252008] border border-[#F5C542]/20">
-                        {mod ? mod.title.split(':')[0] : 'MÓDULO'}
-                      </span>
-                      <span className="text-[11px] text-[#8E8E8E]">Duração: {lesson.duration}</span>
-                      <span className="text-[11px] text-[#38BDF8]">YouTube ID: {lesson.youtubeId}</span>
-                    </div>
-                    <h4 className="text-sm font-bold text-white truncate">{lesson.title}</h4>
-                    {lesson.description && (
-                      <p className="text-xs text-[#8E8E8E] line-clamp-1">{lesson.description}</p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={onOpenVideoManager}
-                      className="p-2 bg-[#202020] hover:bg-[#282828] text-[#38BDF8] border border-[#333] rounded-xl text-xs transition-colors cursor-pointer"
-                      title="Editar vídeo"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </div>
       )}

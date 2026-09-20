@@ -10,7 +10,6 @@ import { TemplatesView } from './components/TemplatesView';
 import { SettingsView } from './components/SettingsView';
 import { CreateReviewWizard } from './components/CreateReviewWizard';
 import { ReviewRenderer } from './components/ReviewRenderer';
-import { TutorialView } from './components/TutorialView';
 import { CompareProductsView } from './components/CompareProductsView';
 import { TopProductsView } from './components/TopProductsView';
 import { AdminPanelView } from './components/AdminPanelView';
@@ -26,7 +25,6 @@ import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 
 const VIEW_TO_PATH: Record<string, string> = {
   'dashboard': '/aluno',
-  'tutorial': '/tutorial',
   'reviews': '/reviews',
   'create': '/create',
   'templates': '/templates',
@@ -42,7 +40,6 @@ const VIEW_TO_PATH: Record<string, string> = {
 const PATH_TO_VIEW: Record<string, string> = {
   '/aluno': 'dashboard',
   '/': 'dashboard',
-  '/tutorial': 'tutorial',
   '/reviews': 'reviews',
   '/create': 'create',
   '/templates': 'templates',
@@ -487,7 +484,6 @@ export default function App() {
                 currentUser={currentUser!}
                 settings={settings}
                 onSaveSettings={handleSaveSettings}
-                onOpenVideoManager={() => setCurrentView('tutorial')}
                 onNavigateTo={setCurrentView}
               />
             ) : (
@@ -514,18 +510,6 @@ export default function App() {
                 setActiveReviewForEdit(null);
                 setCurrentView('create');
               }}
-            />
-          )}
-
-          {currentView === 'tutorial' && (
-            <TutorialView
-              onNavigateTo={(viewId) => setCurrentView(viewId)}
-              onNewReview={() => {
-                setActiveReviewForEdit(null);
-                setCurrentView('create');
-              }}
-              currentUser={currentUser || undefined}
-              isAdmin={isAdmin}
             />
           )}
 
