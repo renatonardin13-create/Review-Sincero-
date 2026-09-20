@@ -347,4 +347,47 @@ export interface NotificationRead {
   readAt: string;
 }
 
+export interface AcademyModule {
+  id: string;
+  title: string;
+  description?: string;
+  order: number;
+  status: 'published' | 'draft';
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+}
+
+export interface AcademyLesson {
+  id: string;
+  moduleId: string;
+  title: string;
+  description: string;
+  videoUrl: string; // YouTube, Vimeo, etc.
+  thumbnailUrl?: string;
+  duration?: string; // ex: "15 min"
+  order: number;
+  status: 'published' | 'draft';
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+}
+
+export type NotificationType = 'lesson' | 'module' | 'update' | 'general';
+
+export interface SystemNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  targetView?: string;
+  targetId?: string;
+  ctaText?: string;
+  published: boolean;
+  createdAt: string;
+  createdBy?: string;
+}
+
+export const APP_VERSION = '2.5.0';
 export const ADMIN_EMAIL = 'renatonardin13@gmail.com';

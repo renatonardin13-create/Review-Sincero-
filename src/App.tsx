@@ -21,6 +21,10 @@ import { loadGlobalSettings, saveGlobalSettings } from './services/settingsServi
 import { SettingsErrorBoundary } from './components/SettingsErrorBoundary';
 import { ProductNotificationWidget } from './components/ProductNotificationWidget';
 import { ToastNotifications } from './components/ToastNotifications';
+import { AcademyView } from './components/AcademyView';
+import { NotificationsCenterModal } from './components/NotificationsCenterModal';
+import { subscribeToNotifications, getReadNotificationsMap, onNotificationReadsChanged } from './services/notificationService';
+import { SystemNotification } from './types';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 
 const VIEW_TO_PATH: Record<string, string> = {
@@ -33,7 +37,8 @@ const VIEW_TO_PATH: Record<string, string> = {
   'trends': '/analisar-tendencias',
   'settings': '/settings',
   'admin': '/adm',
-  'login': '/login'
+  'login': '/login',
+  'academia': '/academia'
 };
 
 const PATH_TO_VIEW: Record<string, string> = {
@@ -48,7 +53,8 @@ const PATH_TO_VIEW: Record<string, string> = {
   '/settings': 'settings',
   '/adm': 'admin',
   '/admin': 'admin',
-  '/login': 'login'
+  '/login': 'login',
+  '/academia': 'academia'
 };
 
 export default function App() {
@@ -56,12 +62,39 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState<boolean>(false);
+  const [targetLessonId, setTargetLessonId] = useState<string | undefined>(undefined);
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+  const [readNotifsMap, setReadNotifsMap] = useState<Record<string, boolean>>(() => getReadNotificationsMap());
 
   // Auth User State & Role Verification
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => getStoredUser());
 
   const isAdmin =
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+
+  // Escutar notificações do sistema em tempo real e status de lido/não lido
+  useEffect(() => {
+    const unsub = subscribeToNotifications((notifs) => {
+      setNotifications(notifs);
+    });
+    const unsubReads = onNotificationReadsChanged(() => {
+      setReadNotifsMap(getReadNotificationsMap());
+    });
+    return () => {
+      unsub();
+      unsubReads();
+    };
+  }, []);
+
+  const unreadNotifsCount = notifications.filter((n) => !readNotifsMap[n.id]).length;
+
+  const handleNavigateFromNotification = (view: string, targetId?: string) => {
+    if (targetId) {
+      setTargetLessonId(targetId);
+    }
+    setCurrentView(view);
+  };
 
   const handleUserChange = (user: AuthUser | null) => {
     setCurrentUser(user);
@@ -421,6 +454,8 @@ export default function App() {
         currentUser={currentUser}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onLogout={handleLogout}
+        unreadNotifsCount={unreadNotifsCount}
+        onOpenNotifications={() => setIsNotificationsModalOpen(true)}
       />
 
       {/* Main Layout Area */}
@@ -436,6 +471,7 @@ export default function App() {
           authorName={settings.authorName}
           currentUser={currentUser || undefined}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          onNavigate={handleNavigateFromNotification}
         />
 
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
@@ -563,6 +599,14 @@ export default function App() {
             />
           )}
 
+          {currentView === 'academia' && (
+            <AcademyView
+              currentUser={currentUser}
+              initialLessonId={targetLessonId}
+              onNavigateBack={() => setCurrentView('dashboard')}
+            />
+          )}
+
           {currentView === 'settings' && (
             <SettingsErrorBoundary>
               <SettingsView settings={settings} onSaveSettings={handleSaveSettings} isAdmin={isAdmin} />
@@ -573,6 +617,15 @@ export default function App() {
 
       <ProductNotificationWidget intervalMinutes={settings.productNotificationIntervalMinutes || 5} />
       <ToastNotifications currentUser={currentUser} />
+
+      {/* Global Notifications Center Modal */}
+      <NotificationsCenterModal
+        isOpen={isNotificationsModalOpen}
+        onClose={() => setIsNotificationsModalOpen(false)}
+        notifications={notifications}
+        readMap={readNotifsMap}
+        onNavigate={handleNavigateFromNotification}
+      />
 
       {/* User Authentication & Role Switcher Modal */}
       <AuthModal

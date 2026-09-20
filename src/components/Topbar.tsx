@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Plus, Menu, User, Sparkles, Crown, ShieldCheck, LogIn } from 'lucide-react';
-import { AuthUser, ADMIN_EMAIL } from '../types';
-import { subscribeSystemUpdates, subscribeToNotificationReads } from '../services/systemUpdateService';
-import { SystemUpdatesModal } from './SystemUpdatesModal';
+import { Search, Bell, Plus, Menu, User, Sparkles, Crown, ShieldCheck, LogIn, GraduationCap } from 'lucide-react';
+import { AuthUser, ADMIN_EMAIL, SystemNotification } from '../types';
+import { subscribeToNotifications, getReadNotificationsMap, onNotificationReadsChanged } from '../services/notificationService';
+import { NotificationsCenterModal } from './NotificationsCenterModal';
 import { OnlineUsersWidget } from './OnlineUsersWidget';
 
 interface TopbarProps {
@@ -13,6 +13,7 @@ interface TopbarProps {
   authorName: string;
   currentUser?: AuthUser;
   onOpenAuthModal?: () => void;
+  onNavigate?: (view: string, targetId?: string) => void;
 }
 
 export const Topbar: React.FC<TopbarProps> = ({
@@ -22,43 +23,34 @@ export const Topbar: React.FC<TopbarProps> = ({
   setSearchQuery,
   authorName,
   currentUser,
-  onOpenAuthModal
+  onOpenAuthModal,
+  onNavigate
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+  const [readMap, setReadMap] = useState<Record<string, boolean>>(() => getReadNotificationsMap());
 
   const isAdmin =
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
   useEffect(() => {
-    let unreadMap: Record<string, string> = {};
-
-    const unsubUpdates = subscribeSystemUpdates((items) => {
-      const published = items.filter(u => u.published);
-      calculateUnread(published, unreadMap);
+    // Escutar notificações em tempo real
+    const unsub = subscribeToNotifications((notifs) => {
+      setNotifications(notifs);
     });
 
-    let unsubReads = () => {};
-    if (currentUser?.id) {
-      unsubReads = subscribeToNotificationReads(currentUser.id, (map) => {
-        unreadMap = map;
-        subscribeSystemUpdates((items) => {
-          const published = items.filter(u => u.published);
-          calculateUnread(published, unreadMap);
-        });
-      });
-    }
-
-    function calculateUnread(published: any[], map: Record<string, string>) {
-      const count = published.filter(u => !map[u.id]).length;
-      setUnreadCount(count);
-    }
+    // Escutar mudanças de leitura local
+    const unsubReads = onNotificationReadsChanged(() => {
+      setReadMap(getReadNotificationsMap());
+    });
 
     return () => {
-      unsubUpdates();
+      unsub();
       unsubReads();
     };
-  }, [currentUser]);
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !readMap[n.id]).length;
 
   return (
     <>
@@ -161,10 +153,16 @@ export const Topbar: React.FC<TopbarProps> = ({
         </div>
       </header>
 
-      <SystemUpdatesModal
-        currentUser={currentUser}
+      <NotificationsCenterModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        notifications={notifications}
+        readMap={readMap}
+        onNavigate={(view, targetId) => {
+          if (onNavigate) {
+            onNavigate(view, targetId);
+          }
+        }}
       />
     </>
   );

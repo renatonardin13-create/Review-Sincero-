@@ -8,3 +8,5 @@ export const getYoutubeId = (url: string) => {
   const match = url.match(regex);
   return match ? match[4] : null;
 };
+
+export const extractYoutubeId = getYoutubeId;

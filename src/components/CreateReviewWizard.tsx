@@ -13,6 +13,7 @@ import { getStoredUser, isUserAdmin, checkUserReviewLimit } from '../services/au
 import { CATEGORIES, PLATFORMS } from '../data/initialData';
 import { ReviewRenderer } from './ReviewRenderer';
 import { matchProductImage, validateAndNormalizeReviewImages } from '../utils/productImageMatcher';
+import { generateStandaloneReviewHtml } from '../utils/exportHtmlUtils';
 import {
   ArrowLeft,
   ArrowRight,
@@ -23,6 +24,7 @@ import {
   Trash2,
   Copy,
   Download,
+  Code,
   Save,
   Eye,
   ShieldCheck,
@@ -222,6 +224,9 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   const [batchPhotosText, setBatchPhotosText] = useState<string>('');
   const [copiedPrompt, setCopiedPrompt] = useState<boolean>(false);
   const [copiedTarget, setCopiedTarget] = useState<string | null>(null);
+  const [generatedHtmlContent, setGeneratedHtmlContent] = useState<string>('');
+  const [isHtmlModalOpen, setIsHtmlModalOpen] = useState<boolean>(false);
+  const [copiedHtml, setCopiedHtml] = useState<boolean>(false);
   const [generatingTitles, setGeneratingTitles] = useState<boolean>(false);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [toastMessage, setToastMessage] = useState<{
@@ -1083,6 +1088,44 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
       setToastMessage(null);
     }, 6000);
     window.open(`https://v0.dev/chat?q=${encodeURIComponent(claudeHtmlPrompt)}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleGenerateHtml = () => {
+    const html = generateStandaloneReviewHtml(formData as any);
+    setGeneratedHtmlContent(html);
+    setIsHtmlModalOpen(true);
+  };
+
+  const handleCopyHtml = () => {
+    const html = generatedHtmlContent || generateStandaloneReviewHtml(formData as any);
+    navigator.clipboard.writeText(html);
+    setCopiedHtml(true);
+    setToastMessage({
+      title: 'HTML Copiado com Sucesso!',
+      desc: 'O código HTML autônomo foi copiado para a área de transferência.',
+      type: 'copy'
+    });
+    setTimeout(() => setCopiedHtml(false), 3000);
+    setTimeout(() => setToastMessage(null), 5000);
+  };
+
+  const handleDownloadHtml = () => {
+    const html = generatedHtmlContent || generateStandaloneReviewHtml(formData as any);
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${formData.slug || 'review-sincero'}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setToastMessage({
+      title: 'Download Iniciado!',
+      desc: 'O arquivo .html foi baixado para o seu computador.',
+      type: 'copy'
+    });
+    setTimeout(() => setToastMessage(null), 4000);
   };
 
   const currentSlug =
@@ -3349,6 +3392,93 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
 
               <div className="bg-[#07090F] border border-[#1E293B] rounded-2xl p-4 font-mono text-xs text-[#CBD5E1] whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed select-all">
                 {claudeHtmlPrompt}
+              </div>
+            </div>
+
+            {/* ---------------------------------
+                EXPORTAÇÃO OPCIONAL (RECURSO SECUNDÁRIO)
+                --------------------------------- */}
+            <div className="pt-5 border-t border-[#1E293B] space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📄</span>
+                  <div>
+                    <h4 className="text-xs font-black text-white uppercase tracking-wider">
+                      EXPORTAÇÃO OPCIONAL — HTML INDEPENDENTE
+                    </h4>
+                    <span className="text-[10px] text-gray-400">
+                      Recurso secundário (executado exclusivamente no navegador/memória)
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold bg-[#1E293B] text-gray-300 px-2 py-0.5 rounded">
+                  Opcional
+                </span>
+              </div>
+
+              {/* Required Explanatory Notice */}
+              <div className="p-3.5 rounded-2xl bg-[#080B12] border border-[#1E293B] text-xs text-[#94A3B8] leading-relaxed">
+                <p className="italic font-medium text-gray-300">
+                  "Use esta opção somente se quiser levar a página para uma hospedagem própria. O foco principal do Review Sincero continua sendo a geração do PRD/PROMPT para plataformas de IA."
+                </p>
+              </div>
+
+              {/* Action Buttons: [ GERAR HTML ] [ COPIAR HTML ] [ BAIXAR HTML ] */}
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleGenerateHtml}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1E293B] hover:bg-[#2A374A] border border-[#334155] text-white text-xs font-bold transition-all cursor-pointer hover:scale-[1.01]"
+                >
+                  <Code className="w-4 h-4 text-[#F5C542]" />
+                  <span>GERAR HTML</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCopyHtml}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1E293B] hover:bg-[#2A374A] border border-[#334155] text-white text-xs font-bold transition-all cursor-pointer hover:scale-[1.01]"
+                >
+                  <Copy className="w-4 h-4 text-blue-400" />
+                  <span>{copiedHtml ? 'COPIADO COM SUCESSO!' : 'COPIAR HTML'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadHtml}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1E293B] hover:bg-[#2A374A] border border-[#334155] text-white text-xs font-bold transition-all cursor-pointer hover:scale-[1.01]"
+                >
+                  <Download className="w-4 h-4 text-emerald-400" />
+                  <span>BAIXAR HTML</span>
+                </button>
+              </div>
+
+              {/* Generated HTML Preview Box if Generated */}
+              {generatedHtmlContent && (
+                <div className="space-y-2 pt-2 animate-in fade-in">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[10px] font-bold text-[#F5C542] uppercase">
+                      Código HTML Gerado (Memória Local):
+                    </span>
+                    <span className="text-[10px] text-gray-500">
+                      Zero registros no banco de dados
+                    </span>
+                  </div>
+                  <pre className="p-3 bg-black/70 border border-[#1E293B] rounded-xl text-[10px] font-mono text-gray-300 max-h-36 overflow-y-auto leading-relaxed">
+                    {generatedHtmlContent.slice(0, 1000)}...
+                  </pre>
+                </div>
+              )}
+
+              {/* Google Sites (Opção Complementar) */}
+              <div className="p-3.5 rounded-2xl bg-[#090D18] border border-blue-900/30 text-xs text-gray-400 space-y-1.5">
+                <div className="flex items-center gap-2 text-blue-400 font-bold">
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>Google Sites (Opção Complementar)</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-gray-400">
+                  Caso deseje utilizar no Google Sites, utilize o recurso de <em>"Incorporar Código"</em> (iframe/embed) e cole o HTML gerado. Note que o Google Sites possui limitações técnicas estruturais e renderiza o conteúdo encapsulado em iframe. O foco recomendado do Review Sincero continua sendo a geração de PRD/PROMPT para plataformas de IA.
+                </p>
               </div>
             </div>
 

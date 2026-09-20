@@ -1,21 +1,19 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
     function isSignedIn() {
       return request.auth != null;
     }
+    
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == 'renatonardin13@gmail.com' ||
+        (request.auth.token.email != null && request.auth.token.email.lower() == 'renatonardin13@gmail.com') ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email == 'renatonardin13@gmail.com') &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email.lower() == 'renatonardin13@gmail.com' &&
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status != 'blocked')
       );
     }
@@ -24,34 +22,50 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // User profiles: strictly restricted to the owner or admin
     match /users/{userId} {
-      allow read, write: if true;
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+
+      match /notificationReads/{updateId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
     }
 
+    // Product Notifications: public can read, only admin can write
     match /product_notifications/{notificationId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
+    // System Updates: public can read, only admin can write
     match /system_updates/{updateId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    match /users/{userId}/notificationReads/{updateId} {
-      allow read, write: if true;
+    // System Notifications (automated alerts for new lessons, modules, updates): public can read, only admin can write
+    match /system_notifications/{notificationId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
+    // Global Settings: public can read, only admin can write
     match /global_settings/{settingId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
+    // Academy Lessons: public can read, only admin can write
     match /academy_lessons/{lessonId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
+    // Academy Modules: public can read, only admin can write
     match /academy_modules/{moduleId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin();
     }
   }
 }

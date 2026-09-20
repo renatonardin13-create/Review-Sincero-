@@ -23,7 +23,8 @@ import {
   UserMinus,
   Ban,
   Upload,
-  Bell
+  Bell,
+  GraduationCap
 } from 'lucide-react';
 import { AuthUser, AppSettings, ADMIN_EMAIL } from '../types';
 import { getRegisteredUsersList } from '../services/authService';
@@ -32,6 +33,7 @@ import { storage } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ProductNotificationManager } from './ProductNotificationManager';
 import { SystemUpdateManager } from './SystemUpdateManager';
+import { AcademyManager } from './AcademyManager';
 
 interface AdminPanelViewProps {
   currentUser: AuthUser;
@@ -48,7 +50,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
 }) => {
   const isAdmin =
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'apis' | 'login' | 'notifications' | 'system-updates'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'users' | 'apis' | 'login' | 'notifications' | 'system-updates'>('overview');
   const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -180,6 +182,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
       <div className="flex items-center gap-2 p-1.5 bg-[#121212] border border-[#242424] rounded-2xl overflow-x-auto">
         {[
           { id: 'overview', label: '📊 Visão Geral', icon: BarChart3 },
+          { id: 'academy', label: '🎓 Academia & Aulas', icon: GraduationCap },
           { id: 'notifications', label: '🔔 Notificações de Produtos', icon: Bell },
           { id: 'system-updates', label: '🔔 Atualizações do Sistema', icon: Bell },
           { id: 'login', label: '🖼️ Tela de Login', icon: Film },
@@ -438,6 +441,11 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
       {/* Tab: System Updates */}
       {activeTab === 'system-updates' && (
         <SystemUpdateManager currentUser={currentUser} />
+      )}
+
+      {/* Tab: Academy & Lessons Management */}
+      {activeTab === 'academy' && (
+        <AcademyManager currentUser={currentUser} />
       )}
     </div>
   );

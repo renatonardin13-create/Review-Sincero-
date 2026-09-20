@@ -72,6 +72,58 @@
         "updatedAt": { "type": "string" },
         "updatedBy": { "type": "string" }
       }
+    },
+    "academyModule": {
+      "title": "Academy Module",
+      "description": "Module container for academy course lessons",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "order": { "type": "number" },
+        "status": { "type": "string", "enum": ["published", "draft"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "createdBy": { "type": "string", "maxLength": 256 }
+      },
+      "required": ["title", "order", "status"]
+    },
+    "academyLesson": {
+      "title": "Academy Lesson",
+      "description": "Individual video lesson in a module",
+      "type": "object",
+      "properties": {
+        "moduleId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 3000 },
+        "videoUrl": { "type": "string", "maxLength": 500 },
+        "thumbnailUrl": { "type": "string", "maxLength": 500 },
+        "duration": { "type": "string", "maxLength": 50 },
+        "order": { "type": "number" },
+        "status": { "type": "string", "enum": ["published", "draft"] },
+        "publishedAt": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "createdBy": { "type": "string", "maxLength": 256 }
+      },
+      "required": ["moduleId", "title", "videoUrl", "order", "status"]
+    },
+    "systemNotification": {
+      "title": "System Notification",
+      "description": "Notification for lessons, modules or updates",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["lesson", "module", "update", "general"] },
+        "title": { "type": "string", "maxLength": 200 },
+        "message": { "type": "string", "maxLength": 1000 },
+        "targetView": { "type": "string", "maxLength": 100 },
+        "targetId": { "type": "string", "maxLength": 128 },
+        "ctaText": { "type": "string", "maxLength": 60 },
+        "published": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "createdBy": { "type": "string", "maxLength": 256 }
+      },
+      "required": ["type", "title", "message", "published"]
     }
   },
   "firestore": {
@@ -94,6 +146,18 @@
     "/global_settings/{settingId}": {
       "schema": "globalSettings",
       "description": "Global configuration settings"
+    },
+    "/academy_modules/{moduleId}": {
+      "schema": "academyModule",
+      "description": "Academy course modules"
+    },
+    "/academy_lessons/{lessonId}": {
+      "schema": "academyLesson",
+      "description": "Academy course lessons"
+    },
+    "/system_notifications/{notificationId}": {
+      "schema": "systemNotification",
+      "description": "Automated system notifications for users"
     }
   }
 }

@@ -19,7 +19,9 @@ import {
   Users,
   Film,
   LogIn,
-  LogOut
+  LogOut,
+  GraduationCap,
+  Bell
 } from 'lucide-react';
 import { AuthUser, ADMIN_EMAIL } from '../types';
 
@@ -32,6 +34,8 @@ interface SidebarProps {
   currentUser?: AuthUser | null;
   onOpenAuthModal?: () => void;
   onLogout?: () => void;
+  unreadNotifsCount?: number;
+  onOpenNotifications?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -42,7 +46,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setMobileOpen,
   currentUser,
   onOpenAuthModal,
-  onLogout
+  onLogout,
+  unreadNotifsCount = 0,
+  onOpenNotifications
 }) => {
   const isAdmin =
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
@@ -51,6 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'reviews', label: 'Meus Reviews', icon: FileText },
     { id: 'create', label: 'Criar Review', icon: PlusCircle, action: onNewReview },
+    { id: 'academia', label: 'Academia & Aulas', icon: GraduationCap, badge: 'AULAS' },
     { id: 'templates', label: 'Templates', icon: LayoutTemplate }
   ];
 
@@ -222,6 +229,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Footer User Role Card */}
         <div className="p-3 border-t border-[#1F1F1F] bg-[#0A0A0A] space-y-2">
+          {onOpenNotifications && (
+            <button
+              type="button"
+              onClick={onOpenNotifications}
+              className="w-full py-1.5 px-3 rounded-xl bg-[#14141A] hover:bg-[#1C1C24] border border-[#22222E] hover:border-[#F5C542]/40 text-[10px] font-bold text-gray-300 hover:text-white flex items-center justify-between transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Bell className="w-3.5 h-3.5 text-[#F5C542]" />
+                <span>Notificações</span>
+              </div>
+              {unreadNotifsCount > 0 && (
+                <span className="bg-[#F5C542] text-black font-black text-[9px] px-1.5 py-0.5 rounded-full animate-pulse">
+                  {unreadNotifsCount}
+                </span>
+              )}
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onOpenAuthModal}
