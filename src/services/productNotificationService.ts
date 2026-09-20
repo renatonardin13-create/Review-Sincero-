@@ -22,25 +22,22 @@ export function normalizeUrl(url: string): string {
 }
 
 export function validateProductUrl(url: string): { valid: boolean; error?: string } {
-  if (!url || !url.trim()) {
-    return { valid: false, error: 'A URL do produto é obrigatória.' };
+  if (!url || typeof url !== 'string' || !url.trim()) {
+    return { valid: false, error: 'A URL é obrigatória.' };
   }
-  const lower = url.trim().toLowerCase();
-  if (lower.startsWith('javascript:') || lower.startsWith('data:') || lower.startsWith('vbscript:')) {
-    return { valid: false, error: 'URLs do tipo javascript:, data: ou vbscript: são estritamente proibidas por segurança.' };
-  }
-  if (!lower.startsWith('http://') && !lower.startsWith('https://')) {
-    return { valid: false, error: 'A URL deve iniciar obrigatoriamente com http:// ou https://.' };
-  }
+  const trimmed = url.trim();
   try {
-    const parsed = new URL(url.trim());
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return { valid: false, error: 'A URL deve utilizar o protocolo http:// ou https://.' };
+    }
     if (!parsed.hostname) {
       return { valid: false, error: 'URL inválida.' };
     }
+    return { valid: true };
   } catch (e) {
-    return { valid: false, error: 'URL inválida ou malformada.' };
+    return { valid: false, error: 'URL inválida ou malformada (deve iniciar com http:// ou https://).' };
   }
-  return { valid: true };
 }
 
 export async function fetchProductNotifications(): Promise<ProductNotification[]> {

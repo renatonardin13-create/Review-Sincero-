@@ -118,7 +118,7 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
 
     const imgVal = validateProductUrl(formImageUrl);
     if (!imgVal.valid) {
-      setErrorMsg('A foto do produto (URL da imagem) é obrigatória e deve iniciar com http:// ou https://.');
+      setErrorMsg(imgVal.error || 'A foto do produto (URL da imagem) é obrigatória e deve iniciar com http:// ou https://.');
       return;
     }
 
