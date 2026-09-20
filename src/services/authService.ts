@@ -221,40 +221,6 @@ export function getRegisteredUsersList(): AuthUser[] {
   return [DEFAULT_ADMIN_USER, DEFAULT_FREE_USER];
 }
 
-export function loginWithGoogleAccount(customEmail?: string, customName?: string): AuthUser {
-  const email = (customEmail || ADMIN_EMAIL).trim().toLowerCase();
-  const isAdmin = email === ADMIN_EMAIL.toLowerCase().trim();
-  const user: AuthUser = {
-    id: 'usr-' + Date.now(),
-    email,
-    name: customName || (isAdmin ? 'Renato Nardin' : 'Usuário Comum'),
-    role: isAdmin ? 'admin' : 'user',
-    status: 'active',
-    provider: 'google',
-    createdAt: new Date().toISOString(),
-    lastLoginAt: new Date().toISOString()
-  };
-  saveStoredUser(user);
-  return user;
-}
-
-export function loginWithEmailAccount(emailInput: string, nameInput?: string): AuthUser {
-  const email = emailInput.trim().toLowerCase();
-  const isAdmin = email === ADMIN_EMAIL.toLowerCase().trim();
-  const user: AuthUser = {
-    id: 'usr-' + Date.now(),
-    email,
-    name: nameInput || (isAdmin ? 'Renato Nardin' : 'Usuário Comum'),
-    role: isAdmin ? 'admin' : 'user',
-    status: 'active',
-    provider: 'email',
-    createdAt: new Date().toISOString(),
-    lastLoginAt: new Date().toISOString()
-  };
-  saveStoredUser(user);
-  return user;
-}
-
 export function addUser(user: Omit<AuthUser, 'id' | 'createdAt' | 'lastLoginAt' | 'status'>): AuthUser {
   const newUser: AuthUser = {
     ...user,

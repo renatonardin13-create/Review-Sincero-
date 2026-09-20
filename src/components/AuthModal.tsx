@@ -15,8 +15,7 @@ import {
 } from 'lucide-react';
 import { AuthUser, ADMIN_EMAIL } from '../types';
 import {
-  loginWithGoogleAccount,
-  loginWithEmailAccount
+  sendEmailLinkLogin
 } from '../services/authService';
 
 interface AuthModalProps {
@@ -44,56 +43,48 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const isInputAdmin = emailInput.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase().trim();
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailInput.trim()) return;
 
     setIsSubmitting(true);
-    const cleanEmail = emailInput.trim().toLowerCase();
-    const isAdmin = cleanEmail === ADMIN_EMAIL.toLowerCase().trim();
+    setFeedback(null);
 
-    setTimeout(() => {
-      const user = loginWithEmailAccount(
-        cleanEmail,
-        nameInput.trim() || (isAdmin ? 'Renato Nardin' : undefined)
-      );
+    const res = await sendEmailLinkLogin(emailInput.trim());
+    setIsSubmitting(false);
 
+    if (res.success) {
       setFeedback({
-        text: isAdmin
-          ? 'Identificado como Administrador Master! Acesso total ativado.'
-          : mode === 'signup'
-          ? 'Usuário Comum cadastrado com sucesso!'
-          : 'Identificado como Usuário Comum! Acesso liberado.',
-        role: isAdmin ? 'admin' : 'user'
+        text: res.message,
+        role: 'user'
       });
-
-      setTimeout(() => {
-        onUserChanged(user);
-        setIsSubmitting(false);
-        onClose();
-      }, 700);
-    }, 500);
+    } else {
+      setFeedback({
+        text: res.message,
+        role: 'user'
+      });
+    }
   };
 
-  const handleGoogleLogin = (customEmail?: string, customName?: string) => {
+  const handleGoogleLogin = async (customEmail?: string, customName?: string) => {
+    const emailToUse = customEmail || ADMIN_EMAIL;
     setIsSubmitting(true);
-    setTimeout(() => {
-      const user = loginWithGoogleAccount(customEmail, customName);
-      const isAdmin = user.role === 'admin';
+    setFeedback(null);
 
+    const res = await sendEmailLinkLogin(emailToUse);
+    setIsSubmitting(false);
+
+    if (res.success) {
       setFeedback({
-        text: isAdmin
-          ? 'Google Auth: Administrador Master autenticado!'
-          : 'Google Auth: Usuário Comum autenticado!',
-        role: isAdmin ? 'admin' : 'user'
+        text: res.message,
+        role: 'admin'
       });
-
-      setTimeout(() => {
-        onUserChanged(user);
-        setIsSubmitting(false);
-        onClose();
-      }, 700);
-    }, 400);
+    } else {
+      setFeedback({
+        text: res.message,
+        role: 'user'
+      });
+    }
   };
 
   const handleQuickPreset = (target: 'admin' | 'user') => {
