@@ -3,6 +3,7 @@ import { Search, Bell, Plus, Menu, User, Sparkles, Crown, ShieldCheck, LogIn } f
 import { AuthUser, ADMIN_EMAIL } from '../types';
 import { subscribeSystemUpdates, subscribeToNotificationReads } from '../services/systemUpdateService';
 import { SystemUpdatesModal } from './SystemUpdatesModal';
+import { OnlineUsersWidget } from './OnlineUsersWidget';
 
 interface TopbarProps {
   onNewReview: () => void;
@@ -86,6 +87,11 @@ export const Topbar: React.FC<TopbarProps> = ({
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
+          {/* Online Users Widget */}
+          <div className="hidden md:block">
+            <OnlineUsersWidget />
+          </div>
+
           {/* Notifications Bell */}
           <div className="relative">
             <button
