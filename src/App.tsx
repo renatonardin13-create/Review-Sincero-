@@ -598,11 +598,11 @@ export default function App() {
             isAdmin ? (
               <SettingsView settings={settings} onSaveSettings={handleSaveSettings} initialTab="banners" isAdmin={isAdmin} />
             ) : (
-              <AccessRestrictedView
-                currentUser={currentUser}
-                onOpenAuthModal={() => setIsAuthModalOpen(true)}
-                onGoToDashboard={() => setCurrentView('dashboard')}
-              />
+              (() => {
+                window.history.replaceState(null, '', '/aluno');
+                setCurrentView('dashboard');
+                return null;
+              })()
             )
           )}
         </main>
