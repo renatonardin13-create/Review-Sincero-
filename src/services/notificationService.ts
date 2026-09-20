@@ -160,7 +160,7 @@ export function checkSystemVersionUpdate(): SystemNotification | null {
         id: `version-update-${APP_VERSION}`,
         type: 'update',
         title: '🚀 NOVA ATUALIZAÇÃO DISPONÍVEL',
-        message: `Versão ${APP_VERSION} - O Review Sincero recebeu novas melhorias, modo offline de páginas e nova área da Academia!`,
+        message: 'Nova versão disponível.',
         targetView: 'dashboard',
         ctaText: 'VER NOVIDADES',
         published: true,

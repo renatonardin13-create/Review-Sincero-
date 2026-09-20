@@ -280,10 +280,10 @@ export async function saveAcademyModule(
       await createAutomatedSystemNotification({
         type: 'module',
         title: '📚 NOVO MÓDULO DISPONÍVEL',
-        message: `Um novo conteúdo foi adicionado à Academia: "${item.title.trim()}".`,
+        message: 'Novo conteúdo foi adicionado à Academia.',
         targetView: 'academia',
         targetId: id,
-        ctaText: 'VER MÓDULO'
+        ctaText: 'ACESSAR ACADEMIA'
       });
     }
 

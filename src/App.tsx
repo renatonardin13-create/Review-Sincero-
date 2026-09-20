@@ -106,34 +106,49 @@ export default function App() {
     const handleUrlSync = () => {
       const path = window.location.pathname;
       const user = getStoredUser();
+      const userIsAdmin = user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
-      if (!user) {
-        if (path !== '/login') {
-          window.history.replaceState(null, '', '/login');
+      // Rota de Admin: Login obrigatório apenas para o Administrador Master
+      if (path === '/admin' || path === '/adm') {
+        if (userIsAdmin) {
+          setCurrentView('admin');
+        } else {
+          // Acesso restrito: exibe a tela de login administrativo
+          setCurrentView('login');
         }
-        setCurrentView('login');
         return;
       }
 
-      const userIsAdmin = user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-
-      if (path === '/login' || path === '/') {
-        window.history.replaceState(null, '', '/aluno');
+      // Redirecionamentos de conveniência para a rota canônica /usuario
+      if (path === '/' || path === '/aluno') {
+        window.history.replaceState(null, '', '/usuario');
         setCurrentView('dashboard');
         return;
       }
 
-      if ((path === '/adm' || path === '/admin') && !userIsAdmin) {
-        window.history.replaceState(null, '', '/aluno');
-        setCurrentView('dashboard');
+      if (path === '/aluno/academia' || path === '/academia') {
+        window.history.replaceState(null, '', '/usuario/academia');
+        setCurrentView('academia');
         return;
       }
 
+      // Se acessou tela de login manualmente
+      if (path === '/login') {
+        if (userIsAdmin) {
+          window.history.replaceState(null, '', '/admin');
+          setCurrentView('admin');
+        } else {
+          setCurrentView('login');
+        }
+        return;
+      }
+
+      // Demais rotas da plataforma: ACESSO LIVRE DIRETO PARA O USUÁRIO (SEM LOGIN, SEM CADASTRO, SEM SENHA)
       const mappedView = PATH_TO_VIEW[path];
       if (mappedView) {
         setCurrentView(mappedView);
       } else {
-        window.history.replaceState(null, '', '/aluno');
+        window.history.replaceState(null, '', '/usuario');
         setCurrentView('dashboard');
       }
     };
@@ -170,14 +185,27 @@ export default function App() {
       console.error(e);
     }
     const initialUser = getStoredUser();
-    const fallbackUserId = initialUser?.id || 'usr-member-free';
+    const fallbackUserId = initialUser?.id || 'local-visitor';
     return SAMPLE_REVIEWS.map(r => ({ ...r, userId: r.userId || fallbackUserId }));
   });
 
+  // User reviews: guests without login access all their locally saved reviews
   const userReviews = React.useMemo(() => {
-    if (!currentUser || !currentUser.id) return [];
-    return reviews.filter((r) => r.userId === currentUser.id);
+    if (!currentUser || !currentUser.id) {
+      return reviews;
+    }
+    return reviews.filter(
+      (r) => !r.userId || r.userId === currentUser.id || r.userId === 'local-visitor' || r.userId === 'usr-member-free'
+    );
   }, [reviews, currentUser]);
+
+  const canManageReview = (rev?: Review | null) => {
+    if (!rev) return false;
+    // Visitante na rota /usuario gerencia livremente os dados do seu próprio localStorage
+    if (!currentUser) return true;
+    if (isAdmin) return true;
+    return !rev.userId || rev.userId === currentUser.id || rev.userId === 'local-visitor' || rev.userId === 'usr-member-free';
+  };
 
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
@@ -252,7 +280,7 @@ export default function App() {
   const handleSaveReview = (review: Review) => {
     if (review.id && reviews.some((r) => r.id === review.id)) {
       const existing = reviews.find((r) => r.id === review.id);
-      if (existing && existing.userId !== currentUser?.id) {
+      if (existing && !canManageReview(existing)) {
         alert("Erro de Permissão: Você não é o proprietário desta review!");
         return;
       }
@@ -260,7 +288,7 @@ export default function App() {
 
     const reviewWithUser = {
       ...review,
-      userId: review.userId || currentUser?.id
+      userId: review.userId || (currentUser ? currentUser.id : 'local-visitor')
     };
     const exists = reviews.some((r) => r.id === review.id);
     if (exists) {
@@ -274,7 +302,7 @@ export default function App() {
 
   const handleDeleteReview = (id: string) => {
     const existing = reviews.find((r) => r.id === id);
-    if (existing && existing.userId !== currentUser?.id) {
+    if (existing && !canManageReview(existing)) {
       alert("Erro de Permissão: Você não é o proprietário desta review!");
       return;
     }
@@ -285,7 +313,7 @@ export default function App() {
   };
 
   const handleDuplicateReview = (review: Review) => {
-    if (review.userId !== currentUser?.id) {
+    if (!canManageReview(review)) {
       alert("Erro de Permissão: Você não é o proprietário desta review!");
       return;
     }
@@ -294,7 +322,7 @@ export default function App() {
       ...review,
       id: 'rev-' + Date.now(),
       productName: `${review.productName} (Cópia)`,
-      userId: currentUser?.id,
+      userId: currentUser?.id || 'local-visitor',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -486,7 +514,7 @@ export default function App() {
                 setCurrentView('create');
               }}
               onEditReview={(rev) => {
-                if (rev.userId !== currentUser?.id) {
+                if (!canManageReview(rev)) {
                   alert("Erro de Permissão: Você não é o proprietário desta review!");
                   return;
                 }
@@ -494,7 +522,7 @@ export default function App() {
                 setCurrentView('create');
               }}
               onViewReview={(rev) => {
-                if (rev.userId !== currentUser?.id) {
+                if (!canManageReview(rev)) {
                   alert("Erro de Permissão: Você não é o proprietário desta review!");
                   return;
                 }
@@ -549,7 +577,7 @@ export default function App() {
                 setCurrentView('create');
               }}
               onEditReview={(rev) => {
-                if (rev.userId !== currentUser?.id) {
+                if (!canManageReview(rev)) {
                   alert("Erro de Permissão: Você não é o proprietário desta review!");
                   return;
                 }
@@ -557,7 +585,7 @@ export default function App() {
                 setCurrentView('create');
               }}
               onViewReview={(rev) => {
-                if (rev.userId !== currentUser?.id) {
+                if (!canManageReview(rev)) {
                   alert("Erro de Permissão: Você não é o proprietário desta review!");
                   return;
                 }

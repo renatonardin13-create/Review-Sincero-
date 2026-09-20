@@ -232,7 +232,11 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   const [toastMessage, setToastMessage] = useState<{
     title: string;
     desc: string;
-    type: 'lovable' | 'google-studio' | 'claude' | 'chatgpt' | 'v0' | 'copy';
+    type: 'lovable' | 'google-studio' | 'claude' | 'chatgpt' | 'v0' | 'copy' | 'error';
+    action?: {
+      label: string;
+      onClick: () => void;
+    };
   } | null>(null);
   const [newKeywordInput, setNewKeywordInput] = useState<string>('');
   const [isSearchingKeywords, setIsSearchingKeywords] = useState<boolean>(false);
@@ -904,8 +908,41 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     setFormData((prev) => ({ ...prev, cons: updated }));
   };
 
-  // Master Prompt for Lovable, Google AI Studio, Claude, Gemini & ChatGPT
-  const claudeHtmlPrompt = `Você é um desenvolvedor frontend sênior e especialista em marketing de afiliados de alta conversão.
+  // Helper resiliente para cópia segura para a área de transferência em qualquer navegador / iframe
+  const safeCopyToClipboard = async (text: string): Promise<boolean> => {
+    if (!text) return false;
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (err) {
+      console.warn('Clipboard API rejeitou ou não disponível, utilizando fallback:', err);
+    }
+
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      textArea.setAttribute('readonly', '');
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return successful;
+    } catch (err) {
+      console.error('Fallback execCommand falhou:', err);
+      return false;
+    }
+  };
+
+  // =========================================================================
+  // FONTE ÚNICA DE VERDADE: PRD / PROMPT COMPLETO GERADO PARA TODAS AS IAS
+  // =========================================================================
+  const generatedPrompt = `Você é um desenvolvedor frontend sênior e especialista em marketing de afiliados de alta conversão.
 Crie uma aplicação web / página de vendas e review completa, moderna, responsiva e pronta para publicação para o seguinte produto:
 
 ========================================
@@ -975,32 +1012,51 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
 8. FAQ em sanfona/accordion.
 9. Botão flutuante no rodapé com CTA de compra garantida.`;
 
-  const handleCopyPrompt = () => {
-    navigator.clipboard.writeText(claudeHtmlPrompt);
+  // Alias para total compatibilidade sem duplicar estados
+  const claudeHtmlPrompt = generatedPrompt;
+
+  const handleCopyPrompt = async () => {
+    const success = await safeCopyToClipboard(generatedPrompt);
     setCopiedPrompt(true);
     setCopiedTarget('manual');
-    setToastMessage({
-      title: 'Prompt Copiado com Sucesso!',
-      desc: 'O prompt completo de alta conversão foi copiado para sua área de transferência (Ctrl+V).',
-      type: 'copy'
-    });
+    if (success) {
+      setToastMessage({
+        title: 'Prompt Copiado com Sucesso!',
+        desc: 'O prompt completo de alta conversão foi copiado para sua área de transferência (Ctrl+V).',
+        type: 'copy',
+        action: {
+          label: 'COPIAR NOVAMENTE',
+          onClick: () => handleCopyPrompt()
+        }
+      });
+    } else {
+      setToastMessage({
+        title: 'Não foi possível copiar automaticamente.',
+        desc: 'Selecione o texto na caixa abaixo e utilize Ctrl+C.',
+        type: 'error'
+      });
+    }
     setTimeout(() => {
       setCopiedPrompt(false);
       setCopiedTarget(null);
     }, 3500);
     setTimeout(() => {
       setToastMessage(null);
-    }, 5500);
+    }, 6000);
   };
 
-  const handleOpenLovable = () => {
-    navigator.clipboard.writeText(claudeHtmlPrompt);
+  const handleOpenLovable = async () => {
+    await safeCopyToClipboard(generatedPrompt);
     setCopiedPrompt(true);
     setCopiedTarget('lovable');
     setToastMessage({
       title: 'Prompt Copiado! Abrindo Lovable...',
       desc: 'O Lovable está sendo aberto. O prompt já foi copiado para sua área de transferência e pode ser colado com Ctrl+V se necessário!',
-      type: 'lovable'
+      type: 'lovable',
+      action: {
+        label: 'COPIAR NOVAMENTE',
+        onClick: () => handleCopyPrompt()
+      }
     });
     setTimeout(() => {
       setCopiedPrompt(false);
@@ -1009,18 +1065,22 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
     setTimeout(() => {
       setToastMessage(null);
     }, 6000);
-    const lovableUrl = `https://lovable.dev/?prompt=${encodeURIComponent(claudeHtmlPrompt)}`;
+    const lovableUrl = `https://lovable.dev/?prompt=${encodeURIComponent(generatedPrompt)}`;
     window.open(lovableUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const handleOpenGoogleAIStudio = () => {
-    navigator.clipboard.writeText(claudeHtmlPrompt);
+  const handleOpenGoogleAIStudio = async () => {
+    await safeCopyToClipboard(generatedPrompt);
     setCopiedPrompt(true);
     setCopiedTarget('google-studio');
     setToastMessage({
       title: 'Prompt Copiado! Abrindo Google AI Studio...',
       desc: 'Abrindo ai.studio/build — basta pressionar Ctrl+V no campo "Describe an app and let Gemini do the rest" para criar a página!',
-      type: 'google-studio'
+      type: 'google-studio',
+      action: {
+        label: 'COPIAR NOVAMENTE',
+        onClick: () => handleCopyPrompt()
+      }
     });
     setTimeout(() => {
       setCopiedPrompt(false);
@@ -1029,56 +1089,111 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
     setTimeout(() => {
       setToastMessage(null);
     }, 6000);
-    const aiStudioUrl = `https://ai.studio/build?prompt=${encodeURIComponent(claudeHtmlPrompt)}`;
+    const aiStudioUrl = `https://ai.studio/build?prompt=${encodeURIComponent(generatedPrompt)}`;
     window.open(aiStudioUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const handleOpenClaude = () => {
-    navigator.clipboard.writeText(claudeHtmlPrompt);
+  const handleOpenClaude = async () => {
+    // 1. Obter o prompt da fonte única generatedPrompt e copiar para clipboard
+    const success = await safeCopyToClipboard(generatedPrompt);
     setCopiedPrompt(true);
     setCopiedTarget('claude');
-    setToastMessage({
-      title: 'Prompt Copiado! Abrindo Claude.ai...',
-      desc: 'Abrindo claude.ai — basta colar com Ctrl+V no campo de mensagem para gerar sua página.',
-      type: 'claude'
-    });
+
+    if (success) {
+      setToastMessage({
+        title: '✓ Prompt copiado! Cole no Claude com Ctrl+V.',
+        desc: 'Claude.ai aberto em nova aba. Pressione Ctrl+V no campo de mensagem para colar o PRD completo.',
+        type: 'claude',
+        action: {
+          label: 'COPIAR NOVAMENTE',
+          onClick: () => handleCopyPrompt()
+        }
+      });
+    } else {
+      setToastMessage({
+        title: 'Não foi possível copiar automaticamente.',
+        desc: 'O navegador bloqueou a área de transferência. Use o botão Copiar Prompt abaixo.',
+        type: 'error',
+        action: {
+          label: 'COPIAR PROMPT',
+          onClick: () => handleCopyPrompt()
+        }
+      });
+    }
+
     setTimeout(() => {
       setCopiedPrompt(false);
       setCopiedTarget(null);
     }, 4000);
     setTimeout(() => {
       setToastMessage(null);
-    }, 6000);
-    window.open('https://claude.ai', '_blank', 'noopener,noreferrer');
+    }, 7000);
+
+    // 2. Abrir rota oficial de novo chat no Claude sem URLs com query strings enormes que causam tela branca
+    window.open('https://claude.ai/new', '_blank', 'noopener,noreferrer');
   };
 
-  const handleOpenChatGPT = () => {
-    navigator.clipboard.writeText(claudeHtmlPrompt);
+  const handleOpenChatGPT = async () => {
+    // 1. Obter o prompt da fonte única generatedPrompt e copiar para clipboard
+    const success = await safeCopyToClipboard(generatedPrompt);
     setCopiedPrompt(true);
     setCopiedTarget('chatgpt');
-    setToastMessage({
-      title: 'Prompt Copiado! Abrindo ChatGPT...',
-      desc: 'Abrindo chatgpt.com — basta colar com Ctrl+V.',
-      type: 'chatgpt'
-    });
+
+    const encodedPrompt = encodeURIComponent(generatedPrompt);
+    // Limite seguro de URL para evitar erro HTTP 414 / tela branca no Cloudflare/ChatGPT (~1800 caracteres)
+    const canUseUrlPreFill = encodedPrompt.length <= 1800;
+    const chatGptUrl = canUseUrlPreFill
+      ? `https://chatgpt.com/?q=${encodedPrompt}`
+      : 'https://chatgpt.com/';
+
+    if (success) {
+      setToastMessage({
+        title: '✓ Prompt copiado! Cole no ChatGPT com Ctrl+V.',
+        desc: canUseUrlPreFill
+          ? 'ChatGPT aberto em nova aba com o campo de mensagem preparado. Se necessário, use Ctrl+V.'
+          : 'Prompt copiado com sucesso! Pressione Ctrl+V no campo do ChatGPT para colar o PRD completo.',
+        type: 'chatgpt',
+        action: {
+          label: 'COPIAR NOVAMENTE',
+          onClick: () => handleCopyPrompt()
+        }
+      });
+    } else {
+      setToastMessage({
+        title: 'Não foi possível copiar automaticamente.',
+        desc: 'O navegador bloqueou a cópia. Use o botão Copiar Prompt para transferir o conteúdo.',
+        type: 'error',
+        action: {
+          label: 'COPIAR PROMPT',
+          onClick: () => handleCopyPrompt()
+        }
+      });
+    }
+
     setTimeout(() => {
       setCopiedPrompt(false);
       setCopiedTarget(null);
     }, 4000);
     setTimeout(() => {
       setToastMessage(null);
-    }, 6000);
-    window.open('https://chatgpt.com', '_blank', 'noopener,noreferrer');
+    }, 7000);
+
+    // 2. Abrir ChatGPT em nova aba utilizando URL segura e oficial
+    window.open(chatGptUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const handleOpenV0 = () => {
-    navigator.clipboard.writeText(claudeHtmlPrompt);
+  const handleOpenV0 = async () => {
+    await safeCopyToClipboard(generatedPrompt);
     setCopiedPrompt(true);
     setCopiedTarget('v0');
     setToastMessage({
       title: 'Prompt Copiado! Abrindo v0.dev...',
       desc: 'Abrindo v0.dev — seu prompt está pronto para gerar os componentes.',
-      type: 'v0'
+      type: 'v0',
+      action: {
+        label: 'COPIAR NOVAMENTE',
+        onClick: () => handleCopyPrompt()
+      }
     });
     setTimeout(() => {
       setCopiedPrompt(false);
@@ -1087,17 +1202,24 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
     setTimeout(() => {
       setToastMessage(null);
     }, 6000);
-    window.open(`https://v0.dev/chat?q=${encodeURIComponent(claudeHtmlPrompt)}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://v0.dev/chat?q=${encodeURIComponent(generatedPrompt)}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleGenerateHtml = () => {
     const html = generateStandaloneReviewHtml(formData as any);
     setGeneratedHtmlContent(html);
     setIsHtmlModalOpen(true);
+    setToastMessage({
+      title: 'HTML Gerado com Sucesso!',
+      desc: 'O código HTML fiel à página atual foi gerado e está pronto para uso.',
+      type: 'copy'
+    });
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   const handleCopyHtml = () => {
-    const html = generatedHtmlContent || generateStandaloneReviewHtml(formData as any);
+    const html = generateStandaloneReviewHtml(formData as any);
+    setGeneratedHtmlContent(html);
     navigator.clipboard.writeText(html);
     setCopiedHtml(true);
     setToastMessage({
@@ -1110,19 +1232,27 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
   };
 
   const handleDownloadHtml = () => {
-    const html = generatedHtmlContent || generateStandaloneReviewHtml(formData as any);
+    const html = generateStandaloneReviewHtml(formData as any);
+    setGeneratedHtmlContent(html);
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${formData.slug || 'review-sincero'}.html`;
+    const safeSlug = (formData.slug || formData.productName || 'review-produto')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') || 'review-produto';
+    link.download = `${safeSlug}.html`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     setToastMessage({
       title: 'Download Iniciado!',
-      desc: 'O arquivo .html foi baixado para o seu computador.',
+      desc: `O arquivo ${safeSlug}.html foi baixado para o seu computador.`,
       type: 'copy'
     });
     setTimeout(() => setToastMessage(null), 4000);
@@ -3391,7 +3521,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
               </div>
 
               <div className="bg-[#07090F] border border-[#1E293B] rounded-2xl p-4 font-mono text-xs text-[#CBD5E1] whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed select-all">
-                {claudeHtmlPrompt}
+                {generatedPrompt}
               </div>
             </div>
 
@@ -3453,6 +3583,14 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                 </button>
               </div>
 
+              {/* Notice regarding Tailwind CDN */}
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-start gap-2">
+                <span className="font-bold shrink-0">💡 Nota Técnica:</span>
+                <span className="text-[11px] leading-relaxed text-amber-200/90">
+                  O HTML gerado é totalmente autônomo, não exige login e não é salvo no banco. O estilo visual utiliza o CDN oficial do Tailwind CSS e fontes Google, requerendo conexão ativa com a internet para renderização completa.
+                </span>
+              </div>
+
               {/* Generated HTML Preview Box if Generated */}
               {generatedHtmlContent && (
                 <div className="space-y-2 pt-2 animate-in fade-in">
@@ -3500,28 +3638,41 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
           FLOATING TOAST NOTIFICATION
          ========================================================================= */}
       {toastMessage && (
-        <div className="fixed bottom-24 right-6 z-50 max-w-md bg-[#0F1420] border border-[#3B82F6]/60 rounded-2xl p-4 shadow-2xl shadow-blue-500/25 animate-in slide-in-from-bottom-5 duration-300">
+        <div className={`fixed bottom-24 right-6 z-50 max-w-md ${toastMessage.type === 'error' ? 'bg-[#180A0A] border-red-500/60 shadow-red-500/25' : 'bg-[#0F1420] border-[#3B82F6]/60 shadow-blue-500/25'} border rounded-2xl p-4 shadow-2xl animate-in slide-in-from-bottom-5 duration-300`}>
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#2563EB]/20 border border-[#3B82F6]/40 flex items-center justify-center shrink-0 text-lg">
+            <div className={`w-9 h-9 rounded-xl ${toastMessage.type === 'error' ? 'bg-red-500/20 border-red-500/40' : 'bg-[#2563EB]/20 border-[#3B82F6]/40'} border flex items-center justify-center shrink-0 text-lg`}>
               {toastMessage.type === 'lovable' && '🚀'}
               {toastMessage.type === 'google-studio' && '✨'}
               {toastMessage.type === 'claude' && '🤖'}
               {toastMessage.type === 'chatgpt' && '💬'}
               {toastMessage.type === 'v0' && '▲'}
               {toastMessage.type === 'copy' && '📋'}
+              {toastMessage.type === 'error' && '⚠️'}
             </div>
-            <div className="space-y-1 flex-1">
+            <div className="space-y-1.5 flex-1">
               <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
                 <span>{toastMessage.title}</span>
-                <Check className="w-3.5 h-3.5 text-[#22C55E] stroke-[3]" />
+                {toastMessage.type !== 'error' && <Check className="w-3.5 h-3.5 text-[#22C55E] stroke-[3]" />}
               </h5>
               <p className="text-[11px] text-[#94A3B8] leading-relaxed">
                 {toastMessage.desc}
               </p>
+              {toastMessage.action && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={toastMessage.action.onClick}
+                    className="inline-flex items-center gap-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shadow transition-colors cursor-pointer"
+                  >
+                    <Copy className="w-3 h-3" />
+                    <span>{toastMessage.action.label}</span>
+                  </button>
+                </div>
+              )}
             </div>
             <button
               onClick={() => setToastMessage(null)}
-              className="text-[#64748B] hover:text-white p-1 rounded-md hover:bg-[#1E293B] transition-colors"
+              className="text-[#64748B] hover:text-white p-1 rounded-md hover:bg-[#1E293B] transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>

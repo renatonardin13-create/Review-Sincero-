@@ -269,18 +269,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="overflow-hidden flex-1">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-white truncate">
-                  {currentUser?.name?.split(' ')[0] || 'Aluno'}
+                  {currentUser ? currentUser.name.split(' ')[0] : 'Visitante'}
                 </span>
                 <span
-                  className={`text-[8px] font-black px-1 py-0.2 rounded uppercase ${
-                    isAdmin ? 'bg-[#F5C542] text-black' : 'bg-[#2563EB] text-white'
+                  className={`text-[8px] font-black px-1.5 py-0.2 rounded uppercase ${
+                    isAdmin
+                      ? 'bg-[#F5C542] text-black'
+                      : currentUser
+                      ? 'bg-[#2563EB] text-white'
+                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                   }`}
                 >
-                  {isAdmin ? 'ADM' : 'GRÁTIS'}
+                  {isAdmin ? 'ADMIN' : currentUser ? 'CONECTADO' : 'ACESSO LIVRE'}
                 </span>
               </div>
               <p className="text-[9px] text-[#8E8E8E] truncate">
-                {currentUser?.email || ADMIN_EMAIL}
+                {currentUser?.email || 'Nenhum cadastro exigido'}
               </p>
             </div>
           </button>
@@ -291,7 +295,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="w-full py-1.5 px-3 rounded-xl bg-[#141414] hover:bg-[#1C1C1C] border border-[#222] hover:border-[#F5C542]/30 text-[10px] font-semibold text-[#A1A1A1] hover:text-[#F5C542] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
           >
             <LogIn className="w-3 h-3" />
-            <span>Abrir Tela de Login / Trocar Conta</span>
+            <span>{isAdmin ? 'Alternar Conta' : 'Login Administrativo (/admin)'}</span>
           </button>
 
           {currentUser && onLogout && (
