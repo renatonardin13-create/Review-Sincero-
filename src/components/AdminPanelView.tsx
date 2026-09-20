@@ -23,7 +23,8 @@ import {
   User,
   UserMinus,
   Ban,
-  Upload
+  Upload,
+  Bell
 } from 'lucide-react';
 import { AuthUser, AppSettings, MemberAcademyData, ADMIN_EMAIL } from '../types';
 import { getStoredAcademyData, saveStoredAcademyData, resetStoredAcademyData } from '../data/academyData';
@@ -31,6 +32,7 @@ import { getRegisteredUsersList } from '../services/authService';
 import { isValidYoutubeUrl } from '../utils/urlUtils';
 import { storage } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ProductNotificationManager } from './ProductNotificationManager';
 
 interface AdminPanelViewProps {
   currentUser: AuthUser;
@@ -49,7 +51,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
 }) => {
   const isAdmin =
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis' | 'login'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis' | 'login' | 'notifications'>('overview');
   const [academyData, setAcademyData] = useState<MemberAcademyData>(getStoredAcademyData);
   const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
@@ -213,6 +215,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
         {[
           { id: 'overview', label: '📊 Visão Geral', icon: BarChart3 },
           { id: 'academy', label: '🎓 Gerenciar Videoaulas & Curso', icon: Film },
+          { id: 'notifications', label: '🔔 Notificações de Produtos', icon: Bell },
           { id: 'banners', label: '⚙️ Ajustes & Monetização Global', icon: DollarSign },
           { id: 'login', label: '🖼️ Tela de Login', icon: Film },
           { id: 'users', label: '👥 Alunos & Usuários', icon: Users },
@@ -568,6 +571,15 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Tab: Notifications */}
+      {activeTab === 'notifications' && (
+        <ProductNotificationManager
+          currentUser={currentUser}
+          settings={settings}
+          onSaveSettings={onSaveSettings}
+        />
       )}
     </div>
   );

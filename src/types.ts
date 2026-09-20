@@ -266,6 +266,17 @@ export interface PromoBannerSlide {
   targetBlank?: boolean;
 }
 
+export interface ProductNotification {
+  id: string;
+  name: string;
+  url: string;
+  active: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+}
+
 export interface AppSettings {
   siteName: string;
   logoUrl: string;
@@ -283,6 +294,7 @@ export interface AppSettings {
   bannerAutoplaySpeed?: number; // em segundos (ex: 5)
   enableBannerCarousel?: boolean; // exibir carrossel no dashboard
   enableQuickLoginShortcuts?: boolean; // exibir atalhos de login rápido na tela de login
+  productNotificationIntervalMinutes?: number; // 2, 5, 10, 15 (default 5)
   usageLimits?: {
     freeReviewLimit: number;
     premiumReviewLimit: number;

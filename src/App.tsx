@@ -20,6 +20,7 @@ import { LoginView } from './components/LoginView';
 import { getStoredUser, saveStoredUser, logoutUser } from './services/authService';
 import { loadGlobalSettings, saveGlobalSettings } from './services/settingsService';
 import { SettingsErrorBoundary } from './components/SettingsErrorBoundary';
+import { ProductNotificationWidget } from './components/ProductNotificationWidget';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 
 const VIEW_TO_PATH: Record<string, string> = {
@@ -606,6 +607,8 @@ export default function App() {
           )}
         </main>
       </div>
+
+      <ProductNotificationWidget intervalMinutes={settings.productNotificationIntervalMinutes || 5} />
 
       {/* User Authentication & Role Switcher Modal */}
       <AuthModal
