@@ -1,16 +1,56 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /global_settings/{document} {
-      allow read, write: if true;
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'renatonardin13@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active')
+      );
     }
 
-    match /product_notifications/{document} {
-      allow read, write: if true;
+    match /{document=**} {
+      allow read, write: if false;
     }
 
-    match /reviews/{document} {
-      allow read, write: if true;
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.uid == userId;
+      allow update: if isSignedIn() && (
+        isAdmin() || 
+        (isOwner(userId) && request.resource.data.role == resource.data.role && request.resource.data.status == resource.data.status)
+      );
+    }
+
+    match /product_notifications/{notificationId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /system_updates/{updateId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /users/{userId}/notificationReads/{updateId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create, update: if isSignedIn() && isOwner(userId) && isValidId(updateId);
+      allow delete: if isSignedIn() && isOwner(userId);
+    }
+
+    match /global_settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

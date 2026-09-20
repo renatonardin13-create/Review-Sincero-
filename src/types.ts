@@ -369,6 +369,7 @@ export interface TrendItem {
 }
 
 export type UserRole = 'admin' | 'user';
+export type UserStatus = 'active' | 'blocked';
 
 export interface AuthUser {
   id: string;
@@ -376,9 +377,28 @@ export interface AuthUser {
   name: string;
   avatarUrl?: string;
   role: UserRole;
+  status: UserStatus;
   provider: 'google' | 'email';
   createdAt: string;
   lastLoginAt: string;
+}
+
+export interface SystemUpdate {
+  id: string;
+  title: string;
+  message: string;
+  imageUrl?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+  version: string;
+  published: boolean;
+  createdAt: string;
+  publishedAt?: string;
+  createdBy: string;
+}
+
+export interface NotificationRead {
+  readAt: string;
 }
 
 export const ADMIN_EMAIL = 'renatonardin13@gmail.com';

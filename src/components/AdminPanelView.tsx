@@ -33,6 +33,7 @@ import { isValidYoutubeUrl } from '../utils/urlUtils';
 import { storage } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ProductNotificationManager } from './ProductNotificationManager';
+import { SystemUpdateManager } from './SystemUpdateManager';
 
 interface AdminPanelViewProps {
   currentUser: AuthUser;
@@ -51,7 +52,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
 }) => {
   const isAdmin =
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis' | 'login' | 'notifications'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'banners' | 'users' | 'apis' | 'login' | 'notifications' | 'system-updates'>('overview');
   const [academyData, setAcademyData] = useState<MemberAcademyData>(getStoredAcademyData);
   const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
@@ -216,6 +217,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           { id: 'overview', label: '📊 Visão Geral', icon: BarChart3 },
           { id: 'academy', label: '🎓 Gerenciar Videoaulas & Curso', icon: Film },
           { id: 'notifications', label: '🔔 Notificações de Produtos', icon: Bell },
+          { id: 'system-updates', label: '🔔 Atualizações do Sistema', icon: Bell },
           { id: 'banners', label: '⚙️ Ajustes & Monetização Global', icon: DollarSign },
           { id: 'login', label: '🖼️ Tela de Login', icon: Film },
           { id: 'users', label: '👥 Alunos & Usuários', icon: Users },
@@ -580,6 +582,11 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           settings={settings}
           onSaveSettings={onSaveSettings}
         />
+      )}
+
+      {/* Tab: System Updates */}
+      {activeTab === 'system-updates' && (
+        <SystemUpdateManager currentUser={currentUser} />
       )}
     </div>
   );
