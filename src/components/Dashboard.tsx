@@ -1,5 +1,6 @@
 import React from 'react';
 import { Review, AppSettings, AuthUser, ADMIN_EMAIL } from '../types';
+import { DEFAULT_PROMO_BANNERS } from '../data/initialData';
 import {
   Plus,
   FileText,
@@ -129,11 +130,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* =========================================================================
           PROMOTIONAL BANNER SLIDES CAROUSEL (Requested for monetization)
          ========================================================================= */}
-      {settings?.promoBanners && settings.promoBanners.length > 0 && (
+      {settings?.enableBannerCarousel !== false && (
         <PromoBannerCarousel
-          banners={settings.promoBanners}
-          autoplaySpeed={settings.bannerAutoplaySpeed || 6}
-          enabled={settings.enableBannerCarousel !== false}
+          banners={settings?.promoBanners && settings.promoBanners.length > 0 ? settings.promoBanners : DEFAULT_PROMO_BANNERS}
+          autoplaySpeed={settings?.bannerAutoplaySpeed || 6}
+          enabled={true}
           onManageClick={currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() ? () => setCurrentView('settings-banners') : undefined}
         />
       )}
