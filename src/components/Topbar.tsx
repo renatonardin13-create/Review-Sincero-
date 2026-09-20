@@ -15,6 +15,7 @@ interface TopbarProps {
   onOpenAuthModal?: () => void;
   onNavigate?: (view: string, targetId?: string) => void;
   currentPath?: string;
+  currentView?: string;
 }
 
 export const Topbar: React.FC<TopbarProps> = ({
@@ -26,7 +27,8 @@ export const Topbar: React.FC<TopbarProps> = ({
   currentUser,
   onOpenAuthModal,
   onNavigate,
-  currentPath
+  currentPath,
+  currentView
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
@@ -36,7 +38,11 @@ export const Topbar: React.FC<TopbarProps> = ({
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
   const pathname = currentPath || (typeof window !== 'undefined' ? window.location.pathname : '');
-  const isPublicUser = pathname.startsWith('/usuario');
+  const isPublicUserRoute =
+    pathname.startsWith('/usuario') ||
+    pathname === '/' ||
+    pathname === '/aluno' ||
+    (Boolean(currentView) && currentView !== 'admin' && currentView !== 'login');
 
   useEffect(() => {
     // Escutar notificações em tempo real
@@ -105,8 +111,8 @@ export const Topbar: React.FC<TopbarProps> = ({
             </button>
           </div>
 
-          {/* User Account / Profile Badge with 1-Click Role Switcher */}
-          {!isPublicUser && (
+          {/* User Account / Profile Badge with 1-Click Role Switcher (Hidden in public /usuario area, preserved in /admin) */}
+          {!isPublicUserRoute && (
             <button
               type="button"
               onClick={onOpenAuthModal}

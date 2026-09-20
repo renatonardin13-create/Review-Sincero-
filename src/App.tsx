@@ -61,6 +61,9 @@ const PATH_TO_VIEW: Record<string, string> = {
 
 export default function App() {
   const [currentView, setCurrentView] = useState<string>('dashboard');
+  const [currentPath, setCurrentPath] = useState<string>(() =>
+    typeof window !== 'undefined' ? window.location.pathname : '/usuario'
+  );
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
@@ -107,6 +110,7 @@ export default function App() {
   useEffect(() => {
     const handleUrlSync = () => {
       const path = window.location.pathname;
+      setCurrentPath(path);
       const user = getStoredUser();
       const userIsAdmin = user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
@@ -124,12 +128,14 @@ export default function App() {
       // Redirecionamentos de conveniência para a rota canônica /usuario
       if (path === '/' || path === '/aluno') {
         window.history.replaceState(null, '', '/usuario');
+        setCurrentPath('/usuario');
         setCurrentView('dashboard');
         return;
       }
 
       if (path === '/aluno/academia' || path === '/academia') {
         window.history.replaceState(null, '', '/usuario/academia');
+        setCurrentPath('/usuario/academia');
         setCurrentView('academia');
         return;
       }
@@ -138,6 +144,7 @@ export default function App() {
       if (path === '/login') {
         if (userIsAdmin) {
           window.history.replaceState(null, '', '/admin');
+          setCurrentPath('/admin');
           setCurrentView('admin');
         } else {
           setCurrentView('login');
@@ -151,6 +158,7 @@ export default function App() {
         setCurrentView(mappedView);
       } else {
         window.history.replaceState(null, '', '/usuario');
+        setCurrentPath('/usuario');
         setCurrentView('dashboard');
       }
     };
@@ -164,19 +172,24 @@ export default function App() {
   }, [currentUser]);
 
   useEffect(() => {
-    const currentPath = window.location.pathname;
+    const currentPathname = window.location.pathname;
     // Don't override /admin or /adm if in admin view
-    if (currentView === 'admin' && (currentPath === '/admin' || currentPath === '/adm')) {
+    if (currentView === 'admin' && (currentPathname === '/admin' || currentPathname === '/adm')) {
+      setCurrentPath(currentPathname);
       return;
     }
     // Don't override /usuario or /usuario/* if in dashboard view
-    if (currentView === 'dashboard' && currentPath.startsWith('/usuario')) {
+    if (currentView === 'dashboard' && currentPathname.startsWith('/usuario')) {
+      setCurrentPath(currentPathname);
       return;
     }
     const expectedPath = VIEW_TO_PATH[currentView];
 
-    if (expectedPath && currentPath !== expectedPath) {
+    if (expectedPath && currentPathname !== expectedPath) {
       window.history.pushState(null, '', expectedPath);
+      setCurrentPath(expectedPath);
+    } else {
+      setCurrentPath(currentPathname);
     }
   }, [currentView]);
 
@@ -494,7 +507,7 @@ export default function App() {
         onLogout={handleLogout}
         unreadNotifsCount={unreadNotifsCount}
         onOpenNotifications={() => setIsNotificationsModalOpen(true)}
-        currentPath={typeof window !== 'undefined' ? window.location.pathname : ''}
+        currentPath={currentPath}
       />
 
       {/* Main Layout Area */}
@@ -511,7 +524,8 @@ export default function App() {
           currentUser={currentUser || undefined}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
           onNavigate={handleNavigateFromNotification}
-          currentPath={typeof window !== 'undefined' ? window.location.pathname : ''}
+          currentPath={currentPath}
+          currentView={currentView}
         />
 
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">

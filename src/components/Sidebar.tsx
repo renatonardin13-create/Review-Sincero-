@@ -56,7 +56,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
   const pathname = currentPath || (typeof window !== 'undefined' ? window.location.pathname : '');
-  const isPublicUser = pathname.startsWith('/usuario');
+  const isPublicUser =
+    pathname.startsWith('/usuario') ||
+    pathname === '/' ||
+    pathname === '/aluno' ||
+    (Boolean(currentView) && currentView !== 'admin' && currentView !== 'login');
 
   const principalItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },

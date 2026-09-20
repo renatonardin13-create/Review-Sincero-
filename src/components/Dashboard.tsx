@@ -56,7 +56,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
     currentUser?.role === 'admin' ||
     currentUser?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
-  const isPublicUser = typeof window !== 'undefined' && window.location.pathname.startsWith('/usuario');
+  const isPublicUser =
+    typeof window !== 'undefined' &&
+    (window.location.pathname.startsWith('/usuario') ||
+      window.location.pathname === '/' ||
+      window.location.pathname === '/aluno');
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
