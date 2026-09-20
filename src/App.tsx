@@ -172,16 +172,31 @@ export default function App() {
   useEffect(() => {
     const fetchSettings = () => {
       fetch('/api/settings')
-        .then(res => res.json())
+        .then(res => {
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            return res.json();
+          }
+          throw new Error('Not JSON response');
+        })
         .then(data => {
-          if (data.success && data.settings) {
+          if (data && data.success && data.settings) {
             setSettings(prev => ({
               ...prev,
               ...data.settings
             }));
           }
         })
-        .catch(console.warn);
+        .catch(() => {
+          // Fallback to localStorage if API is unavailable (e.g. Vercel static deployment)
+          try {
+            const saved = localStorage.getItem('review_sincero_settings');
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              setSettings(prev => ({ ...prev, ...parsed }));
+            }
+          } catch (e) {}
+        });
     };
 
     fetchSettings();
@@ -206,7 +221,10 @@ export default function App() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newSettings)
-        }).catch(console.warn);
+        }).then(res => {
+          const ct = res.headers.get('content-type');
+          if (ct && ct.includes('application/json')) return res.json();
+        }).catch(() => {});
       }
     } catch (e) {
       console.error(e);
