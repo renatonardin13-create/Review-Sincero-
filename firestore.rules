@@ -59,12 +59,12 @@ service cloud.firestore {
     }
 
     match /academy_lessons/{lessonId} {
-      allow read: if isSignedIn() && (resource.data.published == true || resource.data.published == null || isAdmin());
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /academy_modules/{moduleId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
   }
