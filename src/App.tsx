@@ -23,6 +23,8 @@ import { subscribeSystemUpdates } from './services/systemUpdateService';
 import { ActivityLog } from './components/ActivityLog';
 import { ToastNotifications } from './components/ToastNotifications';
 import { AcademyView } from './components/AcademyView';
+import { SalesQuiz } from './components/sales-quiz/SalesQuiz';
+import { QuizAdmin } from './components/sales-quiz/QuizAdmin';
 import { NotificationsCenterModal } from './components/NotificationsCenterModal';
 import { ProductNotificationWidget } from './components/ProductNotificationWidget';
 import { subscribeToNotifications, getReadNotificationsMap, onNotificationReadsChanged } from './services/notificationService';
@@ -39,7 +41,8 @@ const VIEW_TO_PATH: Record<string, string> = {
   'settings': '/settings',
   'admin': '/adm',
   'login': '/login',
-  'academia': '/academia'
+  'academia': '/academia',
+  'quiz': '/usuario/quiz-vendas'
 };
 
 const PATH_TO_VIEW: Record<string, string> = {
@@ -56,7 +59,8 @@ const PATH_TO_VIEW: Record<string, string> = {
   '/adm': 'admin',
   '/admin': 'admin',
   '/login': 'login',
-  '/academia': 'academia'
+  '/academia': 'academia',
+  '/usuario/quiz-vendas': 'quiz'
 };
 
 export default function App() {
@@ -578,6 +582,10 @@ export default function App() {
               initialLessonId={targetLessonId}
               onNavigateBack={() => setCurrentView('dashboard')}
             />
+          )}
+
+          {currentView === 'quiz' && (
+            <SalesQuiz />
           )}
 
           {currentView === 'settings' && (

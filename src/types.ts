@@ -389,5 +389,63 @@ export interface SystemNotification {
   createdBy?: string;
 }
 
+export interface QuizOption {
+  id: string;
+  text: string;
+  score: number;
+  tags: string[];
+  nextQuestionId?: string; // Optional: for conditional branching
+}
+
+export interface QuizQuestion {
+  id: string;
+  question: string; // Renamed from title
+  description?: string;
+  order: number;
+  type: 'single_choice';
+  options: QuizOption[];
+  required: boolean;
+  status: 'draft' | 'published';
+  createdAt: string;
+}
+
+export interface QuizProduct {
+  id: string;
+  productName: string; // Renamed from name
+  productImage: string; // Renamed from imageUrl
+  affiliateLink: string; // Renamed from saleUrl
+  productPrice: string; // Changed to string
+  oldPrice?: string; // Changed to string
+  description: string;
+  benefits: string[];
+  cta: string; // Renamed from ctaText
+  status: 'active' | 'inactive';
+  createdAt: string;
+}
+
+export interface QuizResult {
+  id: string;
+  internalName: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  productId: string; // Associated QuizProduct
+  priority: number;
+  tagsCondition: {
+    tag: string;
+    minScore: number;
+  }[];
+  status: 'draft' | 'published';
+  createdAt: string;
+}
+
+export interface QuizSettings {
+  id: string; // 'config'
+  status: 'active' | 'inactive';
+  title: string;
+  description: string;
+  updatedAt: string;
+}
+
 export const APP_VERSION = '2.5.0';
 export const ADMIN_EMAIL = 'renatonardin13@gmail.com';

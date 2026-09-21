@@ -24,7 +24,8 @@ import {
   Ban,
   Upload,
   Bell,
-  GraduationCap
+  GraduationCap,
+  Target
 } from 'lucide-react';
 import { AuthUser, AppSettings, ADMIN_EMAIL } from '../types';
 import { getRegisteredUsersList } from '../services/authService';
@@ -34,6 +35,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ProductNotificationManager } from './ProductNotificationManager';
 import { SystemUpdateManager } from './SystemUpdateManager';
 import { AcademyManager } from './AcademyManager';
+import { QuizAdminManager } from './sales-quiz/QuizAdminManager';
 
 interface AdminPanelViewProps {
   currentUser: AuthUser;
@@ -50,7 +52,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
 }) => {
   const isAdmin =
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
-  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'users' | 'apis' | 'login' | 'notifications' | 'system-updates'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'users' | 'apis' | 'login' | 'notifications' | 'system-updates' | 'quiz'>('overview');
   const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -187,7 +189,8 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           { id: 'system-updates', label: '🔔 Atualizações do Sistema', icon: Bell },
           { id: 'login', label: '🖼️ Tela de Login', icon: Film },
           { id: 'users', label: '👥 Alunos & Usuários', icon: Users },
-          { id: 'apis', label: '🔑 Chaves & Integrações de APIs', icon: Key }
+          { id: 'apis', label: '🔑 Chaves & Integrações de APIs', icon: Key },
+          { id: 'quiz', label: '🎯 Quiz', icon: Target }
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -446,6 +449,11 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
       {/* Tab: Academy & Lessons Management */}
       {activeTab === 'academy' && (
         <AcademyManager currentUser={currentUser} />
+      )}
+
+      {/* Tab: Quiz Management */}
+      {activeTab === 'quiz' && (
+        <QuizAdminManager currentUser={currentUser} />
       )}
     </div>
   );
