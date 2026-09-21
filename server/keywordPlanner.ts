@@ -239,7 +239,10 @@ async function generateIntelligentMarketKeywords(
 
   if (apiKey) {
     try {
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
       const prompt = `Atue como o motor de Inteligência de Palavras-chave e Volumes de Busca do Google Ads para o mercado do ${location} (idioma ${language}).
 Para os termos pesquisados: ${JSON.stringify(keywordList)}, gere uma lista completa com ${includeIdeas ? '16 a 24' : keywordList.length} palavras-chave relevantes, incluindo os termos exatos fornecidos e variações de alta intenção de compra (ex: "melhor...", "...vale a pena", "...preço", "...comprar", "...promoção", "...original", "...review", "...bom e barato").
 
@@ -375,8 +378,11 @@ async function generateFreeAiKeywords(
     throw new Error('GEMINI_API_KEY não está configurada no servidor.');
   }
 
-  const ai = new GoogleGenAI({ apiKey });
-  const modelName = 'gemini-2.5-flash';
+  const ai = new GoogleGenAI({
+    apiKey,
+    httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+  });
+  const modelName = 'gemini-3.8-flash';
 
   const prompt = `Você é um analista especialista em tráfego, SEO e Google Ads.
 Analise as seguintes palavras-chave sementes: ${JSON.stringify(keywordList)}

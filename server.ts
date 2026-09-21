@@ -1026,7 +1026,10 @@ async function startServer() {
         });
       }
 
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
       const modelName = "gemini-3.8-flash";
 
       const parts: any[] = [];
@@ -1106,7 +1109,7 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
       const prompt = `Sugira 4 títulos de alta conversão para SEO no Google para um produto chamado: "${p}". Devem ser persuasivos em português do Brasil e conter menos de 60 caracteres. Responda estritamente em formato JSON: ["titulo1", "titulo2", "titulo3", "titulo4"].`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
@@ -1155,7 +1158,7 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
       const prompt = `Crie uma meta title (máximo 60 caracteres) e uma meta description (máximo 155 caracteres) para o Google em português do Brasil para o produto: "${p}". Responda em JSON: {"metaTitle": "...", "metaDescription": "..."}`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
