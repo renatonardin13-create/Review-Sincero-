@@ -1062,75 +1062,95 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   // =========================================================================
   // FONTE ÚNICA DE VERDADE: PRD / PROMPT COMPLETO GERADO PARA TODAS AS IAS
   // =========================================================================
-  const generatedPrompt = `Você é um desenvolvedor frontend sênior e especialista em marketing de afiliados de alta conversão.
-Crie uma aplicação web / página de vendas e review completa, moderna, responsiva e pronta para publicação para o seguinte produto:
+  const generatedPrompt = `DOCUMENTO DE REQUISITOS DE PRODUTO (PRD) — PÁGINA DE REVIEW + QUIZ INTERATIVO DE ALTA CONVERSÃO
+
+Você é um engenheiro frontend sênior e especialista em marketing de afiliados de alta conversão.
+Crie uma aplicação web completa, moderna, responsiva e otimizada para SEO e conversão, que engloba UMA PÁGINA DE REVIEW COMPLETA E UM QUIZ INTERATIVO PERSONALIZADO para o produto informado a seguir.
 
 ========================================
-1. DADOS PRINCIPAIS DO PRODUTO & OFERTA
+1. DADOS TÉCNICOS E OFERTA DO PRODUTO
 ========================================
 - Nome do Produto: ${formData.productName}
-- Headline de Alta Conversão: ${formData.headline || formData.productName}
+- Headline do Review: ${formData.headline || formData.productName}
 - Preço Atual Promocional: R$ ${formData.currentPrice}
-${formData.oldPrice ? `- Preço Anterior / Sem Desconto: R$ ${formData.oldPrice}` : ''}
-- Link de Afiliado / Checkout Oficial: ${formData.affiliateUrl || 'https://www.mercadolivre.com.br/'}
-- Plataforma: ${formData.platform}
-- Categoria: ${formData.category}
+${formData.oldPrice ? `- Preço Anterior Sem Desconto: R$ ${formData.oldPrice}` : ''}
+- Link Oficial de Checkout / Afiliado: ${formData.affiliateUrl || 'https://www.mercadolivre.com.br/'}
+- Plataforma Oficial: ${formData.platform}
+- Categoria do Produto: ${formData.category}
 - Nome do Portal de Avaliação: ${formData.siteName || 'ReviewFísico'}
-- Avaliador / Especialista: ${formData.author || ''}
-- Nota do Especialista: ${formData.overallScore || 9.2} / 10
+- Nome do Avaliador / Especialista: ${formData.author || 'Especialista em Reviews'}
+- Nota Geral do Especialista: ${formData.overallScore || 9.2} / 10
 - Garantia Incondicional: ${formData.guaranteeDays || 30} dias
-- Total de Avaliações Verificadas: ${formData.verifiedReviewsCount || 2184} compradores
-- Unidades Restantes no Estoque Promocional: ${formData.urgencySettings?.stockRemaining || 3} unidades
-- WhatsApp VIP / Suporte: ${formData.socialCommunity?.whatsappGroupUrl || ''}
+- Avalições Verificadas: ${formData.verifiedReviewsCount || 2184} clientes satisfeitos
+- Unidades Restantes em Estoque Promocional: ${formData.urgencySettings?.stockRemaining || 3} unidades
+- Link do Suporte / Comunidade WhatsApp: ${formData.socialCommunity?.whatsappGroupUrl || ''}
 
 ========================================
-2. PÚBLICO-ALVO & IDENTIFICAÇÃO ("PARA QUEM É")
+2. PÚBLICO-ALVO & FRASE DE CORTE (ANTI-PERSONA)
 ========================================
-${formData.audience && formData.audience.length > 0 ? formData.audience.map((a) => `• ${a}`).join('\n') : '• Quem busca a melhor relação custo-benefício\n• Quem pesquisa antes de comprar para garantir produto original'}
+Público Ideal:
+${formData.audience && formData.audience.length > 0 ? formData.audience.map((a) => `• ${a}`).join('\n') : '• Quem busca máxima durabilidade e custo-benefício\n• Quem exige garantia e nota fiscal na loja oficial'}
 
-FRASE DE CORTE SINCERA (ANTI-PERSONA):
-"${formData.antiPersonaPhrase || 'Se você não vai utilizar os recursos no dia a dia, um modelo básico de entrada pode ser suficiente.'}"
-
-========================================
-3. PRÓS & CONTRAS (ANÁLISE SINCERA)
-========================================
-PONTOS FORTES (O QUE ME SURPREENDEU):
-${formData.pros && formData.pros.length > 0 ? formData.pros.map((p) => `✓ ${p}`).join('\n') : '✓ Excelente custo-benefício\n✓ Alta durabilidade e acabamento premium'}
-
-PONTOS DE ATENÇÃO (O QUE PODERIA MELHORAR):
-${formData.cons && formData.cons.length > 0 ? formData.cons.map((c) => `× ${c}`).join('\n') : '× Lote promocional costuma esgotar rapidamente'}
-
-VEREDITO DO ESPECIALISTA:
-"${formData.verdict || 'Pelo preço promocional atual, é sem dúvidas uma das melhores compras da categoria. Aprovado e recomendado.'}"
+Frase Anti-Persona (Para quem NÃO é recomendado):
+"${formData.antiPersonaPhrase || 'Se você não pretende utilizar o produto com frequência e busca apenas a opção mais barata sem garantia, não recomendamos este produto.'}"
 
 ========================================
-4. GALERIA DE FOTOS
+3. ANÁLISE SINCERA (PRÓS, CONTRAS E VEREDITO)
 ========================================
-- Imagem Principal: ${formData.mainImage || 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80'}
+Pontos Fortes (Prós):
+${formData.pros && formData.pros.length > 0 ? formData.pros.map((p) => `✓ ${p}`).join('\n') : '✓ Excelente qualidade de construção\n✓ Preço promocional justo pela entrega'}
+
+Pontos de Atenção (Contras):
+${formData.cons && formData.cons.length > 0 ? formData.cons.map((c) => `× ${c}`).join('\n') : '× Estoque promocional costuma acabar rapidamente'}
+
+Veredito do Especialista:
+"${formData.verdict || 'Aprovado em nossos testes práticos com nota alta. A compra vale muito a pena pelo preço de oferta.'}"
+
+========================================
+4. FOTOS, DEPOIMENTOS E FAQ
+========================================
+Foto Principal: ${formData.mainImage || 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80'}
 ${formData.images && formData.images.filter(Boolean).length > 0 ? formData.images.filter(Boolean).map((img, i) => `- Foto ${i + 1}: ${img}`).join('\n') : ''}
 
-========================================
-5. DEPOIMENTOS REAIS DE COMPRADORES
-========================================
-${formData.testimonials && formData.testimonials.length > 0 ? formData.testimonials.map((t) => `- "${t.text || ''}" — ${t.name || 'Cliente'} (${t.rating || 5}★, ${t.origin || 'Compra Verificada'})`).join('\n') : '- "Chegou super rápido e superou minhas expectativas!" — Marcos S. (5★)'}
+Depoimentos de Clientes:
+${formData.testimonials && formData.testimonials.length > 0 ? formData.testimonials.map((t) => `- "${t.text || ''}" — ${t.name || 'Cliente'} (${t.rating || 5}★, ${t.origin || 'Compra Verificada'})`).join('\n') : '- "Superou minhas expectativas, entrega muito rápida!" — Marcos S. (5★)'}
 
-========================================
-6. PERGUNTAS FREQUENTES (FAQ)
-========================================
+Perguntas Frequentes (FAQ):
 ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P: ${f.question}\nR: ${f.answer}`).join('\n\n') : 'P: O frete é seguro?\nR: Sim, envio rastreado com garantia de entrega.'}
 
 ========================================
-7. REQUISITOS TÉCNICOS & DE CONVERSÃO
+5. REQUISITOS DO PRD — MÓDULO 1: PÁGINA DE REVIEW DE ALTA CONVERSÃO
 ========================================
-1. Desenvolva uma página moderna e elegante com Tailwind CSS via CDN.
-2. Top Bar com contagem regressiva de 15 minutos e barra de escassez indicando apenas ${formData.urgencySettings?.stockRemaining || 3} unidades no lote.
-3. Card de preço com destaque para economia e botão de compra direcionando para ${formData.affiliateUrl || 'https://www.mercadolivre.com.br/'}.
-4. Seção de identificação com checks azuis para o público-alvo e caixa de aviso para a frase anti-persona.
-5. Grid de Prós & Contras em cartões contrastantes.
-6. Selo com foto e assinatura de ${formData.author || ''} com nota ${formData.overallScore || 9.2}/10.
-7. Depoimentos com estrelas e avatares reais.
-8. FAQ em sanfona/accordion.
-9. Botão flutuante no rodapé com CTA de compra garantida.`;
+1. Header / Topbar com barra de escassez (apenas ${formData.urgencySettings?.stockRemaining || 3} unidades promocionais restantes), cronômetro regressivo de 15 minutos e aviso de frete com rastreio.
+2. Banner e Identidade do Portal "${formData.siteName || 'ReviewFísico'}" com nota editorial ${formData.overallScore || 9.2}/10 por ${formData.author || 'Especialista'}.
+3. Apresentação do Produto ${formData.productName}: Título de impacto, Preço promocional (R$ ${formData.currentPrice}), foto principal com galeria de miniaturas selecionáveis e botão de CTA verde reluzente para ${formData.affiliateUrl || '#'}.
+4. Seção de Identificação: Tabela interativa "Para Quem É" vs "Para Quem NÃO É" (Anti-Persona).
+5. Cards de Prós e Contras em duas colunas contrastantes.
+6. Bloco Veredito do Especialista assinado por ${formData.author || 'Especialista'}.
+7. Módulo de Depoimentos Reais com avatares e avaliação por estrelas.
+8. FAQ sanfonado (accordion) com respostas expandíveis.
+9. Barra Flutuante de Compra Fixa (Sticky CTA) no rodapé mobile e desktop com gatilho de oferta.
+
+========================================
+6. REQUISITOS DO PRD — MÓDULO 2: QUIZ INTERATIVO PERSONALIZADO DO PRODUTO
+========================================
+Crie um Quiz Interativo de Diagnóstico e Recomendação de Compra focado exclusivamente no produto "${formData.productName}":
+- Pergunta 1 (Maior Necessidade): "Qual é o seu maior objetivo ou necessidade principal ao procurar pelo ${formData.productName}?" (Forneça 3 a 4 opções de resposta).
+- Pergunta 2 (Frequência / Contexto): "Com que frequência você pretende utilizar o ${formData.productName} no seu dia a dia?" (Opções: Diariamente, Finais de semana, Uso profissional, Ocasiões especiais).
+- Pergunta 3 (Prioridade de Compra): "O que é mais importante para você no momento da compra?" (Opções: Menor preço com desconto exclusivo, Garantia oficial de originalidade, Envio rápido com rastreamento, Suporte direto).
+- RECURSOS TÉCNICOS DO QUIZ:
+  • Barra de progresso dinâmica que avança a cada clique (25%, 50%, 75%, 100%).
+  • Animação suave entre cada pergunta.
+  • Loader de Análise Interativa ao finalizar a última pergunta: Mostre uma tela de carregamento com frases como: "Analisando seu perfil...", "Verificando estoque do ${formData.productName}...", "Liberando cupom promocional...".
+  • Tela de Resultado Final Customizado: "Diagnóstico Concluído! O ${formData.productName} é 100% RECOMENDADO para o seu perfil!".
+  • Apresente a Oferta Exclusiva com liberação de Cupom de Desconto, cronômetro de 10 minutos para garantir o preço de R$ ${formData.currentPrice} e botão direto para o checkout oficial (${formData.affiliateUrl}).
+
+========================================
+7. NAVEGAÇÃO & INTERAÇÃO
+========================================
+1. Adicione um menu/tabs no topo permitindo alternar facilmente entre "Página de Review" e "Quiz Interativo de Recomendação".
+2. Estilização moderna e elegante utilizando Tailwind CSS.
+3. Certifique-se de que todos os botões de ação (CTA) levem o usuário para o link oficial (${formData.affiliateUrl}).`;
 
   // Alias para total compatibilidade sem duplicar estados
   const claudeHtmlPrompt = generatedPrompt;
@@ -2263,7 +2283,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                 </h4>
               </div>
               <p className="text-xs text-[#94A3B8]">
-                Copie o prompt com copywriting profissional já estruturado e abra o Lovable ou Google AI Studio diretamente.
+                Gere o PRD completo (Página de Review + Quiz Interativo do produto) e abra o Lovable ou Google AI Studio em 1 clique.
               </p>
             </div>
 
@@ -3455,7 +3475,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                 </h4>
               </div>
               <p className="text-xs text-[#94A3B8]">
-                Copie o prompt final pronto com todas as quebras de objeções e abra o Lovable ou Google AI Studio diretamente.
+                Copie o PRD completo com a Página de Review + Quiz Interativo baseado no produto e abra no Lovable ou Google AI Studio.
               </p>
             </div>
 
