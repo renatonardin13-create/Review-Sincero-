@@ -21,8 +21,7 @@ import {
   LogIn,
   LogOut,
   GraduationCap,
-  Bell,
-  Target
+  Bell
 } from 'lucide-react';
 import { AuthUser, ADMIN_EMAIL } from '../types';
 
@@ -61,8 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'create', label: 'Criar Review', icon: PlusCircle, action: onNewReview },
     { id: 'academia', label: 'Academia & Aulas', icon: GraduationCap, badge: 'AULAS' },
     { id: 'templates', label: 'Templates', icon: LayoutTemplate },
-    { id: 'campeoes', label: 'Produtos Campeões', icon: Trophy, badge: 'TOP' },
-    { id: 'quiz', label: 'Quiz de Vendas', icon: Target }
+    { id: 'campeoes', label: 'Produtos Campeões', icon: Trophy, badge: 'TOP' }
   ];
 
   // Admin Navigation Items (Only when inside administrative area /admin)
@@ -71,8 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'reviews', label: 'Meus Reviews', icon: FileText },
     { id: 'create', label: 'Criar Review', icon: PlusCircle, action: onNewReview },
     { id: 'academia', label: 'Academia & Aulas', icon: GraduationCap, badge: 'AULAS' },
-    { id: 'templates', label: 'Templates', icon: LayoutTemplate },
-    { id: 'quiz', label: 'Quiz de Vendas', icon: Target }
+    { id: 'templates', label: 'Templates', icon: LayoutTemplate }
   ];
 
   const adminFerramentasItems = [
