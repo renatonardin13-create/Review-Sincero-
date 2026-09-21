@@ -10,6 +10,13 @@ import {
   formatMeliTrendItems,
   fetchShopeeLiveTrends
 } from "./server/liveTrends";
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, setDoc, deleteDoc, collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import firebaseConfig from "./firebase-applet-config.json";
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp, firebaseConfig.firestoreDatabaseId);
+const SESSION_TTL_MS = 35000;
 
 dotenv.config();
 
@@ -1271,61 +1278,75 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
   });
 
   // -------------------------------------------------------------------------
-  // PRESENÇA GLOBAL EM TEMPO REAL (Compartilhada entre visitantes sem Math.random)
+  // PRESENÇA GLOBAL EM TEMPO REAL (Compartilhada entre visitantes via Firestore)
   // -------------------------------------------------------------------------
-  const activeSessions = new Map<string, number>();
-  const SESSION_TTL_MS = 35000; // TTL de 35s para expiração automática
 
-  app.post("/api/presence/heartbeat", (req, res) => {
+  app.post("/api/presence/heartbeat", async (req, res) => {
     try {
       const { sessionId } = req.body || {};
+      if (!sessionId || typeof sessionId !== 'string' || sessionId.trim().length === 0) {
+        return res.json({ ok: true, activeSessionCount: 1 });
+      }
+      
+      const docRef = doc(db, 'presence', sessionId.trim());
+      await setDoc(docRef, {
+        lastSeen: Timestamp.now()
+      });
+
+      // Count active sessions
       const now = Date.now();
-
-      if (sessionId && typeof sessionId === 'string' && sessionId.trim().length > 0) {
-        activeSessions.set(sessionId.trim(), now);
-      }
-
-      // Purge sessions older than TTL
-      for (const [id, lastSeen] of activeSessions.entries()) {
-        if (now - lastSeen > SESSION_TTL_MS) {
-          activeSessions.delete(id);
-        }
-      }
-
+      const q = query(collection(db, 'presence'), where('lastSeen', '>', Timestamp.fromMillis(now - SESSION_TTL_MS)));
+      const snapshot = await getDocs(q);
+      
       res.json({
         ok: true,
         online: true,
-        activeSessionCount: Math.max(1, activeSessions.size)
+        activeSessionCount: snapshot.size
       });
-    } catch {
-      res.json({ ok: true, online: true, activeSessionCount: 1 });
+    } catch (e) {
+      console.error("[server] Error in /api/presence/heartbeat:", e);
+      res.json({ ok: true, online: true, activeSessionCount: 0 });
     }
   });
 
-  app.post("/api/presence/leave", (req, res) => {
+  app.post("/api/presence/leave", async (req, res) => {
     try {
       const { sessionId } = req.body || {};
       if (sessionId && typeof sessionId === 'string') {
-        activeSessions.delete(sessionId.trim());
+        await deleteDoc(doc(db, 'presence', sessionId.trim()));
       }
-      res.json({ ok: true, activeSessionCount: Math.max(1, activeSessions.size) });
-    } catch {
+      
+      const now = Date.now();
+      const q = query(collection(db, 'presence'), where('lastSeen', '>', Timestamp.fromMillis(now - SESSION_TTL_MS)));
+      const snapshot = await getDocs(q);
+      
+      res.json({ ok: true, activeSessionCount: snapshot.size });
+    } catch (e) {
+      console.error("[server] Error in /api/presence/leave:", e);
       res.json({ ok: true });
     }
   });
 
-  app.get("/api/presence/count", (req, res) => {
-    const now = Date.now();
-    for (const [id, lastSeen] of activeSessions.entries()) {
-      if (now - lastSeen > SESSION_TTL_MS) {
-        activeSessions.delete(id);
-      }
+  app.get("/api/presence/count", async (req, res) => {
+    try {
+      const now = Date.now();
+      const q = query(collection(db, 'presence'), where('lastSeen', '>', Timestamp.fromMillis(now - SESSION_TTL_MS)));
+      const snapshot = await getDocs(q);
+      
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.json({
+        ok: true,
+        online: true,
+        activeSessionCount: snapshot.size
+      });
+    } catch (e) {
+      console.error("[server] Error in /api/presence/count:", e);
+      res.json({
+        ok: true,
+        online: true,
+        activeSessionCount: 0
+      });
     }
-    res.json({
-      ok: true,
-      online: true,
-      activeSessionCount: Math.max(1, activeSessions.size)
-    });
   });
 
   // Vite middleware for development or static serving for production

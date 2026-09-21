@@ -54,7 +54,7 @@ export function initPresenceTracker(onChange: (state: PresenceState) => void): (
         if (isSubscribed && typeof data.activeSessionCount === 'number') {
           onChange({
             isOnline: true,
-            activeSessionCount: Math.max(1, data.activeSessionCount)
+            activeSessionCount: data.activeSessionCount
           });
         }
       }
@@ -63,7 +63,7 @@ export function initPresenceTracker(onChange: (state: PresenceState) => void): (
       if (isSubscribed) {
         onChange({
           isOnline: navigator.onLine,
-          activeSessionCount: 1
+          activeSessionCount: 0
         });
       }
     }

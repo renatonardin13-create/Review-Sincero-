@@ -22,6 +22,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Presence Tracking: public can read/write to manage sessions
+    match /presence/{sessionId} {
+      allow read, write: if true;
+    }
+
     // User profiles: strictly restricted to the owner or admin
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
