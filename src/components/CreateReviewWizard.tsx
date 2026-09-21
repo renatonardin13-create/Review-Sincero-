@@ -246,7 +246,6 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
       onClick: () => void;
     };
   } | null>(null);
-  const [newKeywordInput, setNewKeywordInput] = useState<string>('');
   const [isSearchingKeywords, setIsSearchingKeywords] = useState<boolean>(false);
   const [keywordWarning, setKeywordWarning] = useState<string | null>(null);
   const [isLimitExceeded, setIsLimitExceeded] = useState<boolean>(false);
@@ -1557,46 +1556,24 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
               </div>
               <input
                 type="text"
-                value={formData.keywordPlanner?.mainKeyword || formData.productName}
+                value={
+                  formData.keywordPlanner?.mainKeyword !== undefined
+                    ? formData.keywordPlanner.mainKeyword
+                    : formData.productName
+                }
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
+                  setFormData((prev) => ({
+                    ...prev,
                     keywordPlanner: {
                       mainKeyword: e.target.value,
-                      highIntentTerms: formData.keywordPlanner?.highIntentTerms || [],
-                      suggestions: formData.keywordPlanner?.suggestions || []
+                      highIntentTerms: prev.keywordPlanner?.highIntentTerms || [],
+                      suggestions: prev.keywordPlanner?.suggestions || []
                     }
-                  })
+                  }))
                 }
                 className="w-full bg-[#080B10] border border-[#1E293B] rounded-xl px-4 py-3 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#3B82F6]"
                 placeholder="Ex: Fone de Ouvido Bluetooth TWS Sem Fio Bateria de Longa Duração"
               />
-              
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newKeywordInput}
-                  onChange={(e) => setNewKeywordInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      if (newKeywordInput.trim()) {
-                        setFormData(prev => ({
-                          ...prev,
-                          keywordPlanner: {
-                            mainKeyword: prev.keywordPlanner?.mainKeyword || prev.productName,
-                            highIntentTerms: Array.from(new Set([...(prev.keywordPlanner?.highIntentTerms || []), newKeywordInput.trim()])),
-                            suggestions: prev.keywordPlanner?.suggestions || []
-                          }
-                        }));
-                        setNewKeywordInput('');
-                      }
-                    }
-                  }}
-                  className="flex-1 bg-[#080B10] border border-[#1E293B] rounded-xl px-4 py-3 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#3B82F6]"
-                  placeholder="Inserir palavra-chave manualmente e dar Enter..."
-                />
-              </div>
             </div>
 
             {/* Selected High Intent Tags */}
