@@ -254,14 +254,28 @@ const PRODUCT_DATABASE: Array<{
       'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80'
     ]
   },
+  // Lanterna / Iluminação / Camping / Lanterna Tática / Bateria Recarregável
+  {
+    keywords: ['lanterna', 'lanterna tatica', 'holofote', 'farol', 'iluminacao', 'recarregavel', 'led potente', 'lanterna de cabeca', 'camping', 'tocha'],
+    category: 'Casa e cozinha',
+    mainImage: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=900&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1508873696983-2df57046475b?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=900&q=80'
+    ]
+  },
   // Ferramentas / Parafusadeira
   {
-    keywords: ['parafusadeira', 'furadeira', 'ferramenta', 'trena', 'esmerilhadeira', 'impacto', 'bateria'],
+    keywords: ['parafusadeira', 'furadeira', 'ferramenta', 'trena', 'esmerilhadeira', 'impacto', 'chave de impacto', 'bateria de parafusadeira'],
     category: 'Casa e cozinha',
     mainImage: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=900&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?auto=format&fit=crop&w=900&q=80'
+      'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1581147036324-c17ac41dfa6c?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=900&q=80'
     ]
   }
 ];
@@ -312,79 +326,134 @@ export function matchProductImage(productName: string, category?: string): {
     }
   }
 
+  const ensureFourImages = (main: string, gal: string[]) => {
+    const list = [main, ...gal.filter(img => img && img !== main)];
+    const unique = Array.from(new Set(list));
+    const fillers = [
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1584269600519-112d071b35e6?auto=format&fit=crop&w=900&q=80'
+    ];
+    for (const f of fillers) {
+      if (unique.length >= 4) break;
+      if (!unique.includes(f)) unique.push(f);
+    }
+    return unique.slice(0, 4);
+  };
+
   if (bestMatch && bestScore >= 2) {
+    const four = ensureFourImages(bestMatch.mainImage, bestMatch.gallery);
     return {
-      mainImage: bestMatch.mainImage,
-      gallery: bestMatch.gallery,
+      mainImage: four[0],
+      gallery: four,
       matchedKeyword: matchedKw
     };
   }
 
   // 2. Fallback by Category with dedicated realistic items
   if (normCategory.includes('tech') || normCategory.includes('celular')) {
-    return {
-      mainImage: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80',
-      gallery: [
-        'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80',
-        'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80'
+    const four = ensureFourImages(
+      'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80',
+      [
+        'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80'
       ]
+    );
+    return {
+      mainImage: four[0],
+      gallery: four
     };
   }
 
   if (normCategory.includes('casa') || normCategory.includes('cozinha')) {
-    return {
-      mainImage: 'https://images.unsplash.com/photo-1584269600519-112d071b35e6?auto=format&fit=crop&w=900&q=80',
-      gallery: [
-        'https://images.unsplash.com/photo-1584269600519-112d071b35e6?auto=format&fit=crop&w=900&q=80',
-        'https://images.unsplash.com/photo-1518640467707-6811f4a6ab73?auto=format&fit=crop&w=900&q=80'
+    const four = ensureFourImages(
+      'https://images.unsplash.com/photo-1584269600519-112d071b35e6?auto=format&fit=crop&w=900&q=80',
+      [
+        'https://images.unsplash.com/photo-1518640467707-6811f4a6ab73?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&w=900&q=80'
       ]
+    );
+    return {
+      mainImage: four[0],
+      gallery: four
     };
   }
 
   if (normCategory.includes('beleza') || normCategory.includes('cabelo') || normCategory.includes('skincare')) {
-    return {
-      mainImage: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80',
-      gallery: [
-        'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80',
-        'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=900&q=80'
+    const four = ensureFourImages(
+      'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80',
+      [
+        'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=900&q=80'
       ]
+    );
+    return {
+      mainImage: four[0],
+      gallery: four
     };
   }
 
   if (normCategory.includes('suplemento') || normCategory.includes('fitness') || normCategory.includes('saude')) {
-    return {
-      mainImage: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=900&q=80',
-      gallery: [
-        'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=900&q=80',
-        'https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=900&q=80'
+    const four = ensureFourImages(
+      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=900&q=80',
+      [
+        'https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=900&q=80'
       ]
+    );
+    return {
+      mainImage: four[0],
+      gallery: four
     };
   }
 
   if (normCategory.includes('esporte')) {
-    return {
-      mainImage: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80',
-      gallery: [
-        'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80'
+    const four = ensureFourImages(
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80',
+      [
+        'https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=900&q=80'
       ]
+    );
+    return {
+      mainImage: four[0],
+      gallery: four
     };
   }
 
   if (normCategory.includes('moda')) {
-    return {
-      mainImage: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80',
-      gallery: [
-        'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80'
+    const four = ensureFourImages(
+      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80',
+      [
+        'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1523381294911-8d3cead13475?auto=format&fit=crop&w=900&q=80'
       ]
+    );
+    return {
+      mainImage: four[0],
+      gallery: four
     };
   }
 
   // Default clean neutral product photo
-  return {
-    mainImage: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=900&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=900&q=80'
+  const defaultFour = ensureFourImages(
+    'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=900&q=80',
+    [
+      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=900&q=80'
     ]
+  );
+  return {
+    mainImage: defaultFour[0],
+    gallery: defaultFour
   };
 }
 

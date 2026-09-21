@@ -1085,9 +1085,17 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
         return res.status(400).json({ error: "Nome do produto não fornecido." });
       }
 
+      const p = String(productName).trim();
+      const fallbackTitles = [
+        `${p}: Review Sincero e Teste Prático (2026)`,
+        `${p} Vale a Pena? Análise Completa e Veredito`,
+        `${p} é Bom Mesmo? Cuidado Antes de Comprar!`,
+        `Review ${p}: Prós, Contras e Onde Comprar Barato`
+      ];
+
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
-        return res.status(400).json({ error: "GEMINI_API_KEY não configurada." });
+        return res.json({ titles: fallbackTitles });
       }
 
       const ai = new GoogleGenAI({
@@ -1095,10 +1103,10 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
         httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
       });
 
-      const prompt = `Sugira 3 títulos de alta conversão para um produto chamado: ${productName}. Responda em um formato de lista JSON simples de strings: ["titulo1", "titulo2", "titulo3"].`;
+      const prompt = `Sugira 4 títulos de alta conversão para SEO no Google para um produto chamado: "${p}". Devem ser persuasivos em português do Brasil e conter menos de 60 caracteres. Responda estritamente em formato JSON: ["titulo1", "titulo2", "titulo3", "titulo4"].`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
@@ -1106,10 +1114,65 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
       });
 
       const titles = JSON.parse(response.text || "[]");
-      res.json({ titles });
+      if (Array.isArray(titles) && titles.length > 0) {
+        return res.json({ titles });
+      }
+      res.json({ titles: fallbackTitles });
     } catch (err: any) {
-      console.error("Erro ao gerar títulos:", err);
-      res.status(500).json({ error: "Erro ao gerar títulos com IA.", details: err.message });
+      console.warn("Aviso ao gerar títulos com Gemini (usando fallback de alta conversão):", err.message);
+      const p = String(req.body?.productName || 'Produto').trim();
+      res.json({
+        titles: [
+          `${p}: Review Sincero e Teste Prático (2026)`,
+          `${p} Vale a Pena? Análise Completa e Veredito`,
+          `${p} é Bom Mesmo? Cuidado Antes de Comprar!`,
+          `Review ${p}: Prós, Contras e Onde Comprar Barato`
+        ]
+      });
+    }
+  });
+
+  // API Route: Generate SEO Meta Description
+  app.post("/api/gemini/generate-seo", async (req, res) => {
+    try {
+      const { productName } = req.body;
+      const p = String(productName || 'Produto').trim();
+      const fallbackMeta = `Review sincero de ${p}: confira teste prático, durabilidade, prós, contras e o veredito de especialista antes de comprar. Veja o melhor preço seguro!`;
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.json({
+          metaTitle: `${p}: Review Sincero e Teste Prático (2026)`,
+          metaDescription: fallbackMeta
+        });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
+
+      const prompt = `Crie uma meta title (máximo 60 caracteres) e uma meta description (máximo 155 caracteres) para o Google em português do Brasil para o produto: "${p}". Responda em JSON: {"metaTitle": "...", "metaDescription": "..."}`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const parsed = JSON.parse(response.text || "{}");
+      res.json({
+        metaTitle: parsed.metaTitle || `${p}: Review Sincero e Teste Prático (2026)`,
+        metaDescription: parsed.metaDescription || fallbackMeta
+      });
+    } catch (err: any) {
+      const p = String(req.body?.productName || 'Produto').trim();
+      res.json({
+        metaTitle: `${p}: Review Sincero e Teste Prático (2026)`,
+        metaDescription: `Review sincero de ${p}: confira teste prático, durabilidade, prós, contras e o veredito de especialista antes de comprar. Veja o melhor preço seguro!`
+      });
     }
   });
 

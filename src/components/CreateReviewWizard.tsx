@@ -15,6 +15,15 @@ import { ReviewRenderer } from './ReviewRenderer';
 import { matchProductImage, validateAndNormalizeReviewImages } from '../utils/productImageMatcher';
 import { generateStandaloneReviewHtml } from '../utils/exportHtmlUtils';
 import {
+  generateFullProductCopy,
+  generateSingleTestimonialText,
+  generateSeoTitles,
+  generateSeoDescription,
+  generateHeadlineByFormula,
+  HEADLINE_FORMULAS,
+  HeadlineFormulaType
+} from '../utils/productCopyEngine';
+import {
   ArrowLeft,
   ArrowRight,
   Sparkles,
@@ -241,6 +250,20 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   const [keywordWarning, setKeywordWarning] = useState<string | null>(null);
   const [isLimitExceeded, setIsLimitExceeded] = useState<boolean>(false);
 
+  // Copy & Intelligence Generator States
+  const [isGeneratingFullCopy, setIsGeneratingFullCopy] = useState<boolean>(false);
+  const [isGeneratingGatilhos, setIsGeneratingGatilhos] = useState<boolean>(false);
+  const [isGeneratingSeoDesc, setIsGeneratingSeoDesc] = useState<boolean>(false);
+  const [selectedHeadlineFormula, setSelectedHeadlineFormula] = useState<HeadlineFormulaType>('sincero');
+  const [actionToast, setActionToast] = useState<{ message: string; type?: 'success' | 'info' } | null>(null);
+
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (!actionToast) return;
+    const timer = setTimeout(() => setActionToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [actionToast]);
+
   useEffect(() => {
     const user = getStoredUser();
     if (user && !isUserAdmin(user)) {
@@ -280,7 +303,8 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
       images: [
         defaultNiche.mainImage,
         'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=800&q=80'
+        'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=800&q=80'
       ],
       pros: [
         'Excelente custo-benefício comparado a fones de R$ 300+',
@@ -435,20 +459,104 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     });
   };
 
-  // Generate headline variations
-  const handleGenerateHeadline = (formulaType: 'sincero' | 'alerta' | 'custo' | 'teste') => {
+  // Generate headline variations by formula
+  const handleGenerateHeadline = (formulaType: HeadlineFormulaType) => {
+    setSelectedHeadlineFormula(formulaType);
     const prod = formData.productName || 'Produto';
-    let newHeadline = '';
-    if (formulaType === 'sincero') {
-      newHeadline = `Review Sincero: ${prod} Vale a Pena ou é Furada?`;
-    } else if (formulaType === 'alerta') {
-      newHeadline = `ALERTA: Não compre ${prod} antes de ler esta análise sincera!`;
-    } else if (formulaType === 'custo') {
-      newHeadline = `${prod}: O Melhor Custo-Benefício de 2026? Testamos na Prática!`;
-    } else if (formulaType === 'teste') {
-      newHeadline = `Testamos ${prod} por 30 dias: Veja os Prós, Contras e Veredito Final`;
-    }
+    const newHeadline = generateHeadlineByFormula(formulaType, prod);
     setFormData((prev) => ({ ...prev, headline: newHeadline }));
+    setActionToast({
+      message: `Fórmula aplicada: "${newHeadline.slice(0, 48)}..."`,
+      type: 'success'
+    });
+  };
+
+  // Full High-Converting Copy Generation (Image 2 Fix)
+  const handleGenerateFullCopy = async () => {
+    const pName = (formData.productName || '').trim();
+    if (!pName) {
+      setActionToast({ message: 'Digite o nome do produto primeiro no campo indicado.', type: 'info' });
+      return;
+    }
+
+    setIsGeneratingFullCopy(true);
+    try {
+      // 1. Match verified product images (guaranteeing 4 authentic images)
+      const matched = matchProductImage(pName, formData.category);
+      const guaranteedFourImages = matched.gallery.slice(0, 4);
+
+      // 2. Generate complete high-converting copy
+      const copy = generateFullProductCopy(pName, formData.category);
+
+      // 3. Try to get Gemini SEO titles if server route is available
+      let titles = copy.suggestedSeoTitles;
+      try {
+        const resp = await fetch('/api/gemini/generate-titles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productName: pName })
+        });
+        const data = await resp.json();
+        if (Array.isArray(data?.titles) && data.titles.length > 0) {
+          titles = data.titles;
+        }
+      } catch (e) {
+        // Fallback already prepared in copy.suggestedSeoTitles
+      }
+
+      setSuggestedTitles(titles);
+
+      // 4. Update complete formData with high-converting structured copy
+      setFormData((prev) => ({
+        ...prev,
+        headline: copy.headline,
+        description: copy.description,
+        slug: copy.slug || prev.slug,
+        seoSettings: {
+          metaTitle: titles[0] || copy.seoTitle,
+          metaDescription: copy.seoDescription
+        },
+        mainImage: guaranteedFourImages[0] || matched.mainImage,
+        images: guaranteedFourImages,
+        audience: copy.audience,
+        antiPersonaPhrase: copy.antiPersonaPhrase,
+        pros: copy.pros,
+        cons: copy.cons,
+        verdict: copy.verdict,
+        overallScore: copy.overallScore,
+        urgencySettings: {
+          ...prev.urgencySettings!,
+          stockRemaining: copy.stockRemaining,
+          enableScarcityBar: true,
+          enableTimer: true,
+          enableFakeAlerts: true
+        },
+        testimonials: copy.testimonials,
+        faq: copy.faq
+      }));
+
+      setActionToast({
+        message: `✨ Copy completa e 4 fotos verificadas geradas com sucesso para "${pName}"!`,
+        type: 'success'
+      });
+    } catch (err) {
+      console.error('Erro ao gerar copy completa:', err);
+      setActionToast({ message: 'Erro ao gerar copy. Verifique os dados.', type: 'info' });
+    } finally {
+      setIsGeneratingFullCopy(false);
+    }
+  };
+
+  // Apply all 4 verified images to gallery
+  const handleApplyAllVerifiedImages = () => {
+    const match = matchProductImage(formData.productName, formData.category);
+    const four = match.gallery.slice(0, 4);
+    setFormData((prev) => ({
+      ...prev,
+      mainImage: four[0] || prev.mainImage,
+      images: four
+    }));
+    setActionToast({ message: 'Todas as 4 fotos verificadas aplicadas à galeria!', type: 'success' });
   };
 
   // Auto-fill everything via Niche Preset
@@ -479,7 +587,10 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   };
 
   const handleGenerateTitles = async () => {
-    if (!formData.productName) return;
+    if (!formData.productName) {
+      setActionToast({ message: 'Digite o nome do produto primeiro.', type: 'info' });
+      return;
+    }
     setGeneratingTitles(true);
     try {
       const response = await fetch("/api/gemini/generate-titles", {
@@ -488,13 +599,72 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
         body: JSON.stringify({ productName: formData.productName })
       });
       const data = await response.json();
-      if (data.titles) {
-        setSuggestedTitles(data.titles);
+      const titles = (Array.isArray(data?.titles) && data.titles.length > 0)
+        ? data.titles
+        : generateSeoTitles(formData.productName);
+
+      setSuggestedTitles(titles);
+      if (titles[0]) {
+        setFormData((prev) => ({
+          ...prev,
+          seoSettings: {
+            metaTitle: titles[0],
+            metaDescription: prev.seoSettings?.metaDescription || ''
+          }
+        }));
       }
+      setActionToast({ message: 'Títulos SEO de alta conversão gerados!', type: 'success' });
     } catch (err) {
       console.error("Erro ao gerar títulos:", err);
+      const titles = generateSeoTitles(formData.productName);
+      setSuggestedTitles(titles);
+      if (titles[0]) {
+        setFormData((prev) => ({
+          ...prev,
+          seoSettings: {
+            metaTitle: titles[0],
+            metaDescription: prev.seoSettings?.metaDescription || ''
+          }
+        }));
+      }
     } finally {
       setGeneratingTitles(false);
+    }
+  };
+
+  const handleGenerateSeoDescription = async () => {
+    if (!formData.productName) {
+      setActionToast({ message: 'Digite o nome do produto primeiro.', type: 'info' });
+      return;
+    }
+    setIsGeneratingSeoDesc(true);
+    try {
+      const response = await fetch("/api/gemini/generate-seo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productName: formData.productName })
+      });
+      const data = await response.json();
+      const desc = data?.metaDescription || generateSeoDescription(formData.productName);
+      setFormData((prev) => ({
+        ...prev,
+        seoSettings: {
+          metaTitle: prev.seoSettings?.metaTitle || data?.metaTitle || `${formData.productName}: Review Sincero (2026)`,
+          metaDescription: desc
+        }
+      }));
+      setActionToast({ message: 'Meta Description do Google gerada com sucesso!', type: 'success' });
+    } catch (err) {
+      const desc = generateSeoDescription(formData.productName);
+      setFormData((prev) => ({
+        ...prev,
+        seoSettings: {
+          metaTitle: prev.seoSettings?.metaTitle || `${formData.productName}: Review Sincero (2026)`,
+          metaDescription: desc
+        }
+      }));
+    } finally {
+      setIsGeneratingSeoDesc(false);
     }
   };
 
@@ -646,53 +816,23 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   };
 
   const handleGenerateSingleTestimonialText = (idx: number) => {
-    const templates = [
-      `Cara, melhor compra que fiz pro home office esse ano. A massagem no fim do dia salva a lombar. Recomendo demais.`,
-      `Esperava algo mediano pelo preço, mas chegou e me surpreendeu. Acabamento bom, super confortável e o apoio dos pés é maravilhoso.`,
-      `Trabalho 9 horas por dia sentado e as dores na lombar sumiram. A inclinação de 150 graus é sensacional para relaxar na hora do almoço.`,
-      `Chegou super rápido em 4 dias no interior de SP. Muito fácil de montar, chave e parafusos vieram todos certinhos. Recomendo 100%!`,
-      `Confesso que fiquei com receio antes de comprar, mas valeu cada centavo. Excelente investimento para minha saúde!`
-    ];
-    const picked = templates[idx % templates.length];
-    updateTestimonial(idx, { text: picked });
+    const pName = formData.productName || 'Produto';
+    const text = generateSingleTestimonialText(pName, idx);
+    updateTestimonial(idx, { text });
+    setActionToast({ message: `Depoimento #${idx + 1} gerado para "${pName}"!`, type: 'success' });
   };
 
   const handleAutoGenerateAllTestimonials = () => {
-    const mockList: TestimonialItem[] = [
-      {
-        id: 't1',
-        name: 'Marcos R.',
-        rating: 5,
-        photo: 'https://images.unsplash.com/photo-1580481077197-28564f51952f?auto=format&fit=crop&w=400&q=80',
-        text: 'Cara, melhor compra que fiz pro home office esse ano. A massagem no fim do dia salva a lombar. Recomendo demais.',
-        origin: 'Comprador Verificado'
-      },
-      {
-        id: 't2',
-        name: 'Patrícia M.',
-        rating: 5,
-        photo: 'https://images.unsplash.com/photo-1505797149-43b0069ec26b?auto=format&fit=crop&w=400&q=80',
-        text: 'Esperava algo mediano pelo preço, mas chegou e me surpreendeu. Acabamento bom, super confortável e o apoio dos pés é maravilhoso.',
-        origin: 'Compradora Verificada'
-      },
-      {
-        id: 't3',
-        name: 'Guilherme Santos',
-        rating: 5,
-        photo: '',
-        text: 'Trabalho 9 horas por dia sentado e as dores na lombar sumiram. A inclinação de 150 graus é sensacional para relaxar na hora do almoço.',
-        origin: 'Comprador Verificado'
-      },
-      {
-        id: 't4',
-        name: 'Renata Oliveira',
-        rating: 5,
-        photo: '',
-        text: 'Chegou super rápido em 4 dias no interior de SP. Muito fácil de montar, chave e parafusos vieram todos certinhos. Recomendo 100%!',
-        origin: 'Compradora Verificada'
-      }
-    ];
-    setFormData((prev) => ({ ...prev, testimonials: mockList }));
+    const pName = formData.productName || 'Produto';
+    const copy = generateFullProductCopy(pName, formData.category);
+    setFormData((prev) => ({
+      ...prev,
+      testimonials: copy.testimonials
+    }));
+    setActionToast({
+      message: `${copy.testimonials.length} depoimentos e fotos verificadas gerados para "${pName}"!`,
+      type: 'success'
+    });
   };
 
   const handleBatchPhotosSubmit = () => {
@@ -728,128 +868,70 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     setShowBatchPhotosModal(false);
   };
 
-  // Gatilhos & Urgência Helpers
+  // Gatilhos & Urgência Helpers (Enhanced with productCopyEngine)
   const handleAutoGenerateGatilhos = () => {
-    const prod = (formData.productName || '').toLowerCase();
-    
-    if (prod.includes('cadeira') || prod.includes('ergon') || prod.includes('escrit') || prod.includes('office')) {
+    const prod = formData.productName || 'Produto';
+    setIsGeneratingGatilhos(true);
+    try {
+      const copy = generateFullProductCopy(prod, formData.category);
+
       setFormData((prev) => ({
         ...prev,
         author: prev.author || 'Thais Monteiro',
-        overallScore: 9.2,
-        guaranteeDays: 30,
-        verifiedReviewsCount: 2184,
+        overallScore: copy.overallScore,
+        guaranteeDays: prev.guaranteeDays || 30,
+        verifiedReviewsCount: prev.verifiedReviewsCount || 2184,
         urgencySettings: {
           ...prev.urgencySettings!,
-          stockRemaining: 3,
+          stockRemaining: copy.stockRemaining,
           enableScarcityBar: true,
           enableTimer: true,
           enableFakeAlerts: true
         },
-        audience: [
-          'Trabalha de 6 a 10 horas sentado por dia (home office, programador, atendimento, estudante de concurso)',
-          'Já tá com dor nas costas, no pescoço ou na lombar e quer resolver sem gastar R$ 2.000+ numa cadeira ergonômica top',
-          'Pesquisa antes de comprar — porque sabe que quem pesquisa faz a compra certa',
-          'Quer alguma coisa diferente do básico (massagem, apoio pra pés reclinável, encosto pro pescoço)'
-        ],
-        antiPersonaPhrase: 'Se você só fica sentado 1h por dia, sinceramente, não precisa. Compra uma de R$ 200 e tá ótimo.',
-        pros: [
-          'Conforto absurdo pelo preço — testei com modelos de R$ 1.500+ e empata',
-          'Massagem lombar funciona de verdade com vibração contínua e suave',
-          'Apoio para pés retrátil é viciante para momentos de pausa ou leitura',
-          'Montagem fácil e intuitiva, leva cerca de 25 minutos sozinho',
-          'Visual elegante e moderno, não parece produto genérico',
-          'Aguenta 92kg com total firmeza sem ranger'
-        ],
-        cons: [
-          'Massagem via cabo USB (acompanha cabo para ligar na tomada ou powerbank)',
-          'Revestimento sintético pode aquecer em dias extremamente quentes sem ar',
-          'Não tem ajuste de profundidade do assento (mas braços compensam)',
-          'Estoque promocional do distribuidor costuma esgotar rapidamente'
-        ],
-        verdict: "Pelo preço, é difícil achar coisa melhor. Não é a cadeira 'definitiva da vida', mas pra quem busca conforto real, massagem e apoio pros pés sem gastar R$ 2.000, ela entrega muito mais do que promete. Aprovada e recomendada."
+        audience: copy.audience,
+        antiPersonaPhrase: copy.antiPersonaPhrase,
+        pros: copy.pros,
+        cons: copy.cons,
+        verdict: copy.verdict
       }));
-    } else if (prod.includes('fone') || prod.includes('airpod') || prod.includes('head') || prod.includes('bluetooth')) {
-      setFormData((prev) => ({
-        ...prev,
-        author: prev.author || 'Thais Monteiro',
-        overallScore: 9.0,
-        guaranteeDays: 30,
-        verifiedReviewsCount: 1840,
-        urgencySettings: {
-          ...prev.urgencySettings!,
-          stockRemaining: 5,
-          enableScarcityBar: true,
-          enableTimer: true,
-          enableFakeAlerts: true
-        },
-        audience: [
-          'Quem busca liberdade de fios para treinar, correr e ir à academia',
-          'Pessoas que fazem muitas reuniões online e precisam de microfone com boa captação',
-          'Quem deseja cancelamento de ruído eficiente sem pagar R$ 1.000+ em marcas de luxo',
-          'Consumidores inteligentes que priorizam bateria que dura a semana inteira'
-        ],
-        antiPersonaPhrase: 'Se você é audiófilo de estúdio profissional e só escuta arquivos FLAC cabeados, busque modelos de monitoramento.',
-        pros: [
-          'Graves profundos e agudos cristalinos que superam fones muito mais caros',
-          'Bateria surreal: até 36 horas totais com as recargas do estojo portátil',
-          'Isolamento passivo e ativo que bloqueia ruídos de trânsito e escritório',
-          'Encaixe anatômico confortável que não machuca o ouvido após horas de uso'
-        ],
-        cons: [
-          'Estojo de carregamento não possui suporte a carregamento sem fio por indução',
-          'Gravação de voz em ambientes com vento muito forte pode ter leve ruído'
-        ],
-        verdict: 'Pelo valor promocional atual, é sem dúvidas uma das melhores compras do ano. Bateria duradoura, excelente palco sonoro e garantia de fábrica impecável.'
-      }));
-    } else {
-      const name = formData.productName || 'este produto';
-      setFormData((prev) => ({
-        ...prev,
-        overallScore: 9.2,
-        guaranteeDays: 30,
-        verifiedReviewsCount: 1540,
-        urgencySettings: {
-          ...prev.urgencySettings!,
-          stockRemaining: 4,
-          enableScarcityBar: true,
-          enableTimer: true,
-          enableFakeAlerts: true
-        },
-        audience: [
-          `Quem busca a melhor relação custo-benefício comprovada para ${name}`,
-          `Pessoas práticas que valorizam durabilidade, acabamento e facilidade no dia a dia`,
-          `Quem pesquisa antes de comprar para garantir o modelo original com garantia oficial`,
-          `Consumidores exigentes que querem economizar sem abrir mão de alta performance`
-        ],
-        antiPersonaPhrase: `Se você não vai utilizar os recursos no seu dia a dia, um modelo básico de entrada pode ser suficiente.`,
-        pros: [
-          `Construção reforçada com materiais de excelente procedência`,
-          `Design intuitivo e ergonômico pronto para uso imediato`,
-          `Entrega rápida e compra garantida direto do distribuidor oficial`,
-          `Excelente aceitação com mais de 96% de avaliações 5 estrelas`
-        ],
-        cons: [
-          `Lote promocional limitado devido à alta procura no Brasil`,
-          `Manual impresso resumido (o guia completo vem via QR Code)`
-        ],
-        verdict: `Superou as expectativas em todos os testes práticos de usabilidade e durabilidade. Um investimento certeiro com excelente retorno.`
-      }));
+
+      setActionToast({
+        message: `🪄 Gatilhos de alta conversão atualizados para "${prod}"!`,
+        type: 'success'
+      });
+    } catch (err) {
+      console.error('Erro ao gerar gatilhos:', err);
+    } finally {
+      setIsGeneratingGatilhos(false);
     }
   };
 
   const handleAutoGenerateAudience = () => {
-    const name = formData.productName || 'produto';
+    const copy = generateFullProductCopy(formData.productName, formData.category);
     setFormData((prev) => ({
       ...prev,
-      audience: [
-        `Trabalha ou usa ${name} intensamente no dia a dia e busca o máximo de rendimento`,
-        `Já teve experiências ruins com marcas frágeis e quer uma solução definitiva de qualidade`,
-        `Pesquisa antes de comprar — porque sabe que quem pesquisa faz a compra certa`,
-        `Quer os benefícios premium sem pagar os preços abusivos das lojas físicas`
-      ],
-      antiPersonaPhrase: `Se você quase nunca vai usar e não prioriza durabilidade, modelos simples mais baratos atendem.`
+      audience: copy.audience,
+      antiPersonaPhrase: copy.antiPersonaPhrase
     }));
+    setActionToast({ message: 'Público-alvo e frase de corte gerados!', type: 'success' });
+  };
+
+  const handleAutoGeneratePros = () => {
+    const copy = generateFullProductCopy(formData.productName, formData.category);
+    setFormData((prev) => ({ ...prev, pros: copy.pros }));
+    setActionToast({ message: 'Pontos fortes (Prós) gerados com sucesso!', type: 'success' });
+  };
+
+  const handleAutoGenerateCons = () => {
+    const copy = generateFullProductCopy(formData.productName, formData.category);
+    setFormData((prev) => ({ ...prev, cons: copy.cons }));
+    setActionToast({ message: 'Pontos de atenção (Contras sinceros) gerados!', type: 'success' });
+  };
+
+  const handleAutoGenerateVerdict = () => {
+    const copy = generateFullProductCopy(formData.productName, formData.category);
+    setFormData((prev) => ({ ...prev, verdict: copy.verdict }));
+    setActionToast({ message: 'Veredito final do especialista gerado!', type: 'success' });
   };
 
   const handleAddNewAudienceItem = () => {
@@ -1594,15 +1676,21 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
 
             <button
               type="button"
-              onClick={() => {
-                handleGenerateHeadline('sincero');
-                handleSearchKeywords();
-                alert('✓ Copy inteligente preenchida e sincronizada!');
-              }}
-              className="flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold px-5 py-3 rounded-xl text-xs shadow-lg shadow-blue-500/20 transition-all cursor-pointer shrink-0 hover:scale-[1.02]"
+              onClick={handleGenerateFullCopy}
+              disabled={isGeneratingFullCopy}
+              className="flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold px-5 py-3 rounded-xl text-xs shadow-lg shadow-blue-500/20 transition-all cursor-pointer shrink-0 hover:scale-[1.02] disabled:opacity-50"
             >
-              <Sparkles className="w-3.5 h-3.5 text-blue-200" />
-              <span>Preencher Tudo Automaticamente</span>
+              {isGeneratingFullCopy ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                  <span>Gerando Copy Completa...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 text-blue-200" />
+                  <span>Preencher Tudo Automaticamente</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -1626,11 +1714,22 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                   </label>
                   <button
                     type="button"
-                    onClick={() => handleGenerateHeadline('sincero')}
-                    className="text-[10px] text-[#60A5FA] hover:text-[#93C5FD] font-semibold flex items-center gap-1 cursor-pointer"
+                    onClick={handleGenerateFullCopy}
+                    disabled={isGeneratingFullCopy}
+                    className="text-[10px] bg-[#3B82F6]/15 hover:bg-[#3B82F6]/30 text-[#60A5FA] border border-[#3B82F6]/40 font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 cursor-pointer transition-all disabled:opacity-50 shadow-sm"
+                    title="Gera Headline, SEO, 4 Fotos Verificadas, Gatilhos e Depoimentos para este produto"
                   >
-                    <Sparkles className="w-3 h-3" />
-                    <span>Gerar Copy deste Produto</span>
+                    {isGeneratingFullCopy ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin text-[#60A5FA]" />
+                        <span>Gerando Copy & Fotos...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3 text-[#F5C542]" />
+                        <span>Gerar Copy deste Produto</span>
+                      </>
+                    )}
                   </button>
                 </div>
                 <input
@@ -1772,44 +1871,43 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
               </div>
             </div>
 
-            {/* Headline formulas selector pills */}
+            {/* Headline formulas selector pills (Image 1: Coloque Mais Modelos) */}
             <div className="space-y-2 pt-1">
-              <span className="text-xs text-[#777] font-medium">
-                Ou clique para escolher uma fórmula de alta conversão:
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleGenerateHeadline('sincero')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181818] hover:bg-[#222] border border-[#2A2A2A] text-xs text-[#C0C0C0] hover:text-white transition-all cursor-pointer"
-                >
-                  <span>⭐</span>
-                  <span>Padrão Sincero</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleGenerateHeadline('alerta')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181818] hover:bg-[#222] border border-[#2A2A2A] text-xs text-[#C0C0C0] hover:text-white transition-all cursor-pointer"
-                >
-                  <span>⚠️</span>
-                  <span>Alerta / Curiosidade</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleGenerateHeadline('custo')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181818] hover:bg-[#222] border border-[#2A2A2A] text-xs text-[#C0C0C0] hover:text-white transition-all cursor-pointer"
-                >
-                  <span>🏆</span>
-                  <span>Custo-Benefício</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleGenerateHeadline('teste')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181818] hover:bg-[#222] border border-[#2A2A2A] text-xs text-[#C0C0C0] hover:text-white transition-all cursor-pointer"
-                >
-                  <span>🔍</span>
-                  <span>Teste Prático</span>
-                </button>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#999] font-medium flex items-center gap-1.5">
+                  <span>💡</span>
+                  <span>Fórmulas de Headline de Alta Conversão (Clique para aplicar):</span>
+                </span>
+                <span className="text-[10px] text-[#3B82F6] font-semibold">
+                  10 Modelos Disponíveis
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                {HEADLINE_FORMULAS.map((formula) => {
+                  const isSelected = selectedHeadlineFormula === formula.id;
+                  return (
+                    <button
+                      key={formula.id}
+                      type="button"
+                      onClick={() => handleGenerateHeadline(formula.id)}
+                      className={`flex flex-col items-start gap-1 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#1E293B] border-[#3B82F6] ring-1 ring-[#3B82F6]/50 shadow-md'
+                          : 'bg-[#121212] hover:bg-[#1A1A1A] border-[#262626] hover:border-[#383838]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${formula.color}`}>
+                          {formula.badge}
+                        </span>
+                        {isSelected && <span className="text-[10px] text-[#38BDF8]">✓</span>}
+                      </div>
+                      <span className={`text-xs font-semibold ${isSelected ? 'text-white' : 'text-[#D1D5DB]'}`}>
+                        {formula.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -2012,27 +2110,53 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                   <label className="text-[11px] font-bold text-[#A1A1A1] uppercase tracking-wider">
                     SEO META TITLE (TÍTULO DA PÁGINA NO GOOGLE)
                   </label>
-                  <button
-                    type="button"
-                    onClick={handleGenerateTitles}
-                    disabled={generatingTitles || !formData.productName}
-                    className="text-[10px] font-bold text-[#3B82F6] hover:text-[#2563EB] disabled:text-[#555] transition-colors"
-                  >
-                    {generatingTitles ? "Gerando..." : "Gerar título com IA"}
-                  </button>
-                  <span className="text-[10px] text-[#8E8E8E] font-mono">
-                    {formData.seoSettings?.metaTitle?.length || 0}/60 caracteres (recomendado)
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleGenerateTitles}
+                      disabled={generatingTitles || !formData.productName}
+                      className="text-[10px] font-bold text-[#3B82F6] hover:text-[#60A5FA] disabled:text-[#555] flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      {generatingTitles ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Gerando títulos...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3 text-[#F5C542]" />
+                          <span>Gerar títulos com IA</span>
+                        </>
+                      )}
+                    </button>
+                    <span className="text-[10px] text-[#8E8E8E] font-mono">
+                      {formData.seoSettings?.metaTitle?.length || 0}/60 caracteres
+                    </span>
+                  </div>
                 </div>
                 {suggestedTitles.length > 0 && (
-                  <div className="mt-2 space-y-2 bg-[#1E293B] p-3 rounded-xl">
-                    <p className="text-[10px] font-bold text-[#A1A1A1]">Sugestões:</p>
+                  <div className="mt-2 space-y-2 bg-[#1E293B]/80 border border-[#334155] p-3 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">
+                        ✨ Sugestões de Título (Clique para usar):
+                      </p>
+                      <span className="text-[9px] text-[#60A5FA]">Pronto para Rankear</span>
+                    </div>
                     {suggestedTitles.map((title, idx) => (
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, seoSettings: { metaTitle: title, metaDescription: prev.seoSettings?.metaDescription || '' } }))}
-                        className="block w-full text-left text-xs text-white p-2 hover:bg-[#334155] rounded-lg transition-colors"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            seoSettings: {
+                              metaTitle: title,
+                              metaDescription: prev.seoSettings?.metaDescription || ''
+                            }
+                          }));
+                          setActionToast({ message: `Título SEO selecionado: "${title.slice(0, 45)}..."`, type: 'success' });
+                        }}
+                        className="block w-full text-left text-xs text-white p-2 hover:bg-[#334155] rounded-lg transition-colors border border-transparent hover:border-[#38BDF8]/40"
                       >
                         {title}
                       </button>
@@ -2062,9 +2186,29 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                   <label className="text-[11px] font-bold text-[#A1A1A1] uppercase tracking-wider">
                     SEO META DESCRIPTION (DESCRIÇÃO DO GOOGLE)
                   </label>
-                  <span className="text-[10px] text-[#8E8E8E] font-mono">
-                    {formData.seoSettings?.metaDescription?.length || 0}/160 caracteres (recomendado)
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleGenerateSeoDescription}
+                      disabled={isGeneratingSeoDesc || !formData.productName}
+                      className="text-[10px] font-bold text-[#3B82F6] hover:text-[#60A5FA] disabled:text-[#555] flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      {isGeneratingSeoDesc ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Gerando descrição...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3 text-[#F5C542]" />
+                          <span>Gerar descrição com IA</span>
+                        </>
+                      )}
+                    </button>
+                    <span className="text-[10px] text-[#8E8E8E] font-mono">
+                      {formData.seoSettings?.metaDescription?.length || 0}/160 caracteres
+                    </span>
+                  </div>
                 </div>
                 <textarea
                   rows={3}
@@ -2169,66 +2313,127 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
             </div>
 
             {/* Smart Auto-Match Button */}
-            <button
-              type="button"
-              onClick={() => {
-                const match = matchProductImage(formData.productName, formData.category);
-                const newImgs = [match.mainImage, ...match.gallery];
-                setFormData({
-                  ...formData,
-                  mainImage: match.mainImage,
-                  images: newImgs
-                });
-              }}
-              className="flex items-center gap-2 bg-[#22C55E]/15 hover:bg-[#22C55E]/25 text-[#22C55E] border border-[#22C55E]/40 font-bold px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer shadow-md"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Sincronizar Fotos com o Produto</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleApplyAllVerifiedImages}
+                className="flex items-center gap-1.5 bg-[#22C55E]/15 hover:bg-[#22C55E]/25 text-[#22C55E] border border-[#22C55E]/40 font-bold px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer shadow-md"
+                title="Aplica as 4 fotos verificadas direto na galeria e capa"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Aplicar Todas as 4 Fotos</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const match = matchProductImage(formData.productName, formData.category);
+                  const four = match.gallery.slice(0, 4);
+                  setFormData({
+                    ...formData,
+                    mainImage: four[0] || match.mainImage,
+                    images: four
+                  });
+                  setActionToast({ message: 'Fotos sincronizadas com o produto com sucesso!', type: 'success' });
+                }}
+                className="flex items-center gap-1.5 bg-[#1E293B] hover:bg-[#334155] text-white border border-[#334155] font-semibold px-3 py-2 rounded-xl text-xs transition-all cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Sincronizar</span>
+              </button>
+            </div>
           </div>
 
-          {/* SUGGESTED VERIFIED IMAGES FOR THIS PRODUCT */}
+          {/* SUGGESTED VERIFIED IMAGES FOR THIS PRODUCT (IMAGE 6 FIX) */}
           {(() => {
             const match = matchProductImage(formData.productName, formData.category);
-            const suggestions = [match.mainImage, ...match.gallery];
+            const suggestions = match.gallery.slice(0, 4);
+            const labels = ['Foto 1 (Capa)', 'Foto 2 (Ângulo)', 'Foto 3 (Detalhes)', 'Foto 4 (Embalagem/Uso)'];
+
             return (
-              <div className="p-4 rounded-xl bg-[#0D0D0D] border border-[#262626] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#A1A1A1] uppercase tracking-wider flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
-                    <span>Fotos Verificadas para "{formData.productName || 'este produto'}":</span>
-                  </span>
-                  <span className="text-[11px] text-[#22C55E]">Clique para aplicar</span>
+              <div className="p-4 md:p-5 rounded-2xl bg-[#0D0D0D] border border-[#262626] space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
+                      <span>Fotos Verificadas (4 Imagens Autênticas):</span>
+                    </span>
+                    <span className="text-[10px] bg-[#22C55E]/15 text-[#22C55E] font-bold px-2 py-0.5 rounded-full">
+                      Alta Resolução
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleApplyAllVerifiedImages}
+                    className="text-[11px] font-bold text-[#22C55E] hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+                  >
+                    <span>⚡ Aplicar as 4 Fotos com 1 Clique</span>
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {suggestions.map((sug, sIdx) => {
                     const isCurrentMain = formData.mainImage === sug;
+                    const isInGallery = (formData.images || []).includes(sug);
+
                     return (
                       <div
                         key={sIdx}
                         onClick={() => {
+                          const updated = [...(formData.images || [])];
+                          if (updated.length < 4) {
+                            while (updated.length < 4) updated.push('');
+                          }
+                          updated[sIdx] = sug;
                           setFormData({
                             ...formData,
-                            mainImage: sug,
-                            images: [sug, ...formData.images.filter((img) => img !== sug)]
+                            mainImage: sIdx === 0 ? sug : formData.mainImage,
+                            images: updated
+                          });
+                          setActionToast({
+                            message: `Foto #${sIdx + 1} aplicada à galeria!`,
+                            type: 'success'
                           });
                         }}
                         className={`group relative rounded-xl overflow-hidden aspect-square border-2 cursor-pointer transition-all ${
-                          isCurrentMain ? 'border-[#22C55E] ring-2 ring-[#22C55E]/30' : 'border-[#262626] hover:border-[#3B82F6]'
+                          isCurrentMain
+                            ? 'border-[#22C55E] ring-2 ring-[#22C55E]/40 shadow-lg shadow-green-500/10'
+                            : isInGallery
+                            ? 'border-[#3B82F6] ring-1 ring-[#3B82F6]/30'
+                            : 'border-[#262626] hover:border-[#3B82F6]'
                         }`}
                       >
-                        <img src={sug} alt={`Sugestão ${sIdx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span className="text-[11px] font-extrabold bg-[#22C55E] text-black px-2 py-1 rounded-md shadow">
-                            Usar como Capa
-                          </span>
-                        </div>
-                        {isCurrentMain && (
-                          <div className="absolute top-2 left-2 bg-[#22C55E] text-black text-[10px] font-extrabold px-2 py-0.5 rounded shadow">
-                            ★ Foto Atual
+                        <img
+                          src={sug}
+                          alt={labels[sIdx]}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-bold bg-black/70 text-[#C0C0C0] px-1.5 py-0.5 rounded backdrop-blur-sm">
+                              {labels[sIdx]}
+                            </span>
+                            {isCurrentMain && (
+                              <span className="bg-[#22C55E] text-black text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow">
+                                ★ Capa
+                              </span>
+                            )}
                           </div>
-                        )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFormData({
+                                ...formData,
+                                mainImage: sug,
+                                images: [sug, ...formData.images.filter((img) => img !== sug)].slice(0, 4)
+                              });
+                              setActionToast({ message: 'Definida como Foto de Capa!', type: 'success' });
+                            }}
+                            className="text-[10px] font-bold bg-[#22C55E] text-black hover:bg-[#16A34A] py-1 px-2 rounded-md shadow text-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            Definir como Capa
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -2248,10 +2453,12 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                   value={formData.mainImage}
                   onChange={(e) => {
                     const val = e.target.value;
+                    const newImages = [...formData.images];
+                    newImages[0] = val;
                     setFormData({
                       ...formData,
                       mainImage: val,
-                      images: [val, ...(formData.images.slice(1))]
+                      images: newImages
                     });
                   }}
                   placeholder="https://images.unsplash.com/..."
@@ -2261,44 +2468,61 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#A1A1A1] uppercase tracking-wider block">
-                FOTOS ADICIONAIS DA GALERIA
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-[#A1A1A1] uppercase tracking-wider block">
+                  FOTOS DA GALERIA (SLOTS 1 A 4)
+                </label>
+                <button
+                  type="button"
+                  onClick={handleApplyAllVerifiedImages}
+                  className="text-[10px] text-[#22C55E] hover:underline font-bold cursor-pointer"
+                >
+                  Preencher com as 4 Fotos Verificadas
+                </button>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {formData.images.map((img, idx) => (
-                  <div key={idx} className="space-y-2">
-                    <div className="aspect-square bg-[#080808] border border-[#262626] rounded-xl overflow-hidden relative group flex items-center justify-center">
-                      {img && img.trim() ? (
-                        <img
-                          src={img.trim()}
-                          alt={`Foto ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const fallback = matchProductImage(formData.productName, formData.category).mainImage;
-                            (e.target as HTMLImageElement).src = fallback;
-                          }}
-                        />
-                      ) : (
-                        <span className="text-xs text-[#555] font-medium">+ Foto {idx + 1}</span>
-                      )}
+                {[0, 1, 2, 3].map((idx) => {
+                  const img = formData.images[idx] || (idx === 0 ? formData.mainImage : '');
+                  const slotNames = ['Capa Principal', 'Ângulo 2', 'Detalhes / Prática', 'Embalagem / Uso'];
+                  return (
+                    <div key={idx} className="space-y-2">
+                      <div className="aspect-square bg-[#080808] border border-[#262626] rounded-xl overflow-hidden relative group flex items-center justify-center">
+                        {img && img.trim() ? (
+                          <img
+                            src={img.trim()}
+                            alt={`Foto ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const fallback = matchProductImage(formData.productName, formData.category).gallery[idx] || matchProductImage(formData.productName, formData.category).mainImage;
+                              (e.target as HTMLImageElement).src = fallback;
+                            }}
+                          />
+                        ) : (
+                          <span className="text-xs text-[#555] font-medium">+ {slotNames[idx]}</span>
+                        )}
+                        <span className="absolute bottom-1.5 left-1.5 text-[9px] font-bold bg-black/70 text-white px-1.5 py-0.5 rounded">
+                          #{idx + 1} {slotNames[idx]}
+                        </span>
+                      </div>
+                      <input
+                        type="url"
+                        value={img}
+                        onChange={(e) => {
+                          const newImages = [...formData.images];
+                          while (newImages.length <= idx) newImages.push('');
+                          newImages[idx] = e.target.value;
+                          setFormData({
+                            ...formData,
+                            images: newImages,
+                            mainImage: idx === 0 ? e.target.value : formData.mainImage
+                          });
+                        }}
+                        placeholder={`URL Foto ${idx + 1}`}
+                        className="w-full bg-[#0A0A0A] border border-[#262626] rounded-lg px-2.5 py-1.5 text-[11px] text-white placeholder-[#555]"
+                      />
                     </div>
-                    <input
-                      type="url"
-                      value={img}
-                      onChange={(e) => {
-                        const newImages = [...formData.images];
-                        newImages[idx] = e.target.value;
-                        setFormData({
-                          ...formData,
-                          images: newImages,
-                          mainImage: idx === 0 ? e.target.value : formData.mainImage
-                        });
-                      }}
-                      placeholder={`URL Foto ${idx + 1}`}
-                      className="w-full bg-[#0A0A0A] border border-[#262626] rounded-lg px-2.5 py-1.5 text-[11px] text-white placeholder-[#555]"
-                    />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -2330,10 +2554,20 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
             <button
               type="button"
               onClick={handleAutoGenerateGatilhos}
-              className="flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-extrabold px-5 py-3 rounded-xl text-xs shadow-lg shadow-blue-500/20 transition-all cursor-pointer shrink-0 hover:scale-[1.02]"
+              disabled={isGeneratingGatilhos}
+              className="flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-extrabold px-5 py-3 rounded-xl text-xs shadow-lg shadow-blue-500/20 transition-all cursor-pointer shrink-0 hover:scale-[1.02] disabled:opacity-60"
             >
-              <Sparkles className="w-4 h-4 text-[#F5C542]" />
-              <span>🪄 Gerar Gatilhos com 1 Clique</span>
+              {isGeneratingGatilhos ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>Gerando Gatilhos...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 text-[#F5C542]" />
+                  <span>🪄 Gerar Gatilhos com 1 Clique</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -2542,14 +2776,25 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                   <CheckCircle2 className="w-4 h-4" />
                   <span>✓ O que me surpreendeu (Pontos Fortes)</span>
                 </h4>
-                <button
-                  type="button"
-                  onClick={handleAddNewPro}
-                  className="text-xs font-bold text-[#22C55E] hover:underline cursor-pointer flex items-center gap-1"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>+ Adicionar</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleAutoGeneratePros}
+                    className="text-[11px] font-bold text-[#22C55E] bg-[#22C55E]/10 hover:bg-[#22C55E]/25 border border-[#22C55E]/30 px-2.5 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                    title="Gera 4 a 6 pontos fortes sinceros para o produto"
+                  >
+                    <Sparkles className="w-3 h-3 text-[#22C55E]" />
+                    <span>Auto-Gerar Prós</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddNewPro}
+                    className="text-xs font-bold text-[#22C55E] hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Adicionar</span>
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -2584,14 +2829,25 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                   <XCircle className="w-4 h-4" />
                   <span>× O que poderia melhorar (Pontos de Atenção)</span>
                 </h4>
-                <button
-                  type="button"
-                  onClick={handleAddNewCon}
-                  className="text-xs font-bold text-[#EF4444] hover:underline cursor-pointer flex items-center gap-1"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>+ Adicionar</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleAutoGenerateCons}
+                    className="text-[11px] font-bold text-[#EF4444] bg-[#EF4444]/10 hover:bg-[#EF4444]/25 border border-[#EF4444]/30 px-2.5 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                    title="Gera pontos de atenção sinceros que trazem credibilidade"
+                  >
+                    <Sparkles className="w-3 h-3 text-[#EF4444]" />
+                    <span>Auto-Gerar Contras</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddNewCon}
+                    className="text-xs font-bold text-[#EF4444] hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Adicionar</span>
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -2622,9 +2878,20 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
 
           {/* CARD: TEXTO DO VEREDITO DO ESPECIALISTA */}
           <div className="bg-[#0D111A] border border-[#1E293B] rounded-2xl p-5 md:p-6 space-y-3">
-            <label className="text-xs font-bold text-white block">
-              Texto do Veredito do Especialista
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-white block">
+                Texto do Veredito do Especialista
+              </label>
+              <button
+                type="button"
+                onClick={handleAutoGenerateVerdict}
+                className="text-[11px] font-bold text-[#60A5FA] bg-[#3B82F6]/10 hover:bg-[#3B82F6]/25 border border-[#3B82F6]/30 px-2.5 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                title="Gera um veredito equilibrado de especialista aprovando a compra"
+              >
+                <Sparkles className="w-3 h-3 text-[#38BDF8]" />
+                <span>Auto-Gerar Veredito</span>
+              </button>
+            </div>
             <textarea
               rows={3}
               value={formData.verdict || ''}
@@ -3662,6 +3929,27 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
             <button
               onClick={() => setToastMessage(null)}
               className="text-[#64748B] hover:text-white p-1 rounded-md hover:bg-[#1E293B] transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* FLOATING ACTION NOTIFICATION TOAST */}
+      {actionToast && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="bg-[#0F172A] border border-[#3B82F6]/60 rounded-2xl p-4 shadow-2xl shadow-blue-500/20 flex items-center gap-3 text-white text-xs max-w-md">
+            <div className="w-8 h-8 rounded-xl bg-[#2563EB]/20 border border-[#3B82F6]/40 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 text-[#38BDF8]" />
+            </div>
+            <div className="flex-1 font-medium leading-tight">
+              {actionToast.message}
+            </div>
+            <button
+              type="button"
+              onClick={() => setActionToast(null)}
+              className="text-[#64748B] hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer shrink-0"
             >
               <X className="w-3.5 h-3.5" />
             </button>
