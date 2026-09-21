@@ -943,31 +943,35 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   };
 
   const handleAutoGenerateAudience = () => {
-    const copy = generateFullProductCopy(formData.productName, formData.category);
+    const pName = formData.productName?.trim() || 'Produto';
+    const copy = generateFullProductCopy(pName, formData.category);
     setFormData((prev) => ({
       ...prev,
       audience: copy.audience,
       antiPersonaPhrase: copy.antiPersonaPhrase
     }));
-    setActionToast({ message: 'Público-alvo e frase de corte gerados!', type: 'success' });
+    setActionToast({ message: `Público-alvo e frase de corte gerados para "${pName}"!`, type: 'success' });
   };
 
   const handleAutoGeneratePros = () => {
-    const copy = generateFullProductCopy(formData.productName, formData.category);
+    const pName = formData.productName?.trim() || 'Produto';
+    const copy = generateFullProductCopy(pName, formData.category);
     setFormData((prev) => ({ ...prev, pros: copy.pros }));
-    setActionToast({ message: 'Pontos fortes (Prós) gerados com sucesso!', type: 'success' });
+    setActionToast({ message: `Pontos fortes (Prós) gerados para "${pName}"!`, type: 'success' });
   };
 
   const handleAutoGenerateCons = () => {
-    const copy = generateFullProductCopy(formData.productName, formData.category);
+    const pName = formData.productName?.trim() || 'Produto';
+    const copy = generateFullProductCopy(pName, formData.category);
     setFormData((prev) => ({ ...prev, cons: copy.cons }));
-    setActionToast({ message: 'Pontos de atenção (Contras sinceros) gerados!', type: 'success' });
+    setActionToast({ message: `Pontos de atenção (Contras) gerados para "${pName}"!`, type: 'success' });
   };
 
   const handleAutoGenerateVerdict = () => {
-    const copy = generateFullProductCopy(formData.productName, formData.category);
+    const pName = formData.productName?.trim() || 'Produto';
+    const copy = generateFullProductCopy(pName, formData.category);
     setFormData((prev) => ({ ...prev, verdict: copy.verdict }));
-    setActionToast({ message: 'Veredito final do especialista gerado!', type: 'success' });
+    setActionToast({ message: `Veredito final do especialista gerado para "${pName}"!`, type: 'success' });
   };
 
   const handleAddNewAudienceItem = () => {

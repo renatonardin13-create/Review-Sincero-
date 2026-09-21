@@ -214,32 +214,32 @@ export function generateFullProductCopy(
   ) {
     return {
       headline: `Review Sincero: ${name} Vale a Pena ou é Furada? (Teste de Alcance & Bateria 2026)`,
-      description: `Análise detalhada sobre feixe de luz, autonomia real da bateria de lítio, resistência à chuva (IPX6) e corpo em alumínio aeroespacial. Descubra se entrega a potência prometida ou se é apenas marketing.`,
+      description: `Análise detalhada sobre feixe de luz, autonomia real da bateria de lítio, resistência à chuva (IPX6) e corpo em alumínio aeroespacial do ${name}. Descubra se entrega a potência prometida ou se é apenas marketing.`,
       slug: slug || 'lanterna-com-bateria-recarregavel',
       seoTitle,
       seoDescription,
       suggestedSeoTitles: seoTitles,
       audience: [
-        'Quem precisa de iluminação potente e confiável para emergências, camping, trilhas ou viagens',
+        `Quem precisa de iluminação potente e confiável no ${name} para emergências, camping ou trilhas`,
         'Profissionais de segurança, mecânica ou obras que executam manutenções noturnas',
         'Motoristas que desejam segurança no porta-luvas para eventuais panes na estrada',
-        'Quem já se frustrou com lanternas baratas que descarregam rápido ou quebram na primeira queda'
+        `Quem quer a garantia de um ${name} durável para não ficar na mão no escuro`
       ],
       antiPersonaPhrase:
-        'Se você só precisa de uma luz fraca do celular uma vez por mês e não se importa com alcance ou resistência, não precisa de uma lanterna profissional.',
+        `Se você só precisa de uma luz fraca do celular uma vez por mês e não busca a potência do ${name}, esse produto não é para você.`,
       pros: [
-        'Feixe de luz ultrabrilhante com alcance de longo alcance mesmo em escuridão total',
-        'Bateria recarregável de lítio com longa autonomia e indicador LED de nível de carga',
-        'Corpo usinado em liga de alumínio aeroespacial resistente a quedas e respingos de chuva (IPX6)',
-        'Carregamento prático via cabo USB / Tipo-C compatível com carregador de celular ou powerbank',
-        'Múltiplos modos de iluminação (Foco Alto, Econômico e Strobo/SOS para emergências)'
+        `Feixe de luz ultrabrilhante com alcance de longo alcance no ${name}`,
+        `Bateria recarregável de lítio com excelente autonomia no ${name}`,
+        `Corpo usinado em liga de alumínio aeroespacial resistente a quedas no ${name}`,
+        `Carregamento prático via cabo USB / Tipo-C com indicador LED no ${name}`,
+        `Múltiplos modos de iluminação (Foco Alto, Econômico e SOS) no ${name}`
       ],
       cons: [
-        'Corpo metálico dissipa calor naturalmente quando operado no modo turbo contínuo',
-        'Feixe extremamente forte que exige cuidado para não apontar diretamente aos olhos'
+        `O corpo metálico do ${name} dissipa calor naturalmente quando operado no modo turbo contínuo`,
+        `Devido ao alto volume de vendas do ${name}, o estoque promocional na loja oficial costuma oscilar`
       ],
       verdict:
-        'Testamos a lanterna em situações extremas de escuridão total e o feixe superou expectativas. A bateria segurou firme e o acabamento metálico passa muita robustez. Pelo preço promocional com entrega oficial, é sem dúvidas a melhor escolha da categoria.',
+        `Testamos o ${name} em situações de escuridão total e o feixe superou expectativas. A bateria segurou firme e o acabamento metálico passa muita robustez. Pelo preço promocional com entrega oficial, é sem dúvidas uma das melhores compras da categoria.`,
       overallScore: 9.6,
       stockRemaining: 7,
       testimonials: [
@@ -248,7 +248,7 @@ export function generateFullProductCopy(
           name: 'Marcos Roberto',
           rating: 5,
           photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
-          text: 'Comprei para deixar no carro e levar nas pescarias noturnas. O alcance do foco é absurdo de forte, clareou a margem inteira do rio. A bateria durou o fim de semana todo sem recarregar.',
+          text: `Comprei o ${name} para deixar no carro e levar nas pescarias noturnas. O alcance do foco é absurdo de forte, clareou a margem inteira do rio.`,
           origin: 'Comprador Verificado'
         },
         {
@@ -256,7 +256,7 @@ export function generateFullProductCopy(
           name: 'Patrícia Mendes',
           rating: 5,
           photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80',
-          text: 'Chegou super rápido em 3 dias em Campinas. Material resistente de verdade em alumínio, nada de plástico frágil. O indicador de bateria evita ficar na mão no escuro. Recomendo muito!',
+          text: `Chegou super rápido em 3 dias. O ${name} tem material resistente em alumínio de verdade. Recomendo muito!`,
           origin: 'Compradora Verificada'
         },
         {
@@ -264,7 +264,7 @@ export function generateFullProductCopy(
           name: 'Carlos Eduardo',
           rating: 5,
           photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
-          text: 'Uso diariamente no meu trabalho de manutenção em galpões. O foco ajustável e o modo econômico são perfeitos. Muito superior a lanternas que cobram o dobro em lojas de ferramentas.',
+          text: `Uso o ${name} no trabalho de manutenção. O foco ajustável e modo econômico são perfeitos. Muito superior a modelos comuns.`,
           origin: 'Comprador Verificado'
         },
         {
@@ -272,34 +272,22 @@ export function generateFullProductCopy(
           name: 'Renata Oliveira',
           rating: 5,
           photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
-          text: 'Comprei por precaução após uma tempestade deixar o bairro 2 dias sem luz. Salvou nossa família! Clareia a sala inteira virada pro teto e recarrega fácil no USB. Valeu cada centavo.',
+          text: `O ${name} salvou nossa família na queda de energia. Clareia a sala inteira virada pro teto e recarrega fácil. Valeu cada centavo.`,
           origin: 'Compradora Verificada'
         }
       ],
       faq: [
         {
           id: 'f-1',
-          question: 'A bateria realmente dura quanto tempo?',
+          question: `A bateria do ${name} realmente dura quanto tempo?`,
           answer:
-            'Nos nossos testes práticos, a bateria recarregável durou entre 6 a 10 horas de uso contínuo dependendo da intensidade escolhida, com indicador LED que avisa quando precisa recarregar.'
+            `Nos nossos testes práticos, a bateria recarregável do ${name} durou entre 6 a 10 horas de uso contínuo dependendo da intensidade.`
         },
         {
           id: 'f-2',
-          question: 'É resistente à água e chuvas fortes?',
+          question: `O ${name} é resistente à água e chuvas fortes?`,
           answer:
-            'Sim! Possui vedação de borracha nos conectores com certificação IPX6, aguentando chuvas fortes, umidade e respingos sem danificar o circuito interno.'
-        },
-        {
-          id: 'f-3',
-          question: 'Como funciona o carregamento?',
-          answer:
-            'Acompanha cabo USB / Tipo-C, podendo ser recarregada em tomadas convencionais de celular, portas USB do computador ou até no carregador veicular e powerbank.'
-        },
-        {
-          id: 'f-4',
-          question: 'Qual é o prazo de entrega e garantia?',
-          answer:
-            'Pela loja oficial indicada, a entrega é rastreada pelos Correios e transportadoras com prazo médio de 3 a 7 dias úteis, contando com garantia de 30 dias para devolução sem burocracia.'
+            `Sim! O ${name} possui vedação de borracha nos conectores aguentando chuva, umidade e respingos sem danificar o circuito.`
         }
       ]
     };
@@ -316,32 +304,32 @@ export function generateFullProductCopy(
   ) {
     return {
       headline: `Review Sincero: ${name} Vale a Pena em 2026? Testamos Torque e Bateria`,
-      description: `Colocamos a ${name} à prova em madeira maciça, alvenaria e montagens pesadas. Descubra a autonomia da bateria, empunhadura e custo-benefício.`,
+      description: `Colocamos o ${name} à prova em madeira maciça, alvenaria e montagens pesadas. Descubra a autonomia da bateria, empunhadura e custo-benefício.`,
       slug: slug || 'parafusadeira-impacto-bateria',
       seoTitle,
       seoDescription,
       suggestedSeoTitles: seoTitles,
       audience: [
-        'Quem faz reparos em casa e quer economizar sem precisar chamar montador a cada móvel',
-        'Profissionais autônomos, marceneiros ou eletricistas que buscam ferramenta leve e potente',
-        'Quem já cansou de usar chave de fenda manual e quer agilidade e precisão nos parafusos',
-        'Quem busca um kit completo com bateria durável sem pagar fortuna em marcas importadas'
+        `Quem faz reparos em casa e quer praticidade usando o ${name}`,
+        `Profissionais autônomos e montadores que buscam o ${name} pelo ótimo torque`,
+        'Quem quer evitar o esforço de ferramentas manuais e ganhar agilidade',
+        `Quem busca um kit completo com bateria durável no ${name}`
       ],
       antiPersonaPhrase:
-        'Se você nunca aperta um parafuso na vida ou prefere sempre pagar mão de obra externa, uma parafusadeira de impacto não terá utilidade para você.',
+        `Se você nunca precisa fazer pequenos reparos e prefere sempre pagar mão de obra externa, o ${name} não terá utilidade para você.`,
       pros: [
-        'Torque potente com controle de velocidade e reverso na empunhadura',
-        'Bateria de íon-lítio com carregamento rápido e sem efeito memória',
-        'Design ergonômico com empunhadura emborrachada que não cansa a mão',
-        'Luz LED auxiliar integrada para iluminar o ponto exato de trabalho',
-        'Acompanha maleta e ponteiras essenciais para uso imediato'
+        `Torque potente com controle de velocidade e reverso no ${name}`,
+        `Bateria de íon-lítio com rápido carregamento e alta durabilidade no ${name}`,
+        `Design ergonômico com empunhadura emborrachada confortável no ${name}`,
+        `Luz LED auxiliar integrada para iluminação precisa durante o uso do ${name}`,
+        `Acompanha maleta e ponteiras essenciais para uso imediato do ${name}`
       ],
       cons: [
-        'Para furos contínuos em concreto armado muito denso, um martelete SDS é mais adequado',
-        'O manual vem resumido, mas o manuseio é 100% intuitivo'
+        `Para furos contínuos em concreto armado muito denso, recomenda-se ponteira específica no ${name}`,
+        `A alta procura pelo ${name} em promoção na loja oficial pode gerar esgotamento de lote`
       ],
       verdict:
-        'A ferramenta surpreendeu pelo torque vigoroso e robustez. Montamos armários inteiros com apenas uma carga de bateria. Pelo valor cobrado na promoção oficial, entrega mais força que concorrentes bem mais caros.',
+        `O ${name} surpreendeu pelo torque vigoroso e robustez. Montamos armários inteiros com apenas uma carga de bateria. Pelo valor promocional na loja oficial, entrega um custo-benefício imbatível.`,
       overallScore: 9.4,
       stockRemaining: 9,
       testimonials: [
@@ -350,7 +338,7 @@ export function generateFullProductCopy(
           name: 'Rodrigo Silveira',
           rating: 5,
           photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
-          text: 'Montei meu quarto planejado inteiro só com ela! O torque é muito forte e a bateria aguentou o dia todo. Melhor investimento que fiz.',
+          text: `Montei meus móveis todos com o ${name}! O torque é forte e a bateria aguentou o dia inteiro de trabalho.`,
           origin: 'Comprador Verificado'
         },
         {
@@ -358,38 +346,16 @@ export function generateFullProductCopy(
           name: 'Felipe Alencar',
           rating: 5,
           photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
-          text: 'Uso em instalação de ar condicionado. Leve, compacta e entra fácil em lugares apertados. Aprovada 100%!',
-          origin: 'Comprador Verificado'
-        },
-        {
-          id: 't-f3',
-          name: 'Luciana Martins',
-          rating: 5,
-          photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80',
-          text: 'Chegou em 4 dias bem embalada com a maleta. Muito fácil de usar até pra quem nunca mexeu com ferramentas. Recomendo!',
-          origin: 'Compradora Verificada'
-        },
-        {
-          id: 't-f4',
-          name: 'Marcio Santos',
-          rating: 5,
-          photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&q=80',
-          text: 'Excelente custo-benefício. Já usei marcas de 800 reais que não duravam tanto a bateria quanto essa. Pode comprar sem medo.',
+          text: `O ${name} é leve, compacto e entra fácil em lugares apertados. Aprovado 100%!`,
           origin: 'Comprador Verificado'
         }
       ],
       faq: [
         {
           id: 'f-f1',
-          question: 'Fura parede de alvenaria comum?',
+          question: `O ${name} fura parede de alvenaria comum?`,
           answer:
-            'Sim, fura alvenaria e tijolos perfeitamente com a broca correta de vídea, além de madeira, drywall e chapas de metal.'
-        },
-        {
-          id: 'f-f2',
-          question: 'A bateria é bivolt?',
-          answer:
-            'Sim, o carregador é bivolt automático (110V/220V), funcionando em qualquer tomada do Brasil.'
+            `Sim, o ${name} fura alvenaria e tijolos perfeitamente com a broca correta de vídea, além de madeira e metal.`
         }
       ]
     };
@@ -399,32 +365,32 @@ export function generateFullProductCopy(
   if (norm.includes('cadeira') || norm.includes('escritorio') || norm.includes('ergonomica') || norm.includes('gamer')) {
     return {
       headline: `Review Sincero: ${name} Salva a Lombar no Home Office? (Teste 2026)`,
-      description: `Testamos a ergonomia, apoio de lombar, tecido respirável em mesh e regulagens de altura por 30 dias de trabalho intenso. Veja se realmente acaba com as dores nas costas.`,
+      description: `Testamos a ergonomia, apoio de lombar, tecido respirável e regulagens do ${name} por 30 dias de trabalho intenso. Veja se acaba com as dores.`,
       slug: slug || 'cadeira-ergonomica-escritorio',
       seoTitle,
       seoDescription,
       suggestedSeoTitles: seoTitles,
       audience: [
-        'Quem passa mais de 6 horas por dia sentado trabalhando ou estudando e sente incômodo na coluna',
-        'Pessoas que buscam apoio lombar ajustável e assento confortável que não afunda com o tempo',
-        'Quem quer melhorar a postura e evitar gastos com fisioterapia ou dores musculares',
-        'Quem deseja uma cadeira com design executivo e moderno que combina com qualquer ambiente'
+        `Quem passa horas sentado trabalhando e busca o conforto ergonômico do ${name}`,
+        `Pessoas que precisam de apoio lombar ajustável e assento macio no ${name}`,
+        'Quem quer melhorar a postura e evitar dores nas costas ao longo do dia',
+        `Quem deseja um design moderno para seu ambiente de trabalho com o ${name}`
       ],
       antiPersonaPhrase:
-        'Se você só senta na escrivaninha 15 minutos por semana, qualquer cadeira básica comum já atende sua necessidade.',
+        `Se você raramente passa tempo na escrivaninha, investir no ${name} pode não ser necessário.`,
       pros: [
-        'Encosto em mesh respirável de alta densidade que não esquenta nos dias quentes',
-        'Apoio lombar ajustável que mantém a curvatura anatômica correta da coluna',
-        'Mecanismo relax com trava de inclinação para momentos de descanso',
-        'Pistão a gás classe 4 certificado com sustentação robusta e regulagem suave',
-        'Rodízios silenciosos em PU que não riscam pisos de madeira ou porcelanato'
+        `Encosto em tecido respirável de alta densidade no ${name}`,
+        `Apoio lombar ajustável que mantém a postura correta no ${name}`,
+        `Mecanismo relax com trava de inclinação suave no ${name}`,
+        `Pistão a gás certificado e estrutura reforçada no ${name}`,
+        `Rodízios silenciosos em PU que protegem o piso ao usar o ${name}`
       ],
       cons: [
-        'A montagem inicial leva cerca de 20 minutos, embora venha com chave e manual ilustrado',
-        'Pessoas acima de 1,95m podem preferir regular o apoio de cabeça no limite máximo'
+        `A montagem inicial do ${name} leva cerca de 20 minutos com manual e chave inclusos`,
+        `Pessoas acima de 1,95m de altura podem necessitar ajustar o apoio de cabeça no limite máximo do ${name}`
       ],
       verdict:
-        'Após semanas de uso por 8 horas diárias, a redução de tensão nos ombros e na lombar foi imediata. A espuma do assento não deformou e a estrutura passa muita firmeza. Vale cada centavo investido na sua saúde.',
+        `Após semanas de uso por 8 horas diárias, o ${name} proporcionou alívio imediato da tensão lombar. A estrutura passa muita firmeza e a espuma do assento não deformou. Vale o investimento na sua saúde.`,
       overallScore: 9.5,
       stockRemaining: 5,
       testimonials: [
@@ -433,79 +399,50 @@ export function generateFullProductCopy(
           name: 'Marcos Rezende',
           rating: 5,
           photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
-          text: 'Melhor compra que fiz pro home office esse ano. As dores no fim do dia na lombar sumiram completamente. Recomendo demais.',
+          text: `Melhor compra que fiz pro home office. O ${name} eliminou minhas dores nas costas no fim do dia.`,
           origin: 'Comprador Verificado'
-        },
-        {
-          id: 't-c2',
-          name: 'Patrícia Moura',
-          rating: 5,
-          photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80',
-          text: 'Esperava algo mediano pelo preço, mas chegou e me surpreendeu. O acabamento é impecável e o apoio de cabeça ajuda muito.',
-          origin: 'Compradora Verificada'
-        },
-        {
-          id: 't-c3',
-          name: 'Guilherme Santos',
-          rating: 5,
-          photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
-          text: 'Trabalho 9 horas por dia sentado. A inclinação para relaxar no almoço é sensacional e a montagem foi muito tranquila.',
-          origin: 'Comprador Verificado'
-        },
-        {
-          id: 't-c4',
-          name: 'Renata Oliveira',
-          rating: 5,
-          photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
-          text: 'Chegou super rápido em 4 dias no interior de SP. Chave e parafusos vieram todos certinhos com peças extras. Recomendo 100%!',
-          origin: 'Compradora Verificada'
         }
       ],
       faq: [
         {
           id: 'f-c1',
-          question: 'Suporta até quantos quilos?',
-          answer: 'A estrutura com pistão classe 4 é reforçada e suporta com folga até 130 kg com total estabilidade.'
-        },
-        {
-          id: 'f-c2',
-          question: 'Acompanha as ferramentas para montar?',
-          answer: 'Sim, acompanha chave Allen e todos os parafusos identificados passo a passo no manual em português.'
+          question: `O ${name} suporta até quantos quilos?`,
+          answer: `A estrutura reforçada do ${name} suporta com total estabilidade até 130 kg.`
         }
       ]
     };
   }
 
   // 4. TECH / FONES / SMARTWATCH
-  if (norm.includes('fone') || norm.includes('headset') || norm.includes('airpod') || norm.includes('tws') || norm.includes('smartwatch')) {
+  if (norm.includes('fone') || norm.includes('headset') || norm.includes('airpod') || norm.includes('tws') || norm.includes('smartwatch') || norm.includes('celular') || norm.includes('smartphone')) {
     return {
       headline: `Review Sincero: ${name} Vale a Pena em 2026? Testamos Som e Bateria`,
-      description: `Testamos a fidelidade sonora dos graves, cancelamento de ruído, estabilidade do Bluetooth 5.3 e autonomia real da case. Veja se compensa frente a modelos caros.`,
+      description: `Testamos a fidelidade sonora dos graves, cancelamento de ruído, conexão Bluetooth e bateria do ${name}. Veja se compensa frente a modelos caros.`,
       slug: slug || 'fone-bluetooth-tws-sem-fio',
       seoTitle,
       seoDescription,
       suggestedSeoTitles: seoTitles,
       audience: [
-        'Quem ama ouvir música com graves marcantes durante treinos, corrida ou deslocamentos',
-        'Pessoas que fazem reuniões online ou chamadas e precisam de microfone com voz clara',
-        'Quem não quer cabos atrapalhando nem ter que carregar o fone todo dia',
-        'Quem procura excelente qualidade sonora sem ter que pagar R$ 800+ em marcas de grife'
+        `Quem busca praticidade, ótimo som e autonomia no ${name}`,
+        `Pessoas que fazem reuniões online e precisam do microfone do ${name}`,
+        'Quem não quer fios atrapalhando durante treinos ou rotina diária',
+        `Quem procura alta qualidade de tecnologia no ${name} sem pagar fortunas`
       ],
       antiPersonaPhrase:
-        'Se você é um audiófilo de estúdio profissional que exige fones cabeados de alta impedância com DAC dedicado, fones portáteis não são seu foco.',
+        `Se você não utiliza fones portáteis ou tecnologias sem fio no dia a dia, o ${name} pode não ser a escolha ideal.`,
       pros: [
-        'Conexão Bluetooth 5.3 instantânea e sem atraso em vídeos e jogos',
-        'Graves encorpados e agudos limpos sem distorcer no volume máximo',
-        'Encaixe firme e anatômico que não cai durante corridas ou musculação',
-        'Bateria com autonomia de até 6h contínuas + 24h na case de carregamento',
-        'Resistente ao suor e respingos com certificação IPX4'
+        `Excelente qualidade de som com graves definidos e áudio limpo no ${name}`,
+        `Conexão Bluetooth 5.3 estável com pareamento instantâneo do ${name}`,
+        `Bateria de longa duração para uso contínuo do ${name}`,
+        `Design anatômico e leveza extrema para o dia a dia com o ${name}`,
+        `Resistência contra suor e respingos d'água no ${name}`
       ],
       cons: [
-        'A case não possui carregamento por indução sem fio (apenas cabo USB-C incluso)',
-        'Alta procura costuma esgotar as cores mais procuradas rapidamente'
+        `O cabo de carregamento incluso no ${name} possui comprimento padrão`,
+        `Devido ao sucesso do ${name}, o estoque promocional costuma ter alta rotatividade`
       ],
       verdict:
-        'O produto entrega uma experiência sonora equivalente a fones do dobro do valor. O pareamento é imediato, o isolamento passivo funciona muito bem e a bateria surpreende. Pelo valor promocional, é uma compra certeira.',
+        `O ${name} entrega uma experiência excelente no uso diário. O pareamento é imediato, o som é encorpado e a bateria surpreende na rotina. Pelo valor promocional verificado na loja oficial, é uma compra acertada.`,
       overallScore: 9.3,
       stockRemaining: 8,
       testimonials: [
@@ -514,79 +451,50 @@ export function generateFullProductCopy(
           name: 'Lucas P.',
           rating: 5,
           photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
-          text: 'O som é sensacional, graves fortes que não abafam a voz. Uso na academia todo dia e não cai do ouvido de jeito nenhum.',
+          text: `O som do ${name} é sensacional, graves fortes que não abafam a voz. Fica bem firme durante o treino.`,
           origin: 'Comprador Verificado'
-        },
-        {
-          id: 't-fo2',
-          name: 'Beatriz Lima',
-          rating: 5,
-          photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80',
-          text: 'A bateria dura muito! Uso o dia todo no trabalho e só recarrego a caixinha uma vez por semana. Amei o design minimalista.',
-          origin: 'Compradora Verificada'
-        },
-        {
-          id: 't-fo3',
-          name: 'Thiago Nogueira',
-          rating: 5,
-          photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
-          text: 'Excelente microfone para reuniões no Meet e chamadas no WhatsApp. As pessoas me escutam alto e sem eco. Recomendo.',
-          origin: 'Comprador Verificado'
-        },
-        {
-          id: 't-fo4',
-          name: 'Mariana Duarte',
-          rating: 5,
-          photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
-          text: 'Chegou antes do prazo! Pareou super rápido com meu iPhone e com o notebook da empresa. Custo-benefício nota 10.',
-          origin: 'Compradora Verificada'
         }
       ],
       faq: [
         {
           id: 'f-fo1',
-          question: 'Funciona em qualquer celular?',
-          answer: 'Sim, compatível com qualquer dispositivo com Bluetooth (iPhone, Android, Xiaomi, notebooks e tablets).'
-        },
-        {
-          id: 'f-fo2',
-          question: 'Tem garantia de troca?',
-          answer: 'Sim, garantia legal de 30 dias pela loja oficial para troca ou reembolso caso haja qualquer problema.'
+          question: `O ${name} funciona em qualquer dispositivo?`,
+          answer: `Sim, o ${name} é compatível com qualquer dispositivo Android, iOS, Windows ou Bluetooth.`
         }
       ]
     };
   }
 
   // 5. CASA / COZINHA / AIR FRYER / ELETRO
-  if (norm.includes('air fryer') || norm.includes('fritadeira') || norm.includes('panela') || norm.includes('liquidificador') || norm.includes('aspirador')) {
+  if (norm.includes('air fryer') || norm.includes('fritadeira') || norm.includes('panela') || norm.includes('liquidificador') || norm.includes('aspirador') || norm.includes('robo')) {
     return {
       headline: `Review Sincero: ${name} Vale a Pena em 2026? Teste de Eficiência`,
-      description: `Testamos a praticidade, facilidade de limpeza, consumo de energia e resultado no dia a dia com receitas reais. Veja se compensa ter na sua cozinha.`,
+      description: `Testamos a praticidade, facilidade de limpeza, consumo de energia e resultado do ${name} em receitas reais. Veja se vale a pena ter na sua casa.`,
       slug: slug || 'fritadeira-eletrica-sem-oleo',
       seoTitle,
       seoDescription,
       suggestedSeoTitles: seoTitles,
       audience: [
-        'Quem quer cozinhar refeições saudáveis sem óleo de forma rápida e prática',
-        'Famílias e pessoas práticas que não querem perder tempo lavando louça engordurada',
-        'Quem busca economizar gás de cozinha usando um aparelho elétrico eficiente',
-        'Quem mora sozinho ou a dois e deseja porções rápidas e crocantes'
+        `Quem quer praticidade e agilidade nas tarefas do lar com o ${name}`,
+        `Pessoas que buscam economizar tempo e esforço usando o ${name}`,
+        `Quem quer refeições saudáveis sem bagunça na cozinha com o ${name}`,
+        'Quem mora sozinho ou em família e valoriza facilidade de limpeza'
       ],
       antiPersonaPhrase:
-        'Se você nunca cozinha em casa ou prefere fritura tradicional imersa em litros de óleo, esse produto não mudará sua rotina.',
+        `Se você não costuma cozinhar ou utilizar eletrodomésticos práticos, o ${name} não mudará sua rotina.`,
       pros: [
-        'Prepara alimentos crocantes por fora e macios por dentro sem pingar óleo',
-        'Cesto antiaderente premium de fácil remoção que não gruda os alimentos',
-        'Economiza tempo e reduz a bagunça de gordura no fogão e azulejos',
-        'Timer inteligente com aviso sonoro e desligamento automático de segurança',
-        'Consumo de energia baixo comparado ao forno convencional'
+        `Preparo rápido e saboroso de alimentos sem necessidade de óleo no ${name}`,
+        `Cesto antiaderente premium muito fácil e rápido de lavar no ${name}`,
+        `Economia de tempo e energia na cozinha utilizando o ${name}`,
+        `Timer inteligente e controles simples de manusear no ${name}`,
+        `Design moderno e compacto que valoriza o ambiente com o ${name}`
       ],
       cons: [
-        'Nos primeiros usos é recomendado fazer o processo de cura do antiaderente conforme o manual',
-        'Ocupa um espaço dedicado na bancada, sendo bom medir antes'
+        `Recomenda-se realizar a cura simples do antiaderente no primeiro uso do ${name}`,
+        `O cabo elétrico do ${name} possui comprimento padrão de bancada`
       ],
       verdict:
-        'Um dos aparelhos que mais transformam a rotina na cozinha. Alimentos ficam prontos na metade do tempo do forno e a limpeza com esponja macia leva menos de dois minutos. Excelente aquisição com alto retorno diário.',
+        `O ${name} transforma a rotina diária trazendo muita praticidade. A limpeza é simples e rápida, e o resultado final nas receitas atende perfeitamente. Excelente aquisição para o lar.`,
       overallScore: 9.5,
       stockRemaining: 6,
       testimonials: [
@@ -595,50 +503,99 @@ export function generateFullProductCopy(
           name: 'Ana Paula Ramos',
           rating: 5,
           photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80',
-          text: 'Minha vida mudou na cozinha! Frango, batata rústica e até bolinhos ficam perfeitos em 15 minutos. E não fica cheiro de gordura na casa.',
+          text: `Facilitou demais a minha vida na cozinha! O ${name} é super prático e rápido de limpar.`,
           origin: 'Compradora Verificada'
-        },
-        {
-          id: 't-a2',
-          name: 'Fabio Meireles',
-          rating: 5,
-          photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
-          text: 'Comprei para economizar gás e a conta de luz nem sentiu diferença. Fácil demais de limpar, nada gruda no cesto. Nota 10!',
-          origin: 'Comprador Verificado'
-        },
-        {
-          id: 't-a3',
-          name: 'Camila Fernandes',
-          rating: 5,
-          photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
-          text: 'Chegou antes do prazo pela transportadora, tudo bem embalado sem nenhum arranhão. Super recomendo a loja oficial.',
-          origin: 'Compradora Verificada'
-        },
-        {
-          id: 't-a4',
-          name: 'Marcio Vieira',
-          rating: 5,
-          photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
-          text: 'Design lindo e acabamento de primeira linha. Já usei todos os dias dessa semana. Praticidade pura!',
-          origin: 'Comprador Verificado'
         }
       ],
       faq: [
         {
           id: 'f-a1',
-          question: 'Qual a voltagem do produto?',
-          answer: 'Está disponível em 110V e 220V na página de finalização da compra na loja oficial.'
-        },
-        {
-          id: 'f-a2',
-          question: 'O antiaderente dura muito?',
-          answer: 'Sim, utilizando espátulas de silicone e o lado macio da esponja, o revestimento dura anos sem descascar.'
+          question: `O ${name} consome muita energia?`,
+          answer: `Não, o ${name} foi projetado com alta eficiência energética para um consumo baixo e consciente.`
         }
       ]
     };
   }
 
-  // 6. GENÉRICO INTELIGENTE / QUALQUER OUTRO PRODUTO
+  // 6. SUPLEMENTOS / SAÚDE / FITING / BELEZA / COSMÉTICOS / CREATINA / WHEY / VITAMINAS
+  if (
+    norm.includes('creatina') ||
+    norm.includes('whey') ||
+    norm.includes('suplemento') ||
+    norm.includes('proteina') ||
+    norm.includes('vitamina') ||
+    norm.includes('colageno') ||
+    norm.includes('omega') ||
+    norm.includes('termogenico') ||
+    norm.includes('pre treino') ||
+    norm.includes('saude') ||
+    norm.includes('beleza') ||
+    norm.includes('skincare') ||
+    norm.includes('cosmetico') ||
+    norm.includes('perfume') ||
+    norm.includes('shampoo') ||
+    norm.includes('suplementacao') ||
+    norm.includes('massa')
+  ) {
+    return {
+      headline: `Review Sincero: ${name} Vale a Pena em 2026? Testamos Pureza e Resultados`,
+      description: `Análise detalhada sobre efeitos, solubilidade, grau de pureza e custo por dose do ${name}. Descubra se cumpre o que promete e se vale o investimento.`,
+      slug: slug || 'suplemento-analise-sincera',
+      seoTitle,
+      seoDescription,
+      suggestedSeoTitles: seoTitles,
+      audience: [
+        `Quem busca otimizar a performance, força e saúde com o ${name} original`,
+        `Praticantes de atividades físicas e esportes que priorizam qualidade de matéria-prima no ${name}`,
+        `Quem deseja evitar produtos falsificados adquirindo na loja oficial do ${name}`,
+        `Quem busca o melhor custo por dose com laudo de pureza comprovado do ${name}`
+      ],
+      antiPersonaPhrase:
+        `Se você não busca constância no consumo e prefere arriscar com produtos sem procedência, o ${name} não é para você.`,
+      pros: [
+        `Matéria-prima de altíssima pureza com laudo de qualidade no ${name}`,
+        `Rápida absorção e excelentes resultados práticos percebidos no ${name}`,
+        `Fórmula sem sabores artificiais enjoativos e fácil solubilidade do ${name}`,
+        `Excelente custo-benefício por dose comparado a marcas concorrentes no ${name}`,
+        `Produto 100% original com nota fiscal e garantia do fabricante no ${name}`
+      ],
+      cons: [
+        `Devido à alta procura do ${name}, os lotes promocionais esgotam rapidamente no distribuidor oficial`,
+        `Exige constância e consumo diário conforme a orientação para obter o máximo resultado com o ${name}`
+      ],
+      verdict:
+        `Testamos o ${name} e comprova-se uma excelente opção no mercado. O grau de pureza, solubilidade e resultados práticos atendem perfeitamente quem busca desempenho real. Vale muito a pena adquirir pelo distribuidor oficial verificado.`,
+      overallScore: 9.6,
+      stockRemaining: 6,
+      testimonials: [
+        {
+          id: 't-s1',
+          name: 'Bruno Machado',
+          rating: 5,
+          photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+          text: `Uso o ${name} há mais de 2 meses e a diferença na força e recuperação foi notável. Dissolve super rápido na água.`,
+          origin: 'Comprador Verificado'
+        },
+        {
+          id: 't-s2',
+          name: 'Camila Duarte',
+          rating: 5,
+          photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80',
+          text: `Chegou super rápido com nota fiscal e bem lacrado. O ${name} tem excelente qualidade. Recomendo!`,
+          origin: 'Compradora Verificada'
+        }
+      ],
+      faq: [
+        {
+          id: 'f-s1',
+          question: `O ${name} é original e possui laudo de pureza?`,
+          answer: `Sim! O ${name} comercializado pela loja oficial indicada é 100% original, aprovado pela Anvisa e acompanha nota fiscal.`
+        }
+      ]
+    };
+  }
+
+  // 7. GENÉRICO INTELIGENTE / QUALQUER OUTRO PRODUTO
   return {
     headline: defaultHeadline,
     description: `Análise completa e sincera sobre a durabilidade, usabilidade e custo-benefício do ${name}. Confira nosso teste real antes de fechar sua compra.`,
@@ -648,21 +605,21 @@ export function generateFullProductCopy(
     suggestedSeoTitles: seoTitles,
     audience: [
       `Quem busca a melhor versão de ${name} com garantia e nota fiscal na loja oficial`,
-      'Pessoas que priorizam durabilidade e materiais de qualidade comprovada',
-      'Quem quer evitar produtos falsificados ou imitações baratas que quebram rápido',
-      'Quem quer aproveitar o preço promocional de lançamento por tempo limitado'
+      `Pessoas que priorizam durabilidade e materiais de qualidade comprovada no ${name}`,
+      `Quem quer evitar imitações ou produtos sem garantia adquirindo o ${name} oficial`,
+      `Quem quer aproveitar o preço promocional de lançamento do ${name}`
     ],
     antiPersonaPhrase:
       `Se você não tem interesse em adquirir um ${name} durável e prefere arriscar com modelos genéricos sem garantia, esse review não é para você.`,
     pros: [
-      'Excelente padrão de acabamento e durabilidade comprovada em uso real',
-      'Alta eficiência e entrega rápida com código de rastreio direto da loja oficial',
-      'Fácil manuseio com instruções claras em português',
-      'Garantia do fabricante com suporte direto ao consumidor'
+      `Excelente padrão de acabamento e durabilidade comprovada no uso do ${name}`,
+      `Alta eficiência e facilidade de manuseio no dia a dia com o ${name}`,
+      `Desempenho prático que atende e supera as expectativas no ${name}`,
+      `Garantia direta do fabricante com suporte ao consumidor e compra 100% segura do ${name}`
     ],
     cons: [
-      'Devido ao alto volume de pedidos, o estoque promocional costuma oscilar',
-      'Algumas opções de cores podem esgotar nas primeiras horas de campanha'
+      `Devido ao alto volume de pedidos do ${name}, o estoque promocional costuma oscilar na loja oficial`,
+      `Algumas opções ou variações do ${name} podem esgotar nas primeiras horas de campanha`
     ],
     verdict:
       `Testamos o ${name} exaustivamente e podemos confirmar que o produto entrega exatamente o que promete. Pelo preço promocional praticado na loja verificada, o custo-benefício é imbatível. Vale muito a pena o investimento.`,
@@ -682,7 +639,7 @@ export function generateFullProductCopy(
         name: 'Patrícia Mendes',
         rating: 5,
         photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80',
-        text: `Esperava algo bom, mas me surpreendeu de verdade. Acabamento impecável e fácil de usar no dia a dia. Recomendo demais!`,
+        text: `Esperava algo bom, mas o ${name} me surpreendeu de verdade. Acabamento impecável e fácil de usar no dia a dia. Recomendo demais!`,
         origin: 'Compradora Verificada'
       },
       {
@@ -690,7 +647,7 @@ export function generateFullProductCopy(
         name: 'Carlos Eduardo',
         rating: 5,
         photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
-        text: `Entrega muito rápida em 3 dias úteis. Veio bem lacrado com nota fiscal e garantia. Valeu cada centavo investido.`,
+        text: `Entrega muito rápida em 3 dias úteis. O ${name} veio bem lacrado com nota fiscal e garantia. Valeu cada centavo investido.`,
         origin: 'Comprador Verificado'
       },
       {
@@ -698,20 +655,20 @@ export function generateFullProductCopy(
         name: 'Renata Oliveira',
         rating: 5,
         photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
-        text: `Estava com receio de comprar pela internet, mas a loja é super séria. Produto 100% original e atendimento nota dez!`,
+        text: `Estava com receio de comprar pela internet, mas a loja é super séria. O ${name} é 100% original e atendimento nota dez!`,
         origin: 'Compradora Verificada'
       }
     ],
     faq: [
       {
         id: 'f-g1',
-        question: 'O produto é original com garantia?',
-        answer: 'Sim, comprado através do link oficial possui garantia do fabricante, nota fiscal e suporte completo.'
+        question: `O ${name} é original com garantia?`,
+        answer: `Sim, o ${name} comprado através do link oficial possui garantia do fabricante, nota fiscal e suporte completo.`
       },
       {
         id: 'f-g2',
-        question: 'Qual o prazo médio de entrega?',
-        answer: 'A entrega é realizada com rastreamento ativo com prazo estimado entre 3 a 7 dias úteis para a maior parte do Brasil.'
+        question: `Qual o prazo médio de entrega do ${name}?`,
+        answer: `A entrega do ${name} é realizada com rastreamento ativo com prazo estimado entre 3 a 7 dias úteis.`
       }
     ]
   };
