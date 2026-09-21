@@ -79,6 +79,16 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Sales Funnel collections
+    match /sales_funnels/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /sales_funnel_steps/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Academy Lessons: public can read, only admin can write
     match /academy_lessons/{lessonId} {
       allow read: if true;

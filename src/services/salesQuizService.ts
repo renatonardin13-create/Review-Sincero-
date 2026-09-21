@@ -9,7 +9,8 @@ import {
   query, 
   where,
   orderBy,
-  getDoc
+  getDoc,
+  setDoc
 } from 'firebase/firestore';
 import { QuizQuestion, QuizResult, QuizProduct, QuizSettings } from '../types';
 
@@ -77,7 +78,18 @@ export async function deleteResult(id: string): Promise<void> {
 export async function fetchSettings(): Promise<QuizSettings | null> {
   const docRef = doc(db, SETTINGS_COL, 'config');
   const snapshot = await getDoc(docRef);
-  if (!snapshot.exists()) return null;
+  if (!snapshot.exists()) {
+    // Seed default settings if missing
+    const defaultSettings: QuizSettings = {
+      id: 'config',
+      status: 'active',
+      title: 'Quiz de Vendas',
+      description: 'Descubra qual produto combina com você',
+      updatedAt: new Date().toISOString()
+    };
+    await setDoc(docRef, { ...defaultSettings });
+    return defaultSettings;
+  }
   return { id: snapshot.id, ...snapshot.data() } as QuizSettings;
 }
 

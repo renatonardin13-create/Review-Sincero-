@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { AuthUser, QuizQuestion, QuizProduct, QuizResult, QuizSettings } from '../../types';
 import { fetchQuestions, fetchProducts, fetchResults, fetchSettings } from '../../services/salesQuizService';
-import { PlusCircle, Target, Trophy, Settings as SettingsIcon } from 'lucide-react';
+import { PlusCircle, Target, Trophy, Settings as SettingsIcon, LayoutTemplate } from 'lucide-react';
+import { FunnelDashboard } from '../sales-funnel/FunnelDashboard';
 
 interface QuizAdminManagerProps {
   currentUser: AuthUser;
 }
 
 export const QuizAdminManager: React.FC<QuizAdminManagerProps> = ({ currentUser }) => {
-  const [activeTab, setActiveTab] = useState<'perguntas' | 'resultados' | 'produtos' | 'config'>('perguntas');
+  const [activeTab, setActiveTab] = useState<'perguntas' | 'resultados' | 'produtos' | 'config' | 'funis'>('perguntas');
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [products, setProducts] = useState<QuizProduct[]>([]);
@@ -33,10 +34,13 @@ export const QuizAdminManager: React.FC<QuizAdminManagerProps> = ({ currentUser 
     { id: 'resultados', label: 'Resultados', icon: Trophy },
     { id: 'produtos', label: 'Produtos', icon: Trophy },
     { id: 'config', label: 'Configurações', icon: SettingsIcon },
+    { id: 'funis', label: 'Funis', icon: LayoutTemplate },
   ];
 
   const renderTabContent = () => {
     switch(activeTab) {
+      case 'funis':
+        return <FunnelDashboard />;
       case 'perguntas':
         return (
           <div className="space-y-4">

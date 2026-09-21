@@ -389,6 +389,44 @@ export interface SystemNotification {
   createdBy?: string;
 }
 
+// --- Funnel Types ---
+
+export interface Funnel {
+  id: string;
+  name: string;
+  title: string;
+  description: string;
+  slug: string;
+  status: 'draft' | 'published' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FunnelStep {
+  id: string;
+  funnelId: string;
+  type: 'start' | 'question' | 'result' | 'offer' | 'cta';
+  order: number;
+  data: any; 
+}
+
+export interface FunnelOption {
+  id: string;
+  text: string;
+  score: number;
+  tags: string[];
+  nextStepId?: string;
+}
+
+export interface FunnelQuestion {
+  id: string;
+  question: string;
+  description?: string;
+  options: FunnelOption[];
+  required: boolean;
+}
+
+// --- Existing Quiz Types ---
 export interface QuizOption {
   id: string;
   text: string;
