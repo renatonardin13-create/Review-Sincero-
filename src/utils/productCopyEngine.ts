@@ -140,11 +140,16 @@ function normalize(str: string): string {
 }
 
 export function slugify(str: string): string {
-  return normalize(str)
-    .replace(/[^a-z0-9\s-]/g, '')
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, ' ')
     .trim()
-    .replace(/\s+/g, '-')
-    .slice(0, 60);
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 /**

@@ -16,6 +16,7 @@ import { matchProductImage, validateAndNormalizeReviewImages } from '../utils/pr
 import { generateStandaloneReviewHtml } from '../utils/exportHtmlUtils';
 import {
   generateFullProductCopy,
+  slugify,
   generateSingleTestimonialText,
   generateSeoTitles,
   generateSeoDescription,
@@ -85,7 +86,7 @@ const POPULAR_NICHES = [
     ctaText: 'QUERO O MEU POR R$ 59.90 →',
     slug: 'fone-de-ouvido-bluetooth-tws-sem-fio-bateria-de-longa-duracao',
     siteName: 'ReviewFísico',
-    author: 'Thais Monteiro',
+    author: '',
     seoTitle: 'Fone de Ouvido Bluetooth TWS Sem Fio Bateria de Longa Duração - Review Sincero e Vale a Pena? (Análise 2026)',
     seoDescription: 'Descubra se Fone de Ouvido Bluetooth TWS Sem Fio Bateria de Longa Duração é bom, vale a pena e confira prós, contras, veredito e onde comprar com o melhor preço e garantia.',
     keywords: [
@@ -132,7 +133,7 @@ const POPULAR_NICHES = [
     ctaText: 'QUERO O MEU POR R$ 449.90 →',
     slug: 'robo-aspirador-inteligente-mop-sensor',
     siteName: 'ReviewFísico',
-    author: 'Thais Monteiro',
+    author: '',
     seoTitle: 'Robô Aspirador de Pó com Mop - Vale a Pena? Resenha Completa e Teste',
     seoDescription: 'Testamos na prática o Robô Aspirador Inteligente: potência de sucção, autonomia da bateria e se realmente limpa pelos de pets e poeira.',
     keywords: [
@@ -154,7 +155,7 @@ const POPULAR_NICHES = [
     ctaText: 'COMPRAR COM FRETE GRÁTIS POR R$ 89.90 →',
     slug: 'smartwatch-relogio-inteligente-monitor-cardiaco',
     siteName: 'ReviewFísico',
-    author: 'Thais Monteiro',
+    author: '',
     seoTitle: 'Smartwatch Relógio Inteligente - Análise Sincera e Prós e Contras',
     seoDescription: 'Avaliação detalhada sobre bateria, precisão dos sensores e compatibilidade com Android e iPhone.',
     keywords: [
@@ -197,7 +198,7 @@ const POPULAR_NICHES = [
     ctaText: 'QUERO A MINHA POR R$ 549.90 →',
     slug: 'cadeira-ergonomica-presidente-escritorio',
     siteName: 'ReviewFísico',
-    author: 'Thais Monteiro',
+    author: '',
     seoTitle: 'Cadeira Ergonômica Presidente - Acaba com as Dores nas Costas? Review 2026',
     seoDescription: 'Testamos a cadeira presidente ergonômica durante 30 dias de trabalho intenso. Confira durabilidade e conforto.',
     keywords: [
@@ -280,11 +281,11 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     return {
       id: 'rev-' + Date.now(),
       siteName: 'ReviewFísico',
-      author: 'Thais Monteiro',
-      productName: defaultNiche.name,
+      author: '',
+      productName: '',
       headline: defaultNiche.headline,
       ctaButtonText: defaultNiche.ctaText,
-      slug: defaultNiche.slug,
+      slug: '',
       currentPrice: defaultNiche.currentPrice,
       oldPrice: defaultNiche.oldPrice,
       affiliateUrl: defaultNiche.affiliateUrl,
@@ -427,6 +428,45 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
     };
   });
 
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState<boolean>(() => {
+    if (initialReview && initialReview.slug) {
+      return initialReview.slug !== slugify(initialReview.productName);
+    }
+    return false;
+  });
+
+  const handleProductNameChange = (newProductName: string) => {
+    if (!isSlugManuallyEdited) {
+      const autoSlug = slugify(newProductName);
+      setFormData((prev) => ({
+        ...prev,
+        productName: newProductName,
+        slug: autoSlug
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        productName: newProductName
+      }));
+    }
+  };
+
+  const handleSlugChange = (newSlug: string) => {
+    if (newSlug.trim() === '') {
+      setIsSlugManuallyEdited(false);
+      setFormData((prev) => ({
+        ...prev,
+        slug: slugify(prev.productName)
+      }));
+    } else {
+      setIsSlugManuallyEdited(true);
+      setFormData((prev) => ({
+        ...prev,
+        slug: newSlug
+      }));
+    }
+  };
+
   const handleSave = () => {
     const user = getStoredUser();
     if (user && !isUserAdmin(user)) {
@@ -561,12 +601,14 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
 
   // Auto-fill everything via Niche Preset
   const handleApplyNiche = (niche: typeof POPULAR_NICHES[0]) => {
+    setIsSlugManuallyEdited(false);
+    const autoSlug = slugify(niche.name);
     setFormData((prev) => ({
       ...prev,
       productName: niche.name,
       headline: niche.headline,
       ctaButtonText: niche.ctaText,
-      slug: niche.slug,
+      slug: autoSlug,
       oldPrice: niche.oldPrice,
       currentPrice: niche.currentPrice,
       category: niche.category,
@@ -754,15 +796,10 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
 
   // Slugify URL
   const handleShortenSlug = () => {
-    const base = formData.productName || 'review-produto';
-    const shortened = base
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-      .slice(0, 50);
+    const autoSlug = slugify(formData.productName);
+    const words = autoSlug.split('-').filter(Boolean);
+    const shortened = words.length > 0 ? words.slice(0, 3).join('-') : 'review-produto';
+    setIsSlugManuallyEdited(true);
     setFormData((prev) => ({ ...prev, slug: shortened }));
   };
 
@@ -877,7 +914,7 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
 
       setFormData((prev) => ({
         ...prev,
-        author: prev.author || 'Thais Monteiro',
+        author: prev.author || '',
         overallScore: copy.overallScore,
         guaranteeDays: prev.guaranteeDays || 30,
         verifiedReviewsCount: prev.verifiedReviewsCount || 2184,
@@ -1036,7 +1073,7 @@ ${formData.oldPrice ? `- Preço Anterior / Sem Desconto: R$ ${formData.oldPrice}
 - Plataforma: ${formData.platform}
 - Categoria: ${formData.category}
 - Nome do Portal de Avaliação: ${formData.siteName || 'ReviewFísico'}
-- Avaliador / Especialista: ${formData.author || 'Thais Monteiro'}
+- Avaliador / Especialista: ${formData.author || ''}
 - Nota do Especialista: ${formData.overallScore || 9.2} / 10
 - Garantia Incondicional: ${formData.guaranteeDays || 30} dias
 - Total de Avaliações Verificadas: ${formData.verifiedReviewsCount || 2184} compradores
@@ -1087,7 +1124,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
 3. Card de preço com destaque para economia e botão de compra direcionando para ${formData.affiliateUrl || 'https://www.mercadolivre.com.br/'}.
 4. Seção de identificação com checks azuis para o público-alvo e caixa de aviso para a frase anti-persona.
 5. Grid de Prós & Contras em cartões contrastantes.
-6. Selo com foto e assinatura de ${formData.author || 'Thais Monteiro'} com nota ${formData.overallScore || 9.2}/10.
+6. Selo com foto e assinatura de ${formData.author || ''} com nota ${formData.overallScore || 9.2}/10.
 7. Depoimentos com estrelas e avatares reais.
 8. FAQ em sanfona/accordion.
 9. Botão flutuante no rodapé com CTA de compra garantida.`;
@@ -1309,13 +1346,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const safeSlug = (formData.slug || formData.productName || 'review-produto')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '') || 'review-produto';
+    const safeSlug = slugify(formData.slug || formData.productName) || 'review-produto';
     link.download = `${safeSlug}.html`;
     document.body.appendChild(link);
     link.click();
@@ -1329,16 +1360,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const currentSlug =
-    formData.slug ||
-    formData.productName
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '') ||
-    'meu-produto';
+  const currentSlug = formData.slug || slugify(formData.productName) || '';
 
   const previewUrl = `https://ais-dev-7ghi3svtc6qxgyrly5seds-19146718761.us-east1.run.app/review/${currentSlug}`;
 
@@ -1473,7 +1495,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                   type="text"
                   value={formData.author}
                   onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                  placeholder="Ex: Thais Monteiro"
+                  placeholder=""
                   className="w-full bg-[#0A0A0A] border border-[#262626] rounded-xl px-4 py-3 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#3B82F6]"
                 />
               </div>
@@ -1735,7 +1757,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                 <input
                   type="text"
                   value={formData.productName}
-                  onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+                  onChange={(e) => handleProductNameChange(e.target.value)}
                   placeholder="Ex: Fone de Ouvido Bluetooth TWS Sem Fio Bateria de Longa Duração"
                   className="w-full bg-[#0A0A0A] border border-[#262626] rounded-xl px-4 py-3 text-xs text-white placeholder-[#555] focus:outline-none focus:border-[#3B82F6]"
                 />
@@ -1932,8 +1954,8 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                 <input
                   type="text"
                   value={formData.slug || ''}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  placeholder="fone-de-ouvido-bluetooth-tws-sem-fio"
+                  onChange={(e) => handleSlugChange(e.target.value)}
+                  placeholder="creatina-100-pura"
                   className="w-full bg-transparent text-xs text-white placeholder-[#555] focus:outline-none font-mono"
                 />
               </div>
@@ -2626,7 +2648,7 @@ ${formData.faq && formData.faq.length > 0 ? formData.faq.map((f: FAQItem) => `P:
                 <div className="col-span-8">
                   <input
                     type="text"
-                    value={formData.author || 'Thais Monteiro'}
+                    value={formData.author || ''}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
