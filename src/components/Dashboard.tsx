@@ -58,71 +58,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* User Access Profile Status Card */}
-      <div
-        className={`p-4 md:p-5 rounded-3xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all shadow-xl ${
-          isAdmin
-            ? 'bg-gradient-to-r from-[#1C1809] via-[#151307] to-[#0D0D0D] border-[#F5C542]/40 shadow-[#F5C542]/5'
-            : 'bg-gradient-to-r from-[#0F172A] via-[#0B1120] to-[#0D0D0D] border-[#2563EB]/40 shadow-[#2563EB]/5'
-        }`}
-      >
-        <div className="flex items-center gap-3.5">
-          <div
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shrink-0 shadow-lg ${
-              isAdmin
-                ? 'bg-[#F5C542] text-black shadow-[#F5C542]/20'
-                : 'bg-[#2563EB] text-white shadow-[#2563EB]/20'
-            }`}
-          >
-            {isAdmin ? <Crown className="w-6 h-6" /> : <User className="w-6 h-6" />}
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
-                Perfil Ativo:
-              </span>
-              <span
-                className={`text-xs font-black px-2.5 py-0.5 rounded-full uppercase border ${
-                  isAdmin
-                    ? 'bg-[#F5C542]/20 text-[#F5C542] border-[#F5C542]/40'
-                    : 'bg-[#2563EB]/20 text-[#38BDF8] border-[#2563EB]/40'
-                }`}
-              >
-                {isAdmin ? '👑 Administrador Master (Acesso Total)' : '👤 Usuário Comum (Plano Gratuito)'}
-              </span>
-            </div>
-            <p className="text-xs text-[#A1A1A1] mt-1">
-              {isAdmin
-                ? `Olá ${currentUser?.name || 'Renato Nardin'}, você possui privilégios totais de gestão e controle administrativo.`
-                : `Olá ${currentUser?.name || 'Aluno'}, você tem acesso gratuito aos geradores e recursos essenciais.`}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5 w-full md:w-auto">
-          {isAdmin ? (
-            <button
-              type="button"
-              onClick={() => setCurrentView('admin')}
-              className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-[#F5C542] hover:bg-[#F5C542]/90 text-black font-black text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-[#F5C542]/20 transition-transform active:scale-95"
-            >
-              <Crown className="w-4 h-4" />
-              <span>Abrir Painel Admin</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={onOpenAuthModal}
-              className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-[#38BDF8]/30 text-[#38BDF8] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
-            >
-              <Zap className="w-4 h-4 text-[#F5C542]" />
-              <span>Alternar Perfil / Login</span>
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* Hero Banner inside Dashboard - Matching PageAI (Screenshot 7) */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#121212] via-[#0E0E0E] to-[#080808] border border-[#222222] p-8 md:p-14 text-center space-y-8 shadow-2xl">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#F5C542]/5 rounded-full blur-3xl pointer-events-none" />
@@ -141,7 +76,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </h1>
           
           <p className="text-[#A1A1A1] text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-            Gere páginas de review profissionais com <strong className="text-white font-semibold">IA gratuita</strong> e descubra os produtos em alta agora. Mercado Livre, Shopee e muito mais.
+            Gere páginas de review profissionais com <strong className="text-white font-semibold">IA gratuita</strong> e acesse produtos com alta conversão. Mercado Livre, Shopee e muito mais.
           </p>
         </div>
 
@@ -165,32 +100,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        {/* Platform Selector Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+        {/* Central Action Button */}
+        <div className="flex items-center justify-center pt-2">
           <button
             onClick={onNewReview}
-            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold bg-[#F5C542] text-[#080808] shadow-lg shadow-[#F5C542]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="flex items-center gap-2.5 px-8 py-3.5 rounded-full text-sm font-bold bg-[#F5C542] text-[#080808] shadow-lg shadow-[#F5C542]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
-            <span className="text-sm">⚡</span>
+            <span className="text-base">⚡</span>
             <span>Gerador com IA</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView('campeoes')}
-            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#1C180C] text-[#F5C542] border border-[#F5C542]/40 hover:bg-[#F5C542]/10 transition-all cursor-pointer"
-          >
-            <span className="text-sm">🏆</span>
-            <span>Produtos Campeões</span>
-          </button>
-
-
-
-          <button
-            onClick={() => setCurrentView('trends')}
-            className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-semibold bg-[#151515] text-[#A1A1A1] border border-[#2A2A2A] hover:text-white hover:border-[#F5C542]/40 transition-all cursor-pointer"
-          >
-            <span className="text-sm">🔥</span>
-            <span>Meli & Shopee Trends</span>
           </button>
         </div>
       </div>
@@ -257,12 +174,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <h3 className="text-lg font-bold text-white">Reviews Recentes</h3>
             <p className="text-xs text-[#A1A1A1] mt-0.5">Gerencie, edite ou visualize suas páginas criadas</p>
           </div>
-          <button
-            onClick={() => setCurrentView('reviews')}
-            className="text-xs font-semibold text-[#F5C542] hover:text-[#FFD95A] transition-colors self-start sm:self-auto"
-          >
-            Ver todas ({reviews.length}) →
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setCurrentView('reviews')}
+              className="text-xs font-semibold text-[#F5C542] hover:text-[#FFD95A] transition-colors self-start sm:self-auto"
+            >
+              Ver todas ({reviews.length}) →
+            </button>
+          )}
         </div>
 
         {reviews.length === 0 ? (

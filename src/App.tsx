@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Review, AppSettings, TrendItem, AuthUser, ADMIN_EMAIL } from './types';
+import { Review, AppSettings, AuthUser, ADMIN_EMAIL } from './types';
 import { SAMPLE_REVIEWS, DEFAULT_SETTINGS } from './data/initialData';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { Dashboard } from './components/Dashboard';
 import { ReviewsList } from './components/ReviewsList';
-import { TrendsView } from './components/TrendsView';
 import { TemplatesView } from './components/TemplatesView';
 import { SettingsView } from './components/SettingsView';
 import { CreateReviewWizard } from './components/CreateReviewWizard';
@@ -19,10 +18,13 @@ import { LoginView } from './components/LoginView';
 import { getStoredUser, saveStoredUser, logoutUser } from './services/authService';
 import { loadGlobalSettings, saveGlobalSettings } from './services/settingsService';
 import { SettingsErrorBoundary } from './components/SettingsErrorBoundary';
-import { ProductNotificationWidget } from './components/ProductNotificationWidget';
+import { SystemUpdate } from './types';
+import { subscribeSystemUpdates } from './services/systemUpdateService';
+import { ActivityLog } from './components/ActivityLog';
 import { ToastNotifications } from './components/ToastNotifications';
 import { AcademyView } from './components/AcademyView';
 import { NotificationsCenterModal } from './components/NotificationsCenterModal';
+import { ProductNotificationWidget } from './components/ProductNotificationWidget';
 import { subscribeToNotifications, getReadNotificationsMap, onNotificationReadsChanged } from './services/notificationService';
 import { SystemNotification } from './types';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
@@ -34,7 +36,6 @@ const VIEW_TO_PATH: Record<string, string> = {
   'templates': '/templates',
   'campeoes': '/produtos-campeoes',
   'comparar': '/comparar-produtos',
-  'trends': '/analisar-tendencias',
   'settings': '/settings',
   'admin': '/adm',
   'login': '/login',
@@ -44,12 +45,13 @@ const VIEW_TO_PATH: Record<string, string> = {
 const PATH_TO_VIEW: Record<string, string> = {
   '/aluno': 'dashboard',
   '/': 'dashboard',
+  '/usuario': 'dashboard',
   '/reviews': 'reviews',
   '/create': 'create',
   '/templates': 'templates',
   '/produtos-campeoes': 'campeoes',
   '/comparar-produtos': 'comparar',
-  '/analisar-tendencias': 'trends',
+  '/analisar-tendencias': 'campeoes',
   '/settings': 'settings',
   '/adm': 'admin',
   '/admin': 'admin',
@@ -65,6 +67,7 @@ export default function App() {
   const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState<boolean>(false);
   const [targetLessonId, setTargetLessonId] = useState<string | undefined>(undefined);
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+  const [updates, setUpdates] = useState<SystemUpdate[]>([]);
   const [readNotifsMap, setReadNotifsMap] = useState<Record<string, boolean>>(() => getReadNotificationsMap());
 
   // Auth User State & Role Verification
@@ -75,6 +78,9 @@ export default function App() {
 
   // Escutar notificações do sistema em tempo real e status de lido/não lido
   useEffect(() => {
+    const unsubUpdates = subscribeSystemUpdates((upds) => {
+      setUpdates(upds);
+    });
     const unsub = subscribeToNotifications((notifs) => {
       setNotifications(notifs);
     });
@@ -84,6 +90,7 @@ export default function App() {
     return () => {
       unsub();
       unsubReads();
+      unsubUpdates();
     };
   }, []);
 
@@ -329,58 +336,6 @@ export default function App() {
     setReviews([duplicated, ...reviews]);
   };
 
-  const handleUseTrend = (trend: TrendItem) => {
-    const trendPlatform = (trend as any).platform || 'Mercado Livre';
-    const trendImage = (trend as any).thumbnail || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80';
-    const trendAffiliateUrl = (trend as any).realUrl || '';
-
-    const newRevFromTrend: Review = {
-      id: 'rev-' + Date.now(),
-      siteName: settings.siteName,
-      author: settings.authorName,
-      productName: trend.title,
-      currentPrice: trend.suggestedPrice || 'R$ 199,90',
-      oldPrice: '',
-      affiliateUrl: trendAffiliateUrl,
-      category: trend.category,
-      platform: trendPlatform,
-      description: trend.suggestedDescription || `Review completo e sincero sobre ${trend.title}, produto campeão de vendas e buscas na plataforma ${trendPlatform}.`,
-      features: [
-        'Alta procura no mercado brasileiro',
-        `Tendência oficial e mais vendidos na ${trendPlatform}`,
-        'Garantia de entrega e compra segura'
-      ],
-      mainImage: trendImage,
-      images: [trendImage],
-      pros: [
-        'Produto em alta demanda com grande volume de buscas no Brasil',
-        'Excelente custo-benefício comparado a concorrentes',
-        `Disponibilidade imediata com entrega rápida na ${trendPlatform}`
-      ],
-      cons: [
-        'Alta procura pode gerar oscilação pontual de estoque'
-      ],
-      audience: ['Consumidores que buscam qualidade com preço justo em ' + trend.title],
-      experience: `Produto identificado e analisado através dos dados reais de tendências da plataforma ${trendPlatform}.`,
-      howItWorks: `Disponível na ${trendPlatform} com pagamento facilitado e proteção ao comprador.`,
-      faq: [
-        { id: 'f1', question: 'O produto é original?', answer: `Recomendamos adquirir através do link oficial na ${trendPlatform} com vendedores bem avaliados.` },
-        { id: 'f2', question: 'Como funciona a garantia e entrega?', answer: `Conta com garantia oficial da plataforma ${trendPlatform} com opção de devolução facilitada.` }
-      ],
-      scoreCriteria: { quality: 8.8, design: 8.6, practicality: 8.9, resources: 8.5, costBenefit: 9.2, experience: 8.8 },
-      overallScore: 8.8,
-      verdict: `Produto campeão na ${trendPlatform}, altamente recomendado para compra com excelente retorno em custo-benefício.`,
-      testimonials: [],
-      template: settings.defaultTemplate,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      status: 'Rascunho',
-      userId: currentUser?.id
-    };
-    setActiveReviewForEdit(newRevFromTrend);
-    setCurrentView('create');
-  };
-
   const handleUseChampionProduct = (product: {
     productName: string;
     productPrice: string;
@@ -500,6 +455,7 @@ export default function App() {
           currentUser={currentUser || undefined}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
           onNavigate={handleNavigateFromNotification}
+          isAdminArea={currentView === 'admin'}
         />
 
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
@@ -606,17 +562,6 @@ export default function App() {
                 setActiveReviewForEdit(null);
                 setCurrentView('dashboard');
               }}
-              onSwitchToTrends={() => setCurrentView('trends')}
-            />
-          )}
-
-          {currentView === 'trends' && (
-            <TrendsView
-              onUseTrend={handleUseTrend}
-              onSwitchToGenerator={(platform) => {
-                setActiveReviewForEdit(null);
-                setCurrentView('create');
-              }}
             />
           )}
 
@@ -645,6 +590,7 @@ export default function App() {
 
       <ProductNotificationWidget intervalMinutes={settings.productNotificationIntervalMinutes || 5} />
       <ToastNotifications currentUser={currentUser} />
+      <ActivityLog updates={updates} />
 
       {/* Global Notifications Center Modal */}
       <NotificationsCenterModal

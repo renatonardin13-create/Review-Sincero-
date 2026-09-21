@@ -48,7 +48,7 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
   onUseProductForReview,
   onSwitchToComparator
 }) => {
-  const [selectedTab, setSelectedTab] = useState<'all' | 'meli' | 'shopee' | 'highticket' | 'trends' | 'highticket_only'>('all');
+  const [selectedTab, setSelectedTab] = useState<'all' | 'meli' | 'shopee' | 'highticket' | 'highticket_only'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [visibleCount, setVisibleCount] = useState<number>(24);
@@ -323,7 +323,6 @@ export const TopProductsView: React.FC<TopProductsViewProps> = ({
       if (selectedTab === 'meli' && prod.platform !== 'Mercado Livre') return false;
       if (selectedTab === 'shopee' && prod.platform !== 'Shopee') return false;
       if (selectedTab === 'highticket' && !prod.isHighTicket && prod.rawPrice < 250) return false;
-      if (selectedTab === 'trends' && !liveTrends.find(t => t.productId === prod.productId)) return false;
       if (selectedCategory !== 'all' && prod.category !== selectedCategory) return false;
       if (
         liveSearchResults.length === 0 &&

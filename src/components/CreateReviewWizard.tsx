@@ -203,7 +203,6 @@ interface CreateReviewWizardProps {
   userReviews: Review[];
   onSave: (review: Review) => void;
   onCancel: () => void;
-  onSwitchToTrends?: () => void;
   defaultPlatformMode?: 'meli' | 'shopee' | 'pf';
 }
 
@@ -213,7 +212,6 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   userReviews,
   onSave,
   onCancel,
-  onSwitchToTrends,
   defaultPlatformMode = 'meli'
 }) => {
   const [step, setStep] = useState<number>(1);
