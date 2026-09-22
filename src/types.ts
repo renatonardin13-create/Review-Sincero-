@@ -203,15 +203,83 @@ export interface ReviewFactItem {
   source?: string;
 }
 
+export type QuizTemplateId = 'classic' | 'diagnostic';
+
+export type QuizQuestionType =
+  | 'single-select'
+  | 'multi-select'
+  | 'slider'
+  | 'weight'
+  | 'height'
+  | 'number'
+  | 'text';
+
 export interface QuizQuestion {
   id: string;
   question: string;
-  options: [string, string, string, string];
+  options: string[]; // Flexible options array (4 for classic, variable for diagnostic)
   correctAnswerIndex: number; // 0, 1, 2, 3
   explanation: string;
+  type?: QuizQuestionType;
+  description?: string;
+  optionScores?: number[];
+  sliderMin?: number;
+  sliderMax?: number;
+  sliderStep?: number;
+  sliderUnit?: string;
+  sliderInitial?: number;
+  required?: boolean;
 }
 
 export type QuizDifficulty = 'Fácil' | 'Médio' | 'Difícil' | 'Misto';
+
+export interface QuizResultProfile {
+  id: string;
+  title: string;
+  description: string;
+  minScore: number;
+  maxScore: number;
+  imageUrl?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+}
+
+export interface QuizLeadCaptureConfig {
+  enabled: boolean;
+  title?: string;
+  subtitle?: string;
+  fields: {
+    name?: boolean;
+    email?: boolean;
+    phone?: boolean;
+  };
+  buttonText?: string;
+}
+
+export interface QuizOfferConfig {
+  title?: string;
+  subtitle?: string;
+  productName?: string;
+  oldPrice?: string;
+  currentPrice?: string;
+  benefits?: string[];
+  guaranteeDays?: number;
+  ctaText?: string;
+  ctaUrl?: string;
+  timerEnabled?: boolean;
+  timerMinutes?: number;
+}
+
+export interface QuizThemeConfig {
+  primaryColor?: string;
+  secondaryColor?: string;
+  bgColor?: string;
+  cardBgColor?: string;
+  borderColor?: string;
+  textColor?: string;
+  borderRadius?: string;
+  contentMaxWidth?: string;
+}
 
 export interface QuizConfig {
   id: string;
@@ -224,6 +292,20 @@ export interface QuizConfig {
   ctaUrl: string;
   resultMessage?: string;
   questions: QuizQuestion[];
+  selectedTemplate?: QuizTemplateId;
+  introImage?: string;
+  introTitle?: string;
+  introSubtitle?: string;
+  introCtaText?: string;
+  processingEnabled?: boolean;
+  processingTimeMs?: number;
+  processingMessages?: string[];
+  resultProfiles?: QuizResultProfile[];
+  leadCapture?: QuizLeadCaptureConfig;
+  offerConfig?: QuizOfferConfig;
+  theme?: QuizThemeConfig;
+  testimonials?: TestimonialItem[];
+  faq?: FAQItem[];
 }
 
 export interface Review {

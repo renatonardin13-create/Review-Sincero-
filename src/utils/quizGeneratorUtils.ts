@@ -1,9 +1,15 @@
-import { QuizConfig, QuizQuestion, QuizDifficulty, Review } from '../types';
+import { QuizConfig, QuizQuestion, QuizDifficulty, QuizTemplateId, Review } from '../types';
+import {
+  generateDefaultDiagnosticConfig,
+  generateDiagnosticPRD,
+  generateDiagnosticPrompt,
+  generateDiagnosticStandaloneHtml
+} from './quizDiagnosticUtils';
 
 /**
  * Escapes HTML characters for safe rendering in HTML templates
  */
-export function escapeHtml(unsafe: string): string {
+export function escapeHtml(unsafe?: string | null): string {
   if (!unsafe) return '';
   return unsafe
     .replace(/&/g, '&amp;')
@@ -20,7 +26,8 @@ export function generateQuizFromProduct(
   reviewData: Partial<Review>,
   questionCount: number = 5,
   difficulty: QuizDifficulty = 'Misto',
-  quizType: string = 'Conhecimento & Diagnóstico de Compra'
+  quizType: string = 'Conhecimento & Diagnóstico de Compra',
+  templateId: QuizTemplateId = 'classic'
 ): QuizConfig {
   const pName = reviewData.productName?.trim() || 'Produto';
   const price = reviewData.currentPrice ? `R$ ${reviewData.currentPrice}` : 'Preço Promocional';
@@ -155,7 +162,7 @@ export function generateQuizFromProduct(
 
   const selectedQuestions = defaultQuestions.slice(0, Math.min(questionCount, defaultQuestions.length));
 
-  return {
+  const baseConfig: QuizConfig = {
     id: 'quiz-' + Date.now(),
     title: `Quiz do ${pName}: Teste Seu Conhecimento`,
     description: `Descubra se o ${pName} é ideal para a sua rotina e tire todas as suas dúvidas antes de comprar na oferta oficial.`,
@@ -163,16 +170,31 @@ export function generateQuizFromProduct(
     difficulty,
     type: quizType,
     ctaText: reviewData.ctaButtonText || `VER OFERTA OFICIAL E COMPRAR (${price})`,
-    ctaUrl: reviewData.affiliateUrl || reviewData.slug ? `/review/${reviewData.slug}` : 'https://www.mercadolivre.com.br/',
+    ctaUrl: reviewData.affiliateUrl || (reviewData.slug ? `/review/${reviewData.slug}` : 'https://www.mercadolivre.com.br/'),
     resultMessage: `Parabéns! Você concluiu o quiz sobre o ${pName}. Com base nas suas respostas, este produto é 100% recomendado para você.`,
-    questions: selectedQuestions
+    questions: selectedQuestions,
+    selectedTemplate: templateId
   };
+
+  if (templateId === 'diagnostic') {
+    const diagConfig = generateDefaultDiagnosticConfig(reviewData, selectedQuestions);
+    return {
+      ...baseConfig,
+      ...diagConfig
+    };
+  }
+
+  return baseConfig;
 }
 
 /**
  * Generates a 20-Section Product Requirements Document (PRD) for the Quiz
  */
 export function generateQuizPRD(quiz: QuizConfig, reviewData: Partial<Review>): string {
+  if (quiz.selectedTemplate === 'diagnostic') {
+    return generateDiagnosticPRD(quiz, reviewData);
+  }
+
   const pName = reviewData.productName || 'Produto';
   const ctaUrl = quiz.ctaUrl || reviewData.affiliateUrl || '#';
 
@@ -272,6 +294,10 @@ Array de objetos JSON contendo id, question, options (length 4), correctAnswerIn
  * Generates an AI Prompt derived from the Quiz PRD for AI Studio / Lovable / Claude
  */
 export function generateQuizPrompt(quiz: QuizConfig, reviewData: Partial<Review>): string {
+  if (quiz.selectedTemplate === 'diagnostic') {
+    return generateDiagnosticPrompt(quiz, reviewData);
+  }
+
   const pName = reviewData.productName || 'Produto';
   const prd = generateQuizPRD(quiz, reviewData);
 
@@ -292,6 +318,10 @@ INSTRUÇÕES DE EXECUÇÃO:
  * Generates a 100% standalone, self-contained HTML5 file for the Quiz
  */
 export function generateStandaloneQuizHtml(quiz: QuizConfig, reviewData: Partial<Review>): string {
+  if (quiz.selectedTemplate === 'diagnostic') {
+    return generateDiagnosticStandaloneHtml(quiz, reviewData);
+  }
+
   const pName = escapeHtml(reviewData.productName || 'Produto');
   const siteName = escapeHtml(reviewData.siteName || 'ReviewFísico');
   const ctaUrl = escapeHtml(quiz.ctaUrl || reviewData.affiliateUrl || '#');

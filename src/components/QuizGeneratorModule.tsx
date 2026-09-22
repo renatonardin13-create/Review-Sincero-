@@ -19,13 +19,17 @@ import {
   ArrowRight,
   AlertCircle
 } from 'lucide-react';
-import { Review, QuizConfig, QuizQuestion, QuizDifficulty } from '../types';
+import { Review, QuizConfig, QuizQuestion, QuizDifficulty, QuizTemplateId } from '../types';
 import {
   generateQuizFromProduct,
   generateQuizPRD,
   generateQuizPrompt,
   generateStandaloneQuizHtml
 } from '../utils/quizGeneratorUtils';
+import { generateDefaultDiagnosticConfig } from '../utils/quizDiagnosticUtils';
+import { QuizTemplateSelector } from './quiz/QuizTemplateSelector';
+import { QuizDiagnosticEditor } from './quiz/QuizDiagnosticEditor';
+import { QuizDiagnosticPreview } from './quiz/QuizDiagnosticPreview';
 
 interface QuizGeneratorModuleProps {
   review: Partial<Review>;
@@ -41,8 +45,10 @@ export const QuizGeneratorModule: React.FC<QuizGeneratorModuleProps> = ({
   // Quiz State
   const [quizConfig, setQuizConfig] = useState<QuizConfig>(() => {
     if (review.quizConfig) return review.quizConfig;
-    return generateQuizFromProduct(review, 5, 'Misto', 'Conhecimento & Diagnóstico de Compra');
+    return generateQuizFromProduct(review, 5, 'Misto', 'Conhecimento & Diagnóstico de Compra', 'classic');
   });
+
+  const selectedTemplate = quizConfig.selectedTemplate || 'classic';
 
   const [questionCount, setQuestionCount] = useState<number>(quizConfig.questions.length || 5);
   const [difficulty, setDifficulty] = useState<QuizDifficulty>(quizConfig.difficulty || 'Misto');
@@ -60,6 +66,31 @@ export const QuizGeneratorModule: React.FC<QuizGeneratorModuleProps> = ({
   const [selectedOptIdx, setSelectedOptIdx] = useState<number | null>(null);
   const [score, setScore] = useState<number>(0);
   const [hasAnswered, setHasAnswered] = useState<boolean>(false);
+
+  // Template Switcher Handler
+  const handleSelectTemplate = (templateId: QuizTemplateId) => {
+    if (selectedTemplate === templateId) return;
+
+    if (templateId === 'diagnostic') {
+      const diagDefaults = generateDefaultDiagnosticConfig(review, quizConfig.questions);
+      const updatedConfig: QuizConfig = {
+        ...quizConfig,
+        ...diagDefaults,
+        selectedTemplate: 'diagnostic'
+      };
+      setQuizConfig(updatedConfig);
+      if (onUpdateQuizConfig) onUpdateQuizConfig(updatedConfig);
+      setActionToast({ message: 'Modelo de Quiz alterado para "Quiz Diagnóstico"!', type: 'success' });
+    } else {
+      const updatedConfig: QuizConfig = {
+        ...quizConfig,
+        selectedTemplate: 'classic'
+      };
+      setQuizConfig(updatedConfig);
+      if (onUpdateQuizConfig) onUpdateQuizConfig(updatedConfig);
+      setActionToast({ message: 'Modelo de Quiz alterado para "Quiz Clássico"!', type: 'success' });
+    }
+  };
 
   // Helper function for resilient clipboard copying
   const safeCopyToClipboard = async (text: string): Promise<boolean> => {
@@ -238,16 +269,43 @@ export const QuizGeneratorModule: React.FC<QuizGeneratorModuleProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* HEADER DO MÓDULO QUIZ */}
-      <div className="bg-[#0D1117] border border-[#1E293B] rounded-2xl p-5 md:p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-[#60A5FA]">
-              <HelpCircle className="w-5 h-5 text-[#60A5FA]" />
-              <h2 className="text-base font-bold text-white tracking-tight">
-                Gerador de Quiz Interativo do Produto
-              </h2>
-            </div>
+      {/* 1. SELETOR DE TEMPLATES DO QUIZ */}
+      <QuizTemplateSelector
+        selectedTemplate={selectedTemplate}
+        onSelectTemplate={handleSelectTemplate}
+      />
+
+      {/* 2. ÁREA DE CONFIGURAÇÃO E EDIÇÃO CONFORME O TEMPLATE SELECIONADO */}
+      {selectedTemplate === 'diagnostic' ? (
+        <div className="space-y-6">
+          <QuizDiagnosticEditor
+            quizConfig={quizConfig}
+            onChange={(updated) => {
+              setQuizConfig(updated);
+              if (onUpdateQuizConfig) onUpdateQuizConfig(updated);
+            }}
+            onGenerateAI={handleGenerateAiQuiz}
+            isGeneratingAI={false}
+          />
+
+          <QuizDiagnosticPreview
+            quizConfig={quizConfig}
+            reviewData={review}
+          />
+        </div>
+      ) : (
+        /* TEMPLATE 01: CLÁSSICO */
+        <div className="space-y-6">
+          {/* HEADER DO MÓDULO QUIZ */}
+          <div className="bg-[#0D1117] border border-[#1E293B] rounded-2xl p-5 md:p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 text-[#60A5FA]">
+                  <HelpCircle className="w-5 h-5 text-[#60A5FA]" />
+                  <h2 className="text-base font-bold text-white tracking-tight">
+                    Gerador de Quiz Clássico do Produto
+                  </h2>
+                </div>
             <p className="text-xs text-[#8E8E8E] mt-1">
               Crie um Quiz interativo para engajar compradores, quebrar objeções e direcionar tráfego qualificado para a sua oferta oficial.
             </p>
@@ -530,6 +588,8 @@ export const QuizGeneratorModule: React.FC<QuizGeneratorModuleProps> = ({
           ))}
         </div>
       </div>
+      </div>
+      )}
 
       {/* CENTRAL DE EXPORTAÇÃO E ENTREGÁVEIS DO QUIZ */}
       <div className="bg-[#0D1117] border border-[#1E293B] rounded-2xl p-5 space-y-4">
