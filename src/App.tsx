@@ -23,6 +23,7 @@ import { subscribeSystemUpdates } from './services/systemUpdateService';
 import { ActivityLog } from './components/ActivityLog';
 import { ToastNotifications } from './components/ToastNotifications';
 import { AcademyView } from './components/AcademyView';
+import { ReviewPage } from './components/ReviewPage';
 import { NotificationsCenterModal } from './components/NotificationsCenterModal';
 import { subscribeToNotifications, getReadNotificationsMap, onNotificationReadsChanged } from './services/notificationService';
 import { SystemNotification } from './types';
@@ -122,6 +123,16 @@ export default function App() {
       const path = window.location.pathname;
       const user = getStoredUser();
       const userIsAdmin = user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+
+      // Rota pública de Review: Acesso livre para qualquer visitante
+      if (path.startsWith('/review/')) {
+        const param = path.replace('/review/', '').trim();
+        const found = reviews.find(r => r.slug === param || r.id === param) || reviews[0];
+        if (found) {
+          setActiveReviewForView(found);
+          return;
+        }
+      }
 
       // Rota de Admin: Login obrigatório apenas para o Administrador Master
       if (path === '/admin' || path === '/adm') {
@@ -616,41 +627,27 @@ export default function App() {
         onUserChanged={handleUserChange}
       />
 
-      {/* Full Review Modal Viewer */}
+      {/* Full Review Page Experience */}
       {activeReviewForView && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md overflow-y-auto">
-          <div className="sticky top-0 z-50 bg-[#0D0D0D] border-b border-[#2A2A2A] px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setActiveReviewForView(null)}
-                className="flex items-center gap-2 text-xs font-semibold text-[#A1A1A1] hover:text-white bg-[#151515] border border-[#2A2A2A] px-4 py-2 rounded-xl cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Fechar Preview</span>
-              </button>
-              <span className="text-xs text-[#F5C542] font-semibold bg-[#F5C542]/10 px-3 py-1 rounded-full border border-[#F5C542]/20">
-                Modo Visualização Oficial
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  const rev = activeReviewForView;
-                  setActiveReviewForView(null);
-                  setActiveReviewForEdit(rev);
-                  setCurrentView('create');
-                }}
-                className="bg-[#151515] hover:bg-[#1C1C1C] border border-[#2A2A2A] text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer"
-              >
-                Editar Review
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-[#080808]">
-            <ReviewRenderer review={activeReviewForView} />
-          </div>
+        <div className="fixed inset-0 z-50 bg-[#080808] overflow-y-auto">
+          <ReviewPage
+            review={activeReviewForView}
+            onSaveReview={(updated) => {
+              handleSaveReview(updated);
+              setActiveReviewForView(updated);
+            }}
+            onRegenerateAi={(rev) => {
+              setActiveReviewForEdit(rev);
+              setActiveReviewForView(null);
+              setCurrentView('create');
+            }}
+            onBack={() => setActiveReviewForView(null)}
+            onEditReview={(rev) => {
+              setActiveReviewForEdit(rev);
+              setActiveReviewForView(null);
+              setCurrentView('create');
+            }}
+          />
         </div>
       )}
     </div>

@@ -34,6 +34,8 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ProductNotificationManager } from './ProductNotificationManager';
 import { SystemUpdateManager } from './SystemUpdateManager';
 import { AcademyManager } from './AcademyManager';
+import { getStoredPurchaseEvents, addPurchaseEvent } from '../services/purchaseEventService';
+import { PurchaseNotificationPreview } from './PurchaseNotificationPreview';
 
 interface AdminPanelViewProps {
   currentUser: AuthUser;
@@ -51,6 +53,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const isAdmin =
     currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
   const [activeTab, setActiveTab] = useState<'overview' | 'academy' | 'users' | 'apis' | 'login' | 'notifications' | 'system-updates'>('overview');
+  const [conversionSubTab, setConversionSubTab] = useState<'promotional' | 'purchases' | 'demo'>('promotional');
   const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>(getRegisteredUsersList());
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -429,13 +432,169 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
         </div>
       )}
 
-      {/* Tab: Notifications */}
+      {/* Tab: Notifications / Automações de Conversão */}
       {activeTab === 'notifications' && (
-        <ProductNotificationManager
-          currentUser={currentUser}
-          settings={settings}
-          onSaveSettings={onSaveSettings}
-        />
+        <div className="space-y-6 animate-in fade-in">
+          {/* Automações Header & Subtabs */}
+          <div className="bg-[#121214] border border-[#27272a] rounded-3xl p-6 shadow-xl space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5C542]/10 border border-[#F5C542]/20 text-[#F5C542] text-xs font-bold uppercase tracking-wider mb-1">
+                  <Bell className="w-3.5 h-3.5" />
+                  <span>AUTOMAÇÕES DE CONVERSÃO</span>
+                </div>
+                <h2 className="text-xl md:text-2xl font-extrabold text-white">Central de Notificações & Eventos</h2>
+                <p className="text-xs text-[#A1A1A1]">
+                  Gerencie notificações promocionais e eventos de compras confirmadas para os leitores das reviews.
+                </p>
+              </div>
+
+              {/* Subtabs Pill Switcher */}
+              <div className="flex items-center gap-1.5 bg-[#18181b] border border-[#27272a] rounded-2xl p-1.5 self-start md:self-auto">
+                <button
+                  onClick={() => setConversionSubTab('promotional')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    conversionSubTab === 'promotional'
+                      ? 'bg-[#F5C542] text-[#080808] shadow-md'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Notificações Promocionais
+                </button>
+
+                <button
+                  onClick={() => setConversionSubTab('purchases')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    conversionSubTab === 'purchases'
+                      ? 'bg-[#F5C542] text-[#080808] shadow-md'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Eventos de Compra
+                </button>
+
+                <button
+                  onClick={() => setConversionSubTab('demo')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    conversionSubTab === 'demo'
+                      ? 'bg-[#F5C542] text-[#080808] shadow-md'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Demonstração
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Subtab Content: Promotional Notifications */}
+          {conversionSubTab === 'promotional' && (
+            <ProductNotificationManager
+              currentUser={currentUser}
+              settings={settings}
+              onSaveSettings={onSaveSettings}
+            />
+          )}
+
+          {/* Subtab Content: Confirmed Purchase Events */}
+          {conversionSubTab === 'purchases' && (
+            <div className="bg-[#121214] border border-[#27272a] rounded-3xl p-6 md:p-8 space-y-6 shadow-xl">
+              <div className="flex items-center justify-between pb-4 border-b border-[#27272a]">
+                <div>
+                  <h3 className="text-lg font-black text-white">Eventos Reais de Compra Confirmada</h3>
+                  <p className="text-xs text-[#A1A1A1]">
+                    Registro de compras confirmadas disparadas por webhooks/gateways
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const name = prompt('Nome do produto:');
+                    if (!name) return;
+                    addPurchaseEvent({
+                      productId: 'prod-' + Date.now(),
+                      productName: name,
+                      amount: 189.90,
+                      currency: 'BRL',
+                      source: 'Manual ADM',
+                      status: 'confirmed',
+                      customerFirstName: 'Cliente'
+                    });
+                    alert('Evento de compra adicionado com sucesso!');
+                  }}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-xl text-xs transition-all cursor-pointer"
+                >
+                  + Simular Evento de Compra
+                </button>
+              </div>
+
+              <div className="divide-y divide-[#27272a]">
+                {getStoredPurchaseEvents().map((event) => (
+                  <div key={event.id} className="py-3.5 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-mono font-bold">
+                        ✓
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white">{event.productName}</h4>
+                        <p className="text-[11px] text-gray-400">
+                          Origem: {event.source} • Cliente: {event.customerFirstName || 'Anônimo'} • R$ {event.amount || '0,00'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right font-mono text-[11px] text-gray-400">
+                      {new Date(event.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Subtab Content: Demo / Testing Playground */}
+          {conversionSubTab === 'demo' && (
+            <div className="bg-[#121214] border border-[#27272a] rounded-3xl p-6 md:p-8 space-y-6 shadow-xl">
+              <div>
+                <h3 className="text-lg font-black text-white">Demonstração e Testes Visuais</h3>
+                <p className="text-xs text-[#A1A1A1]">
+                  Testador interativo da notificação de compra antes de disponibilizar aos leitores.
+                </p>
+              </div>
+
+              <PurchaseNotificationPreview
+                review={{
+                  id: 'demo-rev',
+                  siteName: 'Guia Sincero Tech',
+                  author: 'Carlos Mendonça',
+                  productName: 'Fone Bluetooth Pro Wireless ANC X9',
+                  currentPrice: '189,90',
+                  oldPrice: '299,90',
+                  affiliateUrl: 'https://exemplo.com',
+                  category: 'Tech',
+                  platform: 'Shopee',
+                  description: 'Demonstração do widget de notificação flutuante.',
+                  features: [],
+                  mainImage: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=300&q=80',
+                  images: [],
+                  pros: [],
+                  cons: [],
+                  audience: [],
+                  experience: '',
+                  howItWorks: '',
+                  faq: [],
+                  scoreCriteria: { quality: 9, design: 9, practicality: 9, resources: 9, costBenefit: 9, experience: 9 },
+                  overallScore: 9,
+                  verdict: '',
+                  testimonials: [],
+                  template: 'premium',
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  status: 'Publicado'
+                }}
+              />
+            </div>
+          )}
+        </div>
       )}
 
       {/* Tab: System Updates */}

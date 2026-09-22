@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Review } from '../types';
 import { matchProductImage } from '../utils/productImageMatcher';
+import { PurchaseNotificationEngine } from './PurchaseNotificationEngine';
 import {
   ShieldCheck,
   CheckCircle2,
@@ -689,6 +690,16 @@ export const ReviewRenderer: React.FC<ReviewRendererProps> = ({
           © {new Date().getFullYear()} {review.siteName || 'Review Sincero'}. Análises e Vereditos Independentes.
         </p>
       </footer>
+
+      {/* Automatic Purchase Notification Engine */}
+      <PurchaseNotificationEngine
+        review={review}
+        onCtaClick={() => {
+          if (review.affiliateUrl) {
+            window.open(review.affiliateUrl, '_blank', 'noopener,noreferrer');
+          }
+        }}
+      />
     </div>
   );
 };

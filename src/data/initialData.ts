@@ -1,4 +1,17 @@
-import { CategoryType, PlatformType, Review, AppSettings, TrendItem } from '../types';
+import { CategoryType, PlatformType, Review, AppSettings, TrendItem, ReviewNotificationConfig } from '../types';
+
+export const DEFAULT_NOTIFICATION_CONFIG: ReviewNotificationConfig = {
+  enabled: true,
+  mode: 'product_promotion',
+  position: 'bottom-left',
+  durationMs: 7000,
+  intervalMs: 30000,
+  maxPerSession: 3,
+  showImage: true,
+  showTimeAgo: true,
+  showProductName: true,
+  onlyConfirmedPurchases: true
+};
 
 export const CATEGORIES: CategoryType[] = [
   'Tech',

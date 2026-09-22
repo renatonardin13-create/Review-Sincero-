@@ -310,6 +310,33 @@ export interface QuizConfig {
   faq?: FAQItem[];
 }
 
+export interface ReviewNotificationConfig {
+  enabled: boolean;
+  mode: 'product_promotion' | 'purchase_confirmed' | 'demo';
+  position: 'bottom-left' | 'bottom-right' | 'bottom-center';
+  durationMs: number;
+  intervalMs: number;
+  maxPerSession: number;
+  showImage: boolean;
+  showTimeAgo: boolean;
+  showProductName: boolean;
+  onlyConfirmedPurchases: boolean;
+}
+
+export interface PurchaseEvent {
+  id: string;
+  productId: string;
+  reviewId?: string;
+  productName: string;
+  productImage?: string;
+  amount?: number;
+  currency?: string;
+  source: string;
+  status: 'confirmed';
+  createdAt: string;
+  customerFirstName?: string;
+}
+
 export interface Review {
   id: string;
   siteName: string;
@@ -353,9 +380,10 @@ export interface Review {
   seoSettings?: SeoSettingsData;
   urgencySettings?: UrgencySettingsData;
   quizConfig?: QuizConfig;
+  notificationConfig?: ReviewNotificationConfig;
   createdAt: string;
   updatedAt: string;
-  status: 'Rascunho' | 'Publicado' | 'Arquivado';
+  status: 'Rascunho' | 'Em revisão' | 'Aprovado' | 'Publicado' | 'Arquivado';
   userId?: string;
 }
 

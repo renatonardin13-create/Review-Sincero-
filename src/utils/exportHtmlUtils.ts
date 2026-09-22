@@ -1,5 +1,6 @@
 import { Review, FAQItem, ComparisonProductItem, TestimonialItem } from '../types';
 import { matchProductImage } from './productImageMatcher';
+import { generatePurchaseNotificationRuntimeScript } from './purchaseNotificationRuntime';
 
 function escapeHtml(str: unknown): string {
   if (str === null || str === undefined) return '';
@@ -799,6 +800,7 @@ export function generateStandaloneReviewHtml(review: Partial<Review>): string {
       }
     }
   </script>
+  ${generatePurchaseNotificationRuntimeScript(review as Review)}
 </body>
 </html>`;
 }

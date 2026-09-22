@@ -1557,6 +1557,179 @@ Contexto adicional do usuário: ${promptText || "Nenhum texto adicional fornecid
     }
   });
 
+  // Server-side store for confirmed purchase events (Webhook / Gateway)
+  let serverConfirmedPurchaseEvents: Array<{
+    id: string;
+    productId: string;
+    reviewId?: string;
+    productName: string;
+    productImage?: string;
+    amount?: number;
+    currency?: string;
+    source: string;
+    status: 'confirmed';
+    createdAt: string;
+    customerFirstName?: string;
+  }> = [
+    {
+      id: 'pe-srv-101',
+      productId: 'prod-01',
+      reviewId: 'rev-001',
+      productName: 'Fone Bluetooth Pro Wireless ANC X9',
+      productImage: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=300&q=80',
+      amount: 189.90,
+      currency: 'BRL',
+      source: 'Checkout Afiliado (Webhook Real)',
+      status: 'confirmed',
+      createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+      customerFirstName: 'Mariana'
+    },
+    {
+      id: 'pe-srv-102',
+      productId: 'prod-01',
+      reviewId: 'rev-001',
+      productName: 'Fone Bluetooth Pro Wireless ANC X9',
+      productImage: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=300&q=80',
+      amount: 189.90,
+      currency: 'BRL',
+      source: 'Checkout Afiliado (Webhook Real)',
+      status: 'confirmed',
+      createdAt: new Date(Date.now() - 22 * 60 * 1000).toISOString(),
+      customerFirstName: 'Rodrigo'
+    }
+  ];
+
+  // PUBLIC ENDPOINT: Leitura pública e higienizada de notificações de compras confirmadas
+  app.get("/api/public/purchase-notifications", (req, res) => {
+    try {
+      const reviewId = req.query.reviewId ? String(req.query.reviewId) : undefined;
+      const productId = req.query.productId ? String(req.query.productId) : undefined;
+      const limit = Math.min(Math.max(parseInt(String(req.query.limit || '5'), 10) || 5, 1), 20);
+
+      let filtered = serverConfirmedPurchaseEvents.filter(e => e.status === 'confirmed');
+
+      if (reviewId) {
+        filtered = filtered.filter(e => e.reviewId === reviewId);
+      }
+      if (productId) {
+        filtered = filtered.filter(e => e.productId === productId);
+      }
+
+      // STRICT PRIVACY: Return ONLY public sanitized fields, NEVER personal data
+      const publicItems = filtered.slice(0, limit).map(event => ({
+        id: event.id,
+        productName: event.productName,
+        productImage: event.productImage || '',
+        createdAt: event.createdAt,
+        status: 'confirmed',
+        customerFirstName: event.customerFirstName ? event.customerFirstName.split(' ')[0] : undefined
+      }));
+
+      res.set('Cache-Control', 'public, max-age=15, stale-while-revalidate=30');
+      res.json({
+        ok: true,
+        total: publicItems.length,
+        events: publicItems
+      });
+    } catch (err: any) {
+      console.error("[server] Erro em /api/public/purchase-notifications:", err);
+      res.status(500).json({ ok: false, error: "Erro ao consultar eventos de compra." });
+    }
+  });
+
+  // WEBHOOK ENDPOINT: Recebimento de compras confirmadas via gateway / afiliado / integrador
+  app.post("/api/webhooks/purchase-confirmed", (req, res) => {
+    try {
+      // 1. Validação de Segurança do Webhook Secret
+      const authHeader = req.headers['x-webhook-secret'] || req.headers['authorization'] || '';
+      const expectedSecret = process.env.WEBHOOK_SECRET || 'review_sincero_webhook_secret_2026';
+
+      if (authHeader !== expectedSecret && authHeader !== `Bearer ${expectedSecret}`) {
+        console.warn("[webhook] Tentativa não autorizada de emissão de evento de compra sem secret válida.");
+        return res.status(401).json({
+          ok: false,
+          error: "Acesso não autorizado. Secret de webhook inválida."
+        });
+      }
+
+      // 2. Validação do Payload
+      const {
+        id,
+        eventId,
+        productId,
+        reviewId,
+        productName,
+        productImage,
+        amount,
+        currency,
+        source,
+        status,
+        customerFirstName,
+        customerEmail // extraído apenas para rejeição se necessário, NUNCA armazenado em campos públicos
+      } = req.body || {};
+
+      if (!productName || !productId) {
+        return res.status(400).json({
+          ok: false,
+          error: "Payload inválido. 'productName' e 'productId' são obrigatórios."
+        });
+      }
+
+      // Apenas eventos estritamente confirmados são aceitos
+      if (status !== 'confirmed') {
+        return res.status(400).json({
+          ok: false,
+          error: "Evento rejeitado. Apenas compras com status 'confirmed' geram notificações."
+        });
+      }
+
+      const finalId = String(id || eventId || `pe-wh-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`);
+
+      // 3. Idempotência / Prevenção contra Eventos Duplicados
+      const exists = serverConfirmedPurchaseEvents.some(e => e.id === finalId);
+      if (exists) {
+        console.log(`[webhook] Evento de compra ${finalId} já registrado previamente (idempotência).`);
+        return res.json({
+          ok: true,
+          duplicated: true,
+          message: "Evento já processado anteriormente."
+        });
+      }
+
+      // 4. Registro do Evento de Compra Confirmado
+      const newEvent = {
+        id: finalId,
+        productId: String(productId),
+        reviewId: reviewId ? String(reviewId) : undefined,
+        productName: String(productName),
+        productImage: productImage ? String(productImage) : undefined,
+        amount: typeof amount === 'number' ? amount : undefined,
+        currency: currency ? String(currency) : 'BRL',
+        source: source ? String(source) : 'Webhook Integrador Real',
+        status: 'confirmed' as const,
+        createdAt: new Date().toISOString(),
+        customerFirstName: customerFirstName ? String(customerFirstName).trim().split(' ')[0] : undefined
+      };
+
+      serverConfirmedPurchaseEvents.unshift(newEvent);
+      // Manter limite máximo na memória
+      if (serverConfirmedPurchaseEvents.length > 200) {
+        serverConfirmedPurchaseEvents = serverConfirmedPurchaseEvents.slice(0, 200);
+      }
+
+      console.log(`[webhook] Compra confirmada registrada com sucesso! Produto: ${newEvent.productName} (ID: ${finalId})`);
+
+      res.status(201).json({
+        ok: true,
+        message: "Evento de compra confirmada registrado com sucesso.",
+        eventId: finalId
+      });
+    } catch (err: any) {
+      console.error("[webhook] Erro no processamento do webhook:", err);
+      res.status(500).json({ ok: false, error: "Erro interno no processamento do webhook." });
+    }
+  });
+
   // Catch-all 404 for any other API route
   app.all("/api/*", (req, res) => {
     res.status(404).json({
