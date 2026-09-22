@@ -17,9 +17,10 @@ import {
   Layers,
   Check,
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  Palette
 } from 'lucide-react';
-import { Review, QuizConfig, QuizQuestion, QuizDifficulty, QuizTemplateId } from '../types';
+import { Review, QuizConfig, QuizQuestion, QuizDifficulty, QuizTemplateId, QuizThemeConfig } from '../types';
 import {
   generateQuizFromProduct,
   generateQuizPRD,
@@ -30,6 +31,7 @@ import { generateDefaultDiagnosticConfig } from '../utils/quizDiagnosticUtils';
 import { QuizTemplateSelector } from './quiz/QuizTemplateSelector';
 import { QuizDiagnosticEditor } from './quiz/QuizDiagnosticEditor';
 import { QuizDiagnosticPreview } from './quiz/QuizDiagnosticPreview';
+import { QuizThemeSelectorModal } from './quiz/QuizThemeSelectorModal';
 
 interface QuizGeneratorModuleProps {
   review: Partial<Review>;
@@ -59,6 +61,7 @@ export const QuizGeneratorModule: React.FC<QuizGeneratorModuleProps> = ({
   const [showPrdModal, setShowPrdModal] = useState<boolean>(false);
   const [showPromptModal, setShowPromptModal] = useState<boolean>(false);
   const [showHtmlModal, setShowHtmlModal] = useState<boolean>(false);
+  const [showThemeModal, setShowThemeModal] = useState<boolean>(false);
 
   // Preview Interactive State
   const [previewStep, setPreviewStep] = useState<'start' | 'question' | 'result'>('start');
@@ -311,7 +314,15 @@ export const QuizGeneratorModule: React.FC<QuizGeneratorModuleProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowThemeModal(true)}
+              className="flex items-center gap-2 bg-[#1C1912] border border-[#F5C542]/40 hover:border-[#F5C542] text-[#F5C542] hover:text-white font-bold px-3.5 py-2.5 rounded-xl text-xs shadow-md transition-all cursor-pointer"
+            >
+              <Palette className="w-4 h-4 text-[#F5C542]" />
+              <span>Temas por Nicho</span>
+            </button>
             <button
               type="button"
               onClick={handleGenerateAiQuiz}
@@ -919,6 +930,19 @@ export const QuizGeneratorModule: React.FC<QuizGeneratorModuleProps> = ({
           </div>
         </div>
       )}
+      {/* 3. MODAL SELETOR DE TEMAS POR NICHO */}
+      <QuizThemeSelectorModal
+        isOpen={showThemeModal}
+        onClose={() => setShowThemeModal(false)}
+        quizConfig={quizConfig}
+        review={review}
+        onApplyTheme={(themeConfig: QuizThemeConfig) => {
+          const updated = { ...quizConfig, theme: themeConfig };
+          setQuizConfig(updated);
+          if (onUpdateQuizConfig) onUpdateQuizConfig(updated);
+          setActionToast({ message: 'Tema visual aplicado com sucesso ao Quiz!', type: 'success' });
+        }}
+      />
     </div>
   );
 };

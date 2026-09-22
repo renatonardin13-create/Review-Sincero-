@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { QuizConfig, QuizQuestion, QuizResultProfile, QuizQuestionType } from '../../types';
 import {
+  QUIZ_NICHE_THEMES,
+  QuizNicheTheme,
+  themePresetToConfig
+} from '../../utils/quizThemePresets';
+import {
   Plus,
   Trash2,
   Copy,
@@ -706,96 +711,158 @@ export const QuizDiagnosticEditor: React.FC<QuizDiagnosticEditorProps> = ({
         </div>
       )}
 
-      {/* TAB 7: THEME COLORS */}
+      {/* TAB 7: THEME COLORS & NICHE PRESETS */}
       {activeTab === 'theme' && (
-        <div className="bg-[#0D1117] border border-[#1E293B] p-5 rounded-2xl space-y-4">
-          <h3 className="text-sm font-extrabold text-white">Personalização Visual e Cores do Template</h3>
-          <p className="text-xs text-slate-400">
-            Ajuste a paleta de cores mantendo a responsividade e o alto contraste mobile-first.
-          </p>
+        <div className="bg-[#0D1117] border border-[#1E293B] p-5 md:p-6 rounded-2xl space-y-6">
+          <div>
+            <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+              <Palette className="w-4 h-4 text-[#F5C542]" />
+              <span>Temas Visuais de Quiz por Nicho (12+ Opções)</span>
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Selecione o tema ideal para a categoria do seu produto ou personalize as cores manualmente:
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Cor Principal (CTA/Highlight)</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={quizConfig.theme?.primaryColor || '#16A34A'}
-                  onChange={(e) =>
+          {/* Grid of Niche Themes */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {QUIZ_NICHE_THEMES.map((preset) => {
+              const isSelected =
+                quizConfig.theme?.primaryColor?.toLowerCase() === preset.primaryColor.toLowerCase();
+
+              return (
+                <div
+                  key={preset.id}
+                  onClick={() => {
+                    const themeConfig = themePresetToConfig(preset);
                     onChange({
                       ...quizConfig,
-                      theme: { ...(quizConfig.theme || {}), primaryColor: e.target.value }
-                    })
-                  }
-                  className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                />
-                <input
-                  type="text"
-                  value={quizConfig.theme?.primaryColor || '#16A34A'}
-                  onChange={(e) =>
-                    onChange({
-                      ...quizConfig,
-                      theme: { ...(quizConfig.theme || {}), primaryColor: e.target.value }
-                    })
-                  }
-                  className="w-full bg-[#161B22] border border-[#1F2937] rounded-xl px-3 py-1.5 text-xs text-white"
-                />
+                      theme: themeConfig
+                    });
+                  }}
+                  className={`p-3.5 rounded-xl border text-xs cursor-pointer transition-all flex flex-col justify-between space-y-2.5 ${
+                    isSelected
+                      ? 'border-[#F5C542] bg-[#1A1811] shadow-lg shadow-[#F5C542]/10 ring-1 ring-[#F5C542]'
+                      : 'border-[#1E293B] bg-[#111622] hover:border-slate-600 hover:bg-[#161D2B]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#1C2433] text-white">
+                      {preset.badge}
+                    </span>
+                    {isSelected && (
+                      <span className="text-[10px] font-extrabold text-[#F5C542]">✓ Ativo</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className="font-bold text-white">{preset.name}</h4>
+                    <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                      {preset.description}
+                    </p>
+                  </div>
+
+                  {/* Sample button */}
+                  <div
+                    className="p-2 rounded-lg font-bold text-[11px] text-center border text-white transition-transform"
+                    style={{
+                      backgroundColor: preset.primaryColor,
+                      borderColor: preset.secondaryColor
+                    }}
+                  >
+                    CORES DO NICHO
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Manual Color Adjustments */}
+          <div className="pt-4 border-t border-[#1E293B] space-y-3">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Ajuste Manual de Cores</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Cor Principal (CTA/Highlight)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={quizConfig.theme?.primaryColor || '#16A34A'}
+                    onChange={(e) =>
+                      onChange({
+                        ...quizConfig,
+                        theme: { ...(quizConfig.theme || {}), primaryColor: e.target.value }
+                      })
+                    }
+                    className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
+                  />
+                  <input
+                    type="text"
+                    value={quizConfig.theme?.primaryColor || '#16A34A'}
+                    onChange={(e) =>
+                      onChange({
+                        ...quizConfig,
+                        theme: { ...(quizConfig.theme || {}), primaryColor: e.target.value }
+                      })
+                    }
+                    className="w-full bg-[#161B22] border border-[#1F2937] rounded-xl px-3 py-1.5 text-xs text-white font-mono"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Cor de Fundo do Canvas</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={quizConfig.theme?.bgColor || '#F2F9F4'}
-                  onChange={(e) =>
-                    onChange({
-                      ...quizConfig,
-                      theme: { ...(quizConfig.theme || {}), bgColor: e.target.value }
-                    })
-                  }
-                  className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                />
-                <input
-                  type="text"
-                  value={quizConfig.theme?.bgColor || '#F2F9F4'}
-                  onChange={(e) =>
-                    onChange({
-                      ...quizConfig,
-                      theme: { ...(quizConfig.theme || {}), bgColor: e.target.value }
-                    })
-                  }
-                  className="w-full bg-[#161B22] border border-[#1F2937] rounded-xl px-3 py-1.5 text-xs text-white"
-                />
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Cor de Fundo do Canvas</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={quizConfig.theme?.bgColor || '#0D1117'}
+                    onChange={(e) =>
+                      onChange({
+                        ...quizConfig,
+                        theme: { ...(quizConfig.theme || {}), bgColor: e.target.value }
+                      })
+                    }
+                    className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
+                  />
+                  <input
+                    type="text"
+                    value={quizConfig.theme?.bgColor || '#0D1117'}
+                    onChange={(e) =>
+                      onChange({
+                        ...quizConfig,
+                        theme: { ...(quizConfig.theme || {}), bgColor: e.target.value }
+                      })
+                    }
+                    className="w-full bg-[#161B22] border border-[#1F2937] rounded-xl px-3 py-1.5 text-xs text-white font-mono"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Cor do Card do Conteúdo</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={quizConfig.theme?.cardBgColor || '#FFFFFF'}
-                  onChange={(e) =>
-                    onChange({
-                      ...quizConfig,
-                      theme: { ...(quizConfig.theme || {}), cardBgColor: e.target.value }
-                    })
-                  }
-                  className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                />
-                <input
-                  type="text"
-                  value={quizConfig.theme?.cardBgColor || '#FFFFFF'}
-                  onChange={(e) =>
-                    onChange({
-                      ...quizConfig,
-                      theme: { ...(quizConfig.theme || {}), cardBgColor: e.target.value }
-                    })
-                  }
-                  className="w-full bg-[#161B22] border border-[#1F2937] rounded-xl px-3 py-1.5 text-xs text-white"
-                />
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Cor do Card do Conteúdo</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={quizConfig.theme?.cardBgColor || '#FFFFFF'}
+                    onChange={(e) =>
+                      onChange({
+                        ...quizConfig,
+                        theme: { ...(quizConfig.theme || {}), cardBgColor: e.target.value }
+                      })
+                    }
+                    className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
+                  />
+                  <input
+                    type="text"
+                    value={quizConfig.theme?.cardBgColor || '#FFFFFF'}
+                    onChange={(e) =>
+                      onChange({
+                        ...quizConfig,
+                        theme: { ...(quizConfig.theme || {}), cardBgColor: e.target.value }
+                      })
+                    }
+                    className="w-full bg-[#161B22] border border-[#1F2937] rounded-xl px-3 py-1.5 text-xs text-white font-mono"
+                  />
+                </div>
               </div>
             </div>
           </div>
