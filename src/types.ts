@@ -271,6 +271,8 @@ export interface QuizOfferConfig {
 }
 
 export interface QuizThemeConfig {
+  presetId?: string;
+  presetName?: string;
   primaryColor?: string;
   secondaryColor?: string;
   bgColor?: string;

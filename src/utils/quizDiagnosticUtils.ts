@@ -199,6 +199,7 @@ export function generateDefaultDiagnosticConfig(
 export function generateDiagnosticPRD(quiz: QuizConfig, reviewData: Partial<Review>): string {
   const pName = reviewData.productName || 'Produto';
   const ctaUrl = quiz.ctaUrl || reviewData.affiliateUrl || '#';
+  const theme = quiz.theme || DEFAULT_DIAGNOSTIC_THEME;
 
   return `========================================================================
 DOCUMENTO DE REQUISITOS DE PRODUTO (PRD) — QUIZ DIAGNÓSTICO / FUNIL
@@ -209,7 +210,7 @@ DOCUMENTO DE REQUISITOS DE PRODUTO (PRD) — QUIZ DIAGNÓSTICO / FUNIL
 - Produto Relacionado: ${pName}
 - Título do Quiz: ${quiz.introTitle || quiz.title}
 - Total de Perguntas: ${quiz.questions.length}
-- Estilo Visual: Soft Green Mobile-First (#F2F9F4, cards brancos, tipografia limpa)
+- Estilo Visual: ${theme.presetName || 'Tema Personalizado'} (Fundo: ${theme.bgColor}, Primary: ${theme.primaryColor})
 
 2. OBJETIVO
 Qualificar o lead por meio de perguntas de perfil, calculando um índice de compatibilidade com o ${pName}, capturando dados de contato e apresentando a oferta oficial com alto grau de persuasão.
@@ -235,11 +236,15 @@ Visitantes e potenciais compradores interessados no ${pName} que respondem a fun
   * 30–59 pts: Perfil Altamente Recomendado.
   * 0–29 pts: Perfil Moderado com Garantia sem riscos.
 
-6. DESIGN SYSTEM DIAGNÓSTICO
-- Fundo Tela: Soft Light Green (#F2F9F4).
-- Cards: Branco Puro (#FFFFFF) com bordas suaves (#E2E8F0) e sombra sutil.
-- Destaques / CTAs: Verde Esmeralda (#16A34A / #15803D).
-- Opções: Bordas com destaque ao selecionar.
+6. DESIGN SYSTEM / TEMA VISUAL DO QUIZ
+- Nome do Tema: ${theme.presetName || 'Personalizado'}
+- Cor Principal (Primary): ${theme.primaryColor}
+- Cor Secundária (Secondary): ${theme.secondaryColor}
+- Cor de Fundo da Tela (Canvas): ${theme.bgColor}
+- Cor dos Cards de Conteúdo: ${theme.cardBgColor}
+- Cor das Bordas: ${theme.borderColor}
+- Cor de Texto Principal: ${theme.textColor}
+- Arredondamento de Cantos (Border Radius): ${theme.borderRadius}
 - Responsividade: Mobile-First estrito com suporte a telas de 360px a 480px em smartphone e cartão responsivo no desktop.
 
 7. TELA INICIAL
@@ -302,6 +307,7 @@ Visitantes e potenciais compradores interessados no ${pName} que respondem a fun
 export function generateDiagnosticPrompt(quiz: QuizConfig, reviewData: Partial<Review>): string {
   const pName = reviewData.productName || 'Produto';
   const prd = generateDiagnosticPRD(quiz, reviewData);
+  const theme = quiz.theme || DEFAULT_DIAGNOSTIC_THEME;
 
   return `Você é um desenvolvedor frontend expert em funis de alta conversão para celulares e gamificação de vendas.
 Crie um Quiz Diagnóstico / Funil completo para o produto "${pName}" com base no PRD detalhado a seguir:
@@ -309,7 +315,7 @@ Crie um Quiz Diagnóstico / Funil completo para o produto "${pName}" com base no
 ${prd}
 
 INSTRUÇÕES DE EXECUÇÃO:
-1. Desenvolva uma aplicação web responsiva mobile-first com o design system Soft Green (#F2F9F4 canvas, cards brancos, botões verde esmeralda #16A34A).
+1. Desenvolva uma aplicação web responsiva mobile-first com o design system do tema "${theme.presetName || 'Personalizado'}" (Canvas: ${theme.bgColor}, Cards: ${theme.cardBgColor}, Botões Primary: ${theme.primaryColor}, Texto: ${theme.textColor}, Radius: ${theme.borderRadius}).
 2. Implemente a estrutura completa: Introdução -> Perguntas com score -> Tela de Processamento Animada -> Captura de Lead -> Resultado do Diagnóstico -> Depoimentos de Prova Social -> Card da Oferta com Cronômetro -> CTA Final (${quiz.ctaUrl}).
 3. Suporte aos tipos de pergunta configurados (single-select, multi-select, slider, weight, height).
 4. Garanta que o arquivo final seja 100% funcional em qualquer dispositivo móvel ou desktop.`;
@@ -326,6 +332,15 @@ export function generateDiagnosticStandaloneHtml(quiz: QuizConfig, reviewData: P
   const quizTitle = escapeHtml(quiz.introTitle || quiz.title || `Diagnóstico do ${pName}`);
   const quizSubtitle = escapeHtml(quiz.introSubtitle || quiz.description || `Descubra se o ${pName} é ideal para você.`);
   const introCtaText = escapeHtml(quiz.introCtaText || 'INICIAR DIAGNÓSTICO AGORA →');
+
+  const theme = quiz.theme || DEFAULT_DIAGNOSTIC_THEME;
+  const primaryColor = theme.primaryColor || '#16A34A';
+  const secondaryColor = theme.secondaryColor || '#15803D';
+  const bgColor = theme.bgColor || '#F2F9F4';
+  const cardBgColor = theme.cardBgColor || '#FFFFFF';
+  const borderColor = theme.borderColor || '#E2E8F0';
+  const textColor = theme.textColor || '#133E2B';
+  const borderRadius = theme.borderRadius || '16px';
 
   const offer = quiz.offerConfig || {
     title: `Oferta Oficial do ${pName}`,
@@ -405,40 +420,40 @@ export function generateDiagnosticStandaloneHtml(quiz: QuizConfig, reviewData: P
   <meta name="description" content="${quizSubtitle}">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background-color: #F2F9F4; color: #133E2B; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 12px; }
+    body { background-color: ${bgColor}; color: ${textColor}; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 12px; }
     
     .funnel-container { width: 100%; max-width: 480px; margin: 0 auto; padding-bottom: 32px; }
-    .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px -5px rgba(19, 62, 43, 0.05); margin-bottom: 16px; }
+    .card { background: ${cardBgColor}; border: 1px solid ${borderColor}; border-radius: ${borderRadius}; padding: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); margin-bottom: 16px; }
     
     /* Header & Progress */
-    .funnel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; font-size: 12px; font-weight: 700; color: #16A34A; }
-    .progress-bar-bg { width: 100%; height: 8px; background-color: #E2E8F0; border-radius: 9999px; overflow: hidden; margin-bottom: 20px; }
-    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #22C55E, #15803D); width: 0%; transition: width 0.3s ease; }
+    .funnel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; font-size: 12px; font-weight: 700; color: ${primaryColor}; }
+    .progress-bar-bg { width: 100%; height: 8px; background-color: ${borderColor}; border-radius: 9999px; overflow: hidden; margin-bottom: 20px; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, ${primaryColor}, ${secondaryColor}); width: 0%; transition: width 0.3s ease; }
     
     /* Typography */
-    .title-primary { font-size: 20px; font-weight: 800; color: #133E2B; line-height: 1.3; margin-bottom: 8px; text-align: center; }
-    .subtitle-secondary { font-size: 13px; color: #4A6B5D; line-height: 1.5; margin-bottom: 20px; text-align: center; }
-    .q-title { font-size: 17px; font-weight: 800; color: #133E2B; line-height: 1.35; margin-bottom: 6px; }
-    .q-desc { font-size: 12px; color: #64748B; margin-bottom: 16px; }
+    .title-primary { font-size: 20px; font-weight: 800; color: ${textColor}; line-height: 1.3; margin-bottom: 8px; text-align: center; }
+    .subtitle-secondary { font-size: 13px; opacity: 0.8; line-height: 1.5; margin-bottom: 20px; text-align: center; }
+    .q-title { font-size: 17px; font-weight: 800; color: ${textColor}; line-height: 1.35; margin-bottom: 6px; }
+    .q-desc { font-size: 12px; opacity: 0.7; margin-bottom: 16px; }
 
     /* Interactive Options */
     .options-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-    .opt-btn { width: 100%; min-height: 52px; text-align: left; background-color: #FFFFFF; border: 2px solid #E2E8F0; border-radius: 14px; padding: 14px 16px; color: #1E293B; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: space-between; }
-    .opt-btn:active, .opt-btn.selected { border-color: #16A34A; background-color: #F0FDF4; color: #15803D; }
-    .opt-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #CBD5E1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #FFFFFF; shrink: 0; }
-    .opt-btn.selected .opt-check { background-color: #16A34A; border-color: #16A34A; }
+    .opt-btn { width: 100%; min-height: 52px; text-align: left; background-color: ${cardBgColor}; border: 2px solid ${borderColor}; border-radius: ${borderRadius}; padding: 14px 16px; color: ${textColor}; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: space-between; }
+    .opt-btn:active, .opt-btn.selected { border-color: ${primaryColor}; background-color: rgba(255, 255, 255, 0.08); color: ${primaryColor}; }
+    .opt-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid ${borderColor}; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #FFFFFF; shrink: 0; }
+    .opt-btn.selected .opt-check { background-color: ${primaryColor}; border-color: ${primaryColor}; }
 
     /* Slider / Input Controls */
     .slider-box { text-align: center; margin: 20px 0; }
-    .slider-val { font-size: 32px; font-weight: 900; color: #16A34A; margin-bottom: 12px; }
-    .range-input { width: 100%; height: 10px; border-radius: 5px; accent-color: #16A34A; cursor: pointer; }
+    .slider-val { font-size: 32px; font-weight: 900; color: ${primaryColor}; margin-bottom: 12px; }
+    .range-input { width: 100%; height: 10px; border-radius: 5px; accent-color: ${primaryColor}; cursor: pointer; }
 
     /* Buttons */
-    .btn-green { width: 100%; min-height: 54px; background: linear-gradient(135deg, #16A34A, #15803D); color: #FFFFFF; font-size: 15px; font-weight: 800; border: none; border-radius: 16px; cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(22, 163, 74, 0.25); transition: transform 0.15s ease; }
+    .btn-green { width: 100%; min-height: 54px; background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor}); color: #FFFFFF; font-size: 15px; font-weight: 800; border: none; border-radius: ${borderRadius}; cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); transition: transform 0.15s ease; }
     .btn-green:active { transform: scale(0.98); }
 
     /* Processing Screen */
-    .spinner { width: 48px; height: 48px; border: 5px solid #E2E8F0; border-top-color: #16A34A; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
+    .spinner { width: 48px; height: 48px; border: 5px solid ${borderColor}; border-top-color: ${primaryColor}; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Lead Form */

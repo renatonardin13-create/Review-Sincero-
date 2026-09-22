@@ -280,6 +280,29 @@ export interface QuizOfferConfig {
 
 ---
 
+## 21. THEME SYSTEM (SISTEMA DE TEMAS POR NICHO)
+
+- **Módulos / Arquivos**:
+  - `src/utils/quizThemePresets.ts`: Registro de 12+ presets visuais (Glow Rose Beauty, Emerald Health & Detox, Volt High Performance, Cyber Cyan Tech, Warm Amber Cozy, Glam Magenta Hair, Luxury Bronze & Gold, Playful Violet Kids, Titanium Steel Grooming, Golden Success Navy, Serene Teal Relax, Dark Gold Oficial, Light Clean) e funções utilitárias (`getRecommendedThemeForCategory`, `themePresetToConfig`).
+  - `src/components/quiz/QuizThemeSelectorModal.tsx`: Seletor interativo de temas por categoria com sugestão automática de 1 clique, preview ao vivo e controle de cores manuais.
+  - `src/types.ts`: Interface `QuizThemeConfig` integrada em `QuizConfig.theme`.
+- **Arquitetura Desacoplada**:
+  ```
+  QuizConfig (Data) -> Quiz Engine (Logic) -> Template (Structure) -> Theme (Visual) -> Preview / HTML
+  ```
+- **Princípio da Camada Independente**:
+  - O tema altera **estritamente e exclusivamente** a camada visual (`primaryColor`, `secondaryColor`, `bgColor`, `cardBgColor`, `borderColor`, `textColor`, `borderRadius`).
+  - A seleção ou troca de tema **nunca** altera perguntas, alternativas, respostas corretas, scoring, resultados, captura de leads, ofertas, FAQs, CTAs, produtos ou dados da Review.
+- **Recomendação Automática por Categoria**:
+  - O sistema analisa a categoria do produto e sugere o preset de nicho mais adequado como recomendação, permitindo livre escolha manual sem sobrescrever a decisão do usuário.
+- **Personalização & Fallback**:
+  - Permite ajuste fino de cada parâmetro visual no editor de quiz.
+  - Quizzes legados sem tema sob medida utilizam o tema padrão sem perda de dados nem erros de renderização.
+- **Injeção Dinâmica em Entregáveis**:
+  - O PRD, o Prompt e a exportação HTML Standalone (`quiz-[slug]-classic.html` e `quiz-[slug]-diagnostico.html`) utilizam e injetam dinamicamente as cores e propriedades do tema selecionado.
+
+---
+
 ### 🛡️ MARCAÇÃO DE SEGURANÇA DA ARQUITETURA
-**STATUS**: `VERSION STABLE — REVIEW + QUIZ TEMPLATES`
+**STATUS**: `VERSION STABLE — REVIEW + QUIZ TEMPLATES + NICHE THEMES`
 Esta arquitetura serve como ponto de ancoragem e referência para qualquer evolução futura. Nenhuma API ou interface descrita neste documento deve ser alterada de forma destrutiva.

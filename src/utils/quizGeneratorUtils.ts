@@ -204,6 +204,7 @@ export function generateQuizPRD(quiz: QuizConfig, reviewData: Partial<Review>): 
 
   const pName = reviewData.productName || 'Produto';
   const ctaUrl = quiz.ctaUrl || reviewData.affiliateUrl || '#';
+  const theme = quiz.theme || {};
 
   return `========================================================================
 DOCUMENTO DE REQUISITOS DE PRODUTO (PRD) — GERADOR DE QUIZ INTERATIVO
@@ -215,6 +216,7 @@ DOCUMENTO DE REQUISITOS DE PRODUTO (PRD) — GERADOR DE QUIZ INTERATIVO
 - Tipo de Quiz: ${quiz.type}
 - Nível de Dificuldade: ${quiz.difficulty}
 - Total de Perguntas: ${quiz.questions.length}
+- Tema Visual: ${theme.presetName || 'Dark Gold / Moderno'} (Primary: ${theme.primaryColor || '#22C55E'}, Canvas: ${theme.bgColor || '#080B10'})
 
 2. OBJETIVO
 Engajar o comprador potencial por meio de um quiz de conhecimento e diagnóstico sobre o ${pName}, educando sobre recursos, garantia e custo-benefício antes de direcionar para o checkout/review oficial.
@@ -231,9 +233,15 @@ Compradores em fase de consideração de compra do ${pName} que buscam confirma�
 5. FLUXO DO USUÁRIO
 Início -> Pergunta 1/N -> Seleção de Alternativa -> Feedback -> Próxima Pergunta -> ... -> Tela Final com Diagnóstico -> Clique no CTA (${quiz.ctaText}) -> Redirecionamento para ${ctaUrl}.
 
-6. DESIGN SYSTEM
-- Theme: Dark Mode refinado (#080B10 Canvas, #0D1117 Cards, #1E293B Borders).
-- Destaques: Azul (#3B82F6), Verde Destaque (#22C55E) para acertos e respostas corretas.
+6. DESIGN SYSTEM / TEMA DO QUIZ
+- Nome do Tema: ${theme.presetName || 'Dark Mode / Moderno'}
+- Cor Principal (Primary): ${theme.primaryColor || '#22C55E'}
+- Cor Secundária (Secondary): ${theme.secondaryColor || '#16A34A'}
+- Cor de Fundo da Tela (Canvas): ${theme.bgColor || '#080B10'}
+- Cor dos Cards de Conteúdo: ${theme.cardBgColor || '#0D1117'}
+- Cor das Bordas: ${theme.borderColor || '#1E293B'}
+- Cor de Texto Principal: ${theme.textColor || '#F1F5F9'}
+- Arredondamento (Radius): ${theme.borderRadius || '20px'}
 - Tipografia: Sans-Serif moderna (Inter / Plus Jakarta Sans / System UI).
 
 7. LAYOUT
