@@ -12,6 +12,7 @@ import {
 import { getStoredUser, isUserAdmin, checkUserReviewLimit } from '../services/authService';
 import { CATEGORIES, PLATFORMS } from '../data/initialData';
 import { ReviewRenderer } from './ReviewRenderer';
+import { QuizGeneratorModule } from './QuizGeneratorModule';
 import { matchProductImage, validateAndNormalizeReviewImages } from '../utils/productImageMatcher';
 import { generateStandaloneReviewHtml } from '../utils/exportHtmlUtils';
 import {
@@ -68,7 +69,8 @@ import {
   Users,
   AlertTriangle,
   XCircle,
-  Award
+  Award,
+  FileText
 } from 'lucide-react';
 
 const POPULAR_NICHES = [
@@ -249,6 +251,11 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   const [isSearchingKeywords, setIsSearchingKeywords] = useState<boolean>(false);
   const [keywordWarning, setKeywordWarning] = useState<string | null>(null);
   const [isLimitExceeded, setIsLimitExceeded] = useState<boolean>(false);
+  const [activeGeneratorMode, setActiveGeneratorMode] = useState<'review' | 'quiz'>('review');
+
+  const showActionToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setActionToast({ message, type: type === 'error' ? 'info' : type });
+  };
 
   // Copy & Intelligence Generator States
   const [isGeneratingFullCopy, setIsGeneratingFullCopy] = useState<boolean>(false);
@@ -1456,9 +1463,48 @@ Crie um Quiz Interativo de Diagnóstico e Recomendação de Compra focado exclus
       </div>
 
       {/* =========================================================================
-          HORIZONTAL STEP TABS (1. PRODUTO & PREÇO, 2. GALERIA, ETC.)
+          FLUXO SELECTION (GERAR PÁGINA DE REVIEW vs GERAR QUIZ)
          ========================================================================= */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-[#1E1E1E]">
+      <div className="bg-[#0D1117] border border-[#1E293B] p-1.5 rounded-2xl flex items-center gap-2 shadow-inner">
+        <button
+          type="button"
+          onClick={() => setActiveGeneratorMode('review')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+            activeGeneratorMode === 'review'
+              ? 'bg-[#1E293B] text-white border border-[#3B82F6]/60 shadow-lg shadow-blue-500/10'
+              : 'text-[#8E8E8E] hover:text-white hover:bg-[#121824]'
+          }`}
+        >
+          <FileText className="w-4 h-4 text-[#3B82F6]" />
+          <span>GERAR PÁGINA DE REVIEW</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveGeneratorMode('quiz')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+            activeGeneratorMode === 'quiz'
+              ? 'bg-[#1E293B] text-white border border-[#22C55E]/60 shadow-lg shadow-green-500/10'
+              : 'text-[#8E8E8E] hover:text-white hover:bg-[#121824]'
+          }`}
+        >
+          <HelpCircle className="w-4 h-4 text-[#22C55E]" />
+          <span>GERAR QUIZ DO PRODUTO</span>
+        </button>
+      </div>
+
+      {activeGeneratorMode === 'quiz' ? (
+        <QuizGeneratorModule
+          review={formData}
+          onUpdateQuizConfig={(cfg) => setFormData((prev) => ({ ...prev, quizConfig: cfg }))}
+          setActionToast={({ message, type }) => showActionToast(message, type)}
+        />
+      ) : (
+        <>
+          {/* =========================================================================
+              HORIZONTAL STEP TABS (1. PRODUTO & PREÇO, 2. GALERIA, ETC.)
+             ========================================================================= */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-[#1E1E1E]">
         {[
           { num: 1, label: '1. Produto & Preço' },
           { num: 2, label: `2. Galeria (${formData.images.filter(Boolean).length})` },
@@ -3555,6 +3601,8 @@ Crie um Quiz Interativo de Diagnóstico e Recomendação de Compra focado exclus
           </div>
         </div>
       </div>
+    </>
+    )}
 
       {/* =========================================================================
           BATCH PHOTOS MODAL (COLAR FOTOS EM LOTE)

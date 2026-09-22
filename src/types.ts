@@ -203,6 +203,29 @@ export interface ReviewFactItem {
   source?: string;
 }
 
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  options: [string, string, string, string];
+  correctAnswerIndex: number; // 0, 1, 2, 3
+  explanation: string;
+}
+
+export type QuizDifficulty = 'Fácil' | 'Médio' | 'Difícil' | 'Misto';
+
+export interface QuizConfig {
+  id: string;
+  title: string;
+  description: string;
+  questionCount: number;
+  difficulty: QuizDifficulty;
+  type: string;
+  ctaText: string;
+  ctaUrl: string;
+  resultMessage?: string;
+  questions: QuizQuestion[];
+}
+
 export interface Review {
   id: string;
   siteName: string;
@@ -245,6 +268,7 @@ export interface Review {
   socialCommunity?: SocialCommunityData;
   seoSettings?: SeoSettingsData;
   urgencySettings?: UrgencySettingsData;
+  quizConfig?: QuizConfig;
   createdAt: string;
   updatedAt: string;
   status: 'Rascunho' | 'Publicado' | 'Arquivado';
