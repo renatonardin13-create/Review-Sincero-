@@ -22,7 +22,6 @@ import {
   validateProductUrl, 
   subscribeToProductNotifications 
 } from '../services/productNotificationService';
-import { ProductNotificationWidget } from './ProductNotificationWidget';
 
 interface ProductNotificationManagerProps {
   currentUser: AuthUser;
@@ -519,10 +518,33 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
                   </p>
                 </div>
                 <div className="py-6 flex items-center justify-center">
-                  <ProductNotificationWidget 
-                    previewItem={previewNotification} 
-                    onClosePreview={() => {}} 
-                  />
+                  <div className="bg-[#121214] border border-[#27272a] rounded-2xl p-3.5 shadow-xl w-full max-w-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5 text-[#F5C542] text-[11px] font-bold uppercase tracking-wider">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Produto em destaque</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {previewNotification.imageUrl ? (
+                        <img 
+                          src={previewNotification.imageUrl} 
+                          alt={previewNotification.name} 
+                          className="w-14 h-14 rounded-xl object-cover border border-[#27272a] shrink-0 bg-[#18181b]"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl bg-[#1e1e24] border border-[#27272a] shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-white text-xs line-clamp-2 leading-tight mb-1.5">
+                          {previewNotification.name}
+                        </h4>
+                        <div className="py-1 px-2 rounded-lg bg-[#F5C542] text-[#080808] text-[11px] font-bold text-center">
+                          {previewNotification.ctaText}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="text-[11px] text-gray-500 text-center">
                   O botão fechar (×) e o CTA funcionam interativamente.
