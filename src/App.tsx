@@ -22,6 +22,7 @@ import { SystemUpdate } from './types';
 import { subscribeSystemUpdates } from './services/systemUpdateService';
 import { ActivityLog } from './components/ActivityLog';
 import { ToastNotifications } from './components/ToastNotifications';
+import { LiveUserActivityToast } from './components/LiveUserActivityToast';
 import { AcademyView } from './components/AcademyView';
 import { NotificationsCenterModal } from './components/NotificationsCenterModal';
 import { ProductNotificationWidget } from './components/ProductNotificationWidget';
@@ -599,6 +600,7 @@ export default function App() {
 
       <ProductNotificationWidget intervalMinutes={settings.productNotificationIntervalMinutes || 5} />
       <ToastNotifications currentUser={currentUser} />
+      <LiveUserActivityToast />
       <ActivityLog updates={updates} />
 
       {/* Global Notifications Center Modal */}
