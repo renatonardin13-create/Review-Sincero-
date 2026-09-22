@@ -435,19 +435,26 @@ export const CreateReviewWizard: React.FC<CreateReviewWizardProps> = ({
   });
 
   const handleProductNameChange = (newProductName: string) => {
-    if (!isSlugManuallyEdited) {
-      const autoSlug = slugify(newProductName);
-      setFormData((prev) => ({
+    setFormData((prev) => {
+      const isMainKeywordDefaultOrMatching =
+        !prev.keywordPlanner?.mainKeyword ||
+        prev.keywordPlanner.mainKeyword === prev.productName;
+
+      const updatedMainKeyword = isMainKeywordDefaultOrMatching
+        ? newProductName
+        : (prev.keywordPlanner?.mainKeyword || newProductName);
+
+      return {
         ...prev,
         productName: newProductName,
-        slug: autoSlug
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        productName: newProductName
-      }));
-    }
+        slug: !isSlugManuallyEdited ? slugify(newProductName) : prev.slug,
+        keywordPlanner: {
+          mainKeyword: updatedMainKeyword,
+          highIntentTerms: prev.keywordPlanner?.highIntentTerms || [],
+          suggestions: prev.keywordPlanner?.suggestions || []
+        }
+      };
+    });
   };
 
   const handleSlugChange = (newSlug: string) => {
@@ -1580,11 +1587,7 @@ Crie um Quiz Interativo de Diagnóstico e Recomendação de Compra focado exclus
               </div>
               <input
                 type="text"
-                value={
-                  formData.keywordPlanner?.mainKeyword !== undefined
-                    ? formData.keywordPlanner.mainKeyword
-                    : formData.productName
-                }
+                value={formData.keywordPlanner?.mainKeyword ?? formData.productName ?? ''}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
