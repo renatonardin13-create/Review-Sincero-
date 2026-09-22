@@ -151,7 +151,7 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta notificação de produto?')) return;
-    const res = await deleteProductNotification(id, currentUser);
+    const res = await deleteProductNotification(id, currentUser, notifications);
     if (res.success) {
       setSuccessMsg('Produto excluído com sucesso!');
       setTimeout(() => setSuccessMsg(''), 3000);

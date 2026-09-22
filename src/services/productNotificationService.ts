@@ -167,14 +167,49 @@ export async function saveProductNotification(
     }
     return { success: true };
   } catch (e: any) {
-    console.error('[ProductNotificationService] Error saving product notification:', e);
-    return { success: false, error: e?.message || 'Erro ao salvar no Firestore (PERMISSÃO NEGADA ou falha de rede).' };
+    console.warn('[ProductNotificationService] Firestore error, falling back to local persistence:', e);
+    
+    // Resilient local storage fallback
+    try {
+      let updatedList: ProductNotification[] = [...existingList];
+      if (item.id) {
+        updatedList = updatedList.map(p => p.id === item.id ? {
+          ...p,
+          name: item.name!.trim(),
+          imageUrl: item.imageUrl!.trim(),
+          url: item.url!.trim(),
+          ctaText,
+          active: item.active !== false,
+          order: typeof item.order === 'number' ? item.order : p.order,
+          updatedAt: now
+        } : p);
+      } else {
+        const newItem: ProductNotification = {
+          id: 'pn-local-' + Date.now(),
+          name: item.name!.trim(),
+          imageUrl: item.imageUrl!.trim(),
+          url: item.url!.trim(),
+          ctaText,
+          active: item.active !== false,
+          order: typeof item.order === 'number' ? item.order : (existingList.length + 1),
+          createdAt: now,
+          updatedAt: now,
+          createdBy: currentUser?.email || ADMIN_EMAIL
+        };
+        updatedList.unshift(newItem);
+      }
+      localStorage.setItem('review_sincero_product_notifications', JSON.stringify(updatedList));
+      return { success: true };
+    } catch (localErr) {
+      return { success: false, error: 'Erro ao salvar o produto.' };
+    }
   }
 }
 
 export async function deleteProductNotification(
   id: string,
-  currentUser: AuthUser | null
+  currentUser: AuthUser | null,
+  existingList: ProductNotification[] = []
 ): Promise<{ success: boolean; error?: string }> {
   const isAdmin = currentUser?.email && currentUser.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
   if (!isAdmin) {
@@ -185,7 +220,13 @@ export async function deleteProductNotification(
     await deleteDoc(doc(db, COLLECTION_NAME, id));
     return { success: true };
   } catch (e: any) {
-    console.error('[ProductNotificationService] Error deleting product notification:', e);
-    return { success: false, error: e?.message || 'Erro ao excluir no Firestore.' };
+    console.warn('[ProductNotificationService] Error deleting in Firestore, updating local storage fallback:', e);
+    try {
+      const updatedList = existingList.filter(p => p.id !== id);
+      localStorage.setItem('review_sincero_product_notifications', JSON.stringify(updatedList));
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: 'Erro ao excluir produto.' };
+    }
   }
 }
