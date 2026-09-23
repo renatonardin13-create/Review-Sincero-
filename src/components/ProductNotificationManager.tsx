@@ -263,8 +263,11 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
             <select
               value={intervalMinutes}
               onChange={(e) => setIntervalMinutes(Number(e.target.value))}
-              className="bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-[#F5C542] w-full md:w-48"
+              className="bg-[#18181b] border border-[#3f3f46] text-white rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-[#F5C542] w-full md:w-56"
             >
+              <option value={0.25}>15 segundos (Teste Rápido)</option>
+              <option value={0.5}>30 segundos</option>
+              <option value={1}>1 minuto</option>
               <option value={2}>2 minutos</option>
               <option value={5}>5 minutos (Padrão)</option>
               <option value={10}>10 minutos</option>

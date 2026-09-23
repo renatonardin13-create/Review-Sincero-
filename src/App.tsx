@@ -609,7 +609,6 @@ export default function App() {
       </div>
 
       <ToastNotifications currentUser={currentUser} />
-      <FloatingProductNotificationWidget settings={settings} />
       <ActivityLog updates={updates} />
 
       {/* Global Notifications Center Modal */}
@@ -652,6 +651,9 @@ export default function App() {
           />
         </div>
       )}
+
+      {/* Global Floating Product Notifications Widget */}
+      <FloatingProductNotificationWidget settings={settings} />
     </div>
   );
 }

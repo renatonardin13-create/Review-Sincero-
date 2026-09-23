@@ -29,8 +29,6 @@ export const PurchaseNotificationEngine: React.FC<PurchaseNotificationEngineProp
 
     const triggerNotification = async () => {
       if (!isMounted) return;
-      if (document.hidden) return; // Respect tab visibility
-      if (sessionCount >= config.maxPerSession) return;
 
       const itemData = await resolveNotificationItem(review, config);
       if (itemData && isMounted) {
