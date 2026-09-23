@@ -25,6 +25,7 @@ import { ToastNotifications } from './components/ToastNotifications';
 import { AcademyView } from './components/AcademyView';
 import { ReviewPage } from './components/ReviewPage';
 import { NotificationsCenterModal } from './components/NotificationsCenterModal';
+import { FloatingProductNotificationWidget } from './components/FloatingProductNotificationWidget';
 import { subscribeToNotifications, getReadNotificationsMap, onNotificationReadsChanged } from './services/notificationService';
 import { SystemNotification } from './types';
 import { X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
@@ -608,6 +609,7 @@ export default function App() {
       </div>
 
       <ToastNotifications currentUser={currentUser} />
+      <FloatingProductNotificationWidget settings={settings} />
       <ActivityLog updates={updates} />
 
       {/* Global Notifications Center Modal */}

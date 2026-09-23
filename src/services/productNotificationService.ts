@@ -14,6 +14,45 @@ import { ProductNotification, AuthUser, ADMIN_EMAIL } from '../types';
 
 const COLLECTION_NAME = 'product_notifications';
 
+export const DEFAULT_PRODUCT_NOTIFICATIONS: ProductNotification[] = [
+  {
+    id: 'pn-default-1',
+    name: 'adaptador starlink',
+    imageUrl: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=300&q=80',
+    url: 'https://meli.la/2p9BAh4',
+    ctaText: 'Ver produto',
+    active: true,
+    order: 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdBy: ADMIN_EMAIL
+  },
+  {
+    id: 'pn-default-2',
+    name: 'Cadeira De Escritório Gamer Nitro Ergonômica Estofado Couro Sintético',
+    imageUrl: 'https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&w=300&q=80',
+    url: 'https://meli.la/2RzCZhJ',
+    ctaText: 'Ver produto',
+    active: true,
+    order: 2,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdBy: ADMIN_EMAIL
+  },
+  {
+    id: 'pn-default-3',
+    name: 'Creatina 100% Pura Integralmedica 300g',
+    imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=300&q=80',
+    url: 'https://meli.la/2JzLEbn',
+    ctaText: 'Ver produto',
+    active: true,
+    order: 3,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdBy: ADMIN_EMAIL
+  }
+];
+
 export function normalizeUrl(url: string): string {
   if (!url) return '';
   let trimmed = url.trim();
@@ -60,23 +99,66 @@ export async function fetchProductNotifications(): Promise<ProductNotification[]
         createdBy: data.createdBy || ADMIN_EMAIL
       });
     });
+    if (items.length === 0) {
+      try {
+        const cached = localStorage.getItem('review_sincero_product_notifications');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (err) {}
+      return DEFAULT_PRODUCT_NOTIFICATIONS;
+    }
+    try {
+      localStorage.setItem('review_sincero_product_notifications', JSON.stringify(items));
+    } catch (e) {}
     return items;
   } catch (e) {
     console.warn('[ProductNotificationService] Error fetching product notifications:', e);
     try {
       const cached = localStorage.getItem('review_sincero_product_notifications');
       if (cached) {
-        return JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
     } catch (err) {}
-    return [];
+    return DEFAULT_PRODUCT_NOTIFICATIONS;
   }
 }
 
 export function subscribeToProductNotifications(callback: (notifications: ProductNotification[]) => void): () => void {
+  // 1. Initial immediate local cache response
+  try {
+    const cached = localStorage.getItem('review_sincero_product_notifications');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        callback(parsed);
+      } else {
+        callback(DEFAULT_PRODUCT_NOTIFICATIONS);
+      }
+    } else {
+      callback(DEFAULT_PRODUCT_NOTIFICATIONS);
+    }
+  } catch (e) {
+    callback(DEFAULT_PRODUCT_NOTIFICATIONS);
+  }
+
+  // 2. Local custom event listener
+  const handleLocalUpdate = () => {
+    fetchProductNotifications().then(callback);
+  };
+  window.addEventListener('product_notifications_updated', handleLocalUpdate);
+
+  // 3. Firestore snapshot subscription
+  let unsubscribeFirestore = () => {};
   try {
     const q = query(collection(db, COLLECTION_NAME), orderBy('order', 'asc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    unsubscribeFirestore = onSnapshot(q, (snapshot) => {
       const items: ProductNotification[] = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
@@ -99,12 +181,17 @@ export function subscribeToProductNotifications(callback: (notifications: Produc
       callback(items);
     }, (error) => {
       console.warn('[ProductNotificationService] Snapshot error:', error);
+      fetchProductNotifications().then(callback);
     });
-    return unsubscribe;
   } catch (e) {
     console.warn('[ProductNotificationService] Could not setup onSnapshot:', e);
-    return () => {};
+    fetchProductNotifications().then(callback);
   }
+
+  return () => {
+    unsubscribeFirestore();
+    window.removeEventListener('product_notifications_updated', handleLocalUpdate);
+  };
 }
 
 export async function saveProductNotification(
@@ -165,6 +252,7 @@ export async function saveProductNotification(
         createdBy: currentUser?.email || ADMIN_EMAIL
       });
     }
+    window.dispatchEvent(new CustomEvent('product_notifications_updated'));
     return { success: true };
   } catch (e: any) {
     console.warn('[ProductNotificationService] Firestore error, falling back to local persistence:', e);
@@ -199,6 +287,7 @@ export async function saveProductNotification(
         updatedList.unshift(newItem);
       }
       localStorage.setItem('review_sincero_product_notifications', JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent('product_notifications_updated'));
       return { success: true };
     } catch (localErr) {
       return { success: false, error: 'Erro ao salvar o produto.' };
@@ -218,12 +307,14 @@ export async function deleteProductNotification(
 
   try {
     await deleteDoc(doc(db, COLLECTION_NAME, id));
+    window.dispatchEvent(new CustomEvent('product_notifications_updated'));
     return { success: true };
   } catch (e: any) {
     console.warn('[ProductNotificationService] Error deleting in Firestore, updating local storage fallback:', e);
     try {
       const updatedList = existingList.filter(p => p.id !== id);
       localStorage.setItem('review_sincero_product_notifications', JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent('product_notifications_updated'));
       return { success: true };
     } catch (err) {
       return { success: false, error: 'Erro ao excluir produto.' };

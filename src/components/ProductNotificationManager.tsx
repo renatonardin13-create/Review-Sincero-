@@ -82,6 +82,12 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
     setTimeout(() => setSuccessMsg(''), 3000);
   };
 
+  const handleTestNotification = (index?: number) => {
+    window.dispatchEvent(new CustomEvent('trigger_product_notification_test', { detail: { index } }));
+    setSuccessMsg('🔔 Notificação flutuante exibida na tela!');
+    setTimeout(() => setSuccessMsg(''), 4000);
+  };
+
   const handleOpenAdd = () => {
     setEditingId(null);
     setFormName('');
@@ -223,13 +229,23 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
               Cadastre produtos afiliados com imagem e CTA personalizado para exibição em rotação contínua.
             </p>
           </div>
-          <button
-            onClick={handleOpenAdd}
-            className="flex items-center gap-2 px-5 py-3 bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-bold rounded-xl transition-all shadow-lg shadow-[#F5C542]/10 cursor-pointer self-start md:self-auto"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Novo Produto</span>
-          </button>
+          <div className="flex items-center gap-3 self-start md:self-auto flex-wrap">
+            <button
+              onClick={() => handleTestNotification()}
+              className="flex items-center gap-2 px-4 py-3 bg-[#1e1e24] hover:bg-[#27272a] text-[#F5C542] border border-[#F5C542]/30 font-bold rounded-xl transition-all shadow-md cursor-pointer"
+              title="Disparar notificação na tela imediatamente para testar"
+            >
+              <Bell className="w-4 h-4 animate-bounce" />
+              <span>Testar Notificação Agora</span>
+            </button>
+            <button
+              onClick={handleOpenAdd}
+              className="flex items-center gap-2 px-5 py-3 bg-[#F5C542] hover:bg-[#FFD95A] text-[#080808] font-bold rounded-xl transition-all shadow-lg shadow-[#F5C542]/10 cursor-pointer"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Novo Produto</span>
+            </button>
+          </div>
         </div>
 
         {/* Global Interval Bar */}
@@ -361,6 +377,15 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
                       <ArrowDown className="w-4 h-4" />
                     </button>
                   </div>
+
+                  <button
+                    onClick={() => handleTestNotification(index)}
+                    className="px-2.5 py-2 rounded-xl text-xs font-bold bg-[#1e1e24] hover:bg-[#27272a] text-[#F5C542] border border-[#F5C542]/20 transition-all cursor-pointer flex items-center gap-1"
+                    title="Disparar este produto na tela agora"
+                  >
+                    <Bell className="w-3.5 h-3.5" />
+                    <span>Testar</span>
+                  </button>
 
                   <button
                     onClick={() => handleToggleActive(item)}
