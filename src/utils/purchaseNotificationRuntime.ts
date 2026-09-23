@@ -7,11 +7,11 @@ export function generatePurchaseNotificationRuntimeScript(review: Review): strin
     position: 'bottom-left',
     durationMs: 7000,
     intervalMs: 30000,
-    maxPerSession: 3,
+    maxPerSession: 5,
     showImage: true,
     showTimeAgo: true,
     showProductName: true,
-    onlyConfirmedPurchases: true
+    onlyConfirmedPurchases: false
   };
 
   if (!config.enabled) return '';
@@ -105,7 +105,7 @@ export function generatePurchaseNotificationRuntimeScript(review: Review): strin
         }, config.durationMs || 7000);
       }
 
-      setTimeout(renderNotification, 3000);
+      setTimeout(renderNotification, 1000);
       setInterval(renderNotification, Math.max(config.intervalMs || 30000, 5000));
     })();
   </script>

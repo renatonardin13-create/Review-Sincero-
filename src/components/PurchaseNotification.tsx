@@ -11,6 +11,7 @@ export interface NotificationVisualData {
   timeAgoText: string;
   subtitleText: string;
   isConfirmedPurchase: boolean;
+  ctaUrl?: string;
 }
 
 interface PurchaseNotificationProps {

@@ -1,6 +1,7 @@
 import { ReviewNotificationConfig, PurchaseEvent, Review } from '../types';
 import { DEFAULT_NOTIFICATION_CONFIG } from '../data/initialData';
 import { getPublicSafePurchaseEvents } from './purchaseEventService';
+import { fetchProductNotifications } from './productNotificationService';
 
 export function getEffectiveNotificationConfig(review?: Review | null): ReviewNotificationConfig {
   if (!review || !review.notificationConfig) {
@@ -46,13 +47,38 @@ export async function resolveNotificationItem(
   timeAgoText: string;
   subtitleText: string;
   isConfirmedPurchase: boolean;
+  ctaUrl?: string;
 } | null> {
   if (!config.enabled) return null;
 
+  // 1. Tenta buscar produto ativo cadastrado em "Notificações de Produtos" pelo ADM
+  try {
+    const adminProducts = await fetchProductNotifications();
+    const activeAdminProducts = adminProducts.filter(p => p.active !== false);
+    if (activeAdminProducts.length > 0) {
+      // Sorteia um produto ativo cadastrado no Admin
+      const selected = activeAdminProducts[Math.floor(Math.random() * activeAdminProducts.length)];
+      return {
+        title: '● Produto em Destaque',
+        badgeLabel: 'DESTAQUE PLATAFORMA',
+        badgeColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+        productName: selected.name,
+        productImage: selected.imageUrl,
+        timeAgoText: 'Recomendação em destaque',
+        subtitleText: selected.ctaText || 'Ver oferta especial',
+        isConfirmedPurchase: false,
+        ctaUrl: selected.url
+      };
+    }
+  } catch (err) {
+    console.warn('[purchaseNotificationService] Erro ao carregar produtos do admin:', err);
+  }
+
+  // 2. Se o modo for 'purchase_confirmed', verifica eventos de compras reais
   if (config.mode === 'purchase_confirmed') {
     const events = await getPublicSafePurchaseEvents(review.id, undefined, 5);
     if (events.length > 0) {
-      const latest = events[0];
+      const latest = events[Math.floor(Math.random() * events.length)];
       const buyerName = latest.customerFirstName ? `${latest.customerFirstName}` : 'Uma pessoa';
       return {
         title: '● Compra confirmada',
@@ -65,11 +91,9 @@ export async function resolveNotificationItem(
         isConfirmedPurchase: true
       };
     }
-    if (config.onlyConfirmedPurchases) {
-      return null;
-    }
   }
 
+  // 3. Modo Demonstração
   if (config.mode === 'demo') {
     return {
       title: '● Modo Demonstração',
@@ -83,7 +107,7 @@ export async function resolveNotificationItem(
     };
   }
 
-  // Fallback: product_promotion
+  // 4. Promoção padrão do produto da review
   return {
     title: '● Destaque do Produto',
     badgeLabel: 'PROMOÇÃO',

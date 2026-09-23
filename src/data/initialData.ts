@@ -6,11 +6,11 @@ export const DEFAULT_NOTIFICATION_CONFIG: ReviewNotificationConfig = {
   position: 'bottom-left',
   durationMs: 7000,
   intervalMs: 30000,
-  maxPerSession: 3,
+  maxPerSession: 5,
   showImage: true,
   showTimeAgo: true,
   showProductName: true,
-  onlyConfirmedPurchases: true
+  onlyConfirmedPurchases: false
 };
 
 export const CATEGORIES: CategoryType[] = [

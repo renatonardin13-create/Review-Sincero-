@@ -46,10 +46,10 @@ export const PurchaseNotificationEngine: React.FC<PurchaseNotificationEngineProp
       }
     };
 
-    // Initial trigger after 3 seconds
+    // Initial trigger after 1 second
     const initialTimer = setTimeout(() => {
       triggerNotification();
-    }, 3000);
+    }, 1000);
 
     // Interval loop
     const intervalMs = Math.max(config.intervalMs || 30000, 5000);
@@ -72,7 +72,13 @@ export const PurchaseNotificationEngine: React.FC<PurchaseNotificationEngineProp
       data={data}
       config={config}
       onClose={() => setIsVisible(false)}
-      onClickCta={onCtaClick}
+      onClickCta={() => {
+        if (data.ctaUrl) {
+          window.open(data.ctaUrl, '_blank', 'noopener,noreferrer');
+        } else if (onCtaClick) {
+          onCtaClick();
+        }
+      }}
     />
   );
 };
