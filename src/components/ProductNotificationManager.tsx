@@ -51,14 +51,13 @@ export const ProductNotificationManager: React.FC<ProductNotificationManagerProp
   const [formOrder, setFormOrder] = useState<number>(1);
 
   useEffect(() => {
-    let unsubscribe = () => {};
-    fetchProductNotifications().then(items => {
-      setNotifications(items);
-      setLoading(false);
-    });
-
-    unsubscribe = subscribeToProductNotifications((items) => {
-      setNotifications(items);
+    const unsubscribe = subscribeToProductNotifications((items) => {
+      setNotifications(prev => {
+        try {
+          if (JSON.stringify(prev) === JSON.stringify(items)) return prev;
+        } catch (e) {}
+        return items;
+      });
       setLoading(false);
     });
 

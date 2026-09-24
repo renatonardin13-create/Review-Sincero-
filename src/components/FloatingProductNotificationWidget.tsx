@@ -30,7 +30,14 @@ export const FloatingProductNotificationWidget: React.FC<FloatingProductNotifica
         .filter(p => p && p.active !== false)
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-      setProducts(active);
+      setProducts(prev => {
+        try {
+          if (JSON.stringify(prev) === JSON.stringify(active)) {
+            return prev;
+          }
+        } catch (e) {}
+        return active;
+      });
     };
 
     fetchProductNotifications().then(applyProducts);

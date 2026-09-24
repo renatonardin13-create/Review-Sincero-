@@ -43,7 +43,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
         onLoginSuccess(user);
       }
     });
-  }, [onLoginSuccess]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -131,26 +131,45 @@ export async function fetchProductNotifications(): Promise<ProductNotification[]
 }
 
 export function subscribeToProductNotifications(callback: (notifications: ProductNotification[]) => void): () => void {
+  let lastEmittedJson = '';
+
+  const emitIfChanged = (list: ProductNotification[]) => {
+    try {
+      const currentJson = JSON.stringify(list);
+      if (currentJson !== lastEmittedJson) {
+        lastEmittedJson = currentJson;
+        callback(list);
+      }
+    } catch (e) {
+      callback(list);
+    }
+  };
+
   // 1. Initial immediate local cache response
   try {
     const cached = localStorage.getItem('review_sincero_product_notifications');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        callback(parsed);
+        emitIfChanged(parsed);
       } else {
-        callback(DEFAULT_PRODUCT_NOTIFICATIONS);
+        emitIfChanged(DEFAULT_PRODUCT_NOTIFICATIONS);
       }
     } else {
-      callback(DEFAULT_PRODUCT_NOTIFICATIONS);
+      emitIfChanged(DEFAULT_PRODUCT_NOTIFICATIONS);
     }
   } catch (e) {
-    callback(DEFAULT_PRODUCT_NOTIFICATIONS);
+    emitIfChanged(DEFAULT_PRODUCT_NOTIFICATIONS);
   }
 
   // 2. Local custom event listener
   const handleLocalUpdate = () => {
-    fetchProductNotifications().then(callback);
+    try {
+      const cached = localStorage.getItem('review_sincero_product_notifications');
+      if (cached) {
+        emitIfChanged(JSON.parse(cached));
+      }
+    } catch (e) {}
   };
   window.addEventListener('product_notifications_updated', handleLocalUpdate);
 
@@ -175,17 +194,24 @@ export function subscribeToProductNotifications(callback: (notifications: Produc
           createdBy: data.createdBy || ADMIN_EMAIL
         });
       });
-      try {
-        localStorage.setItem('review_sincero_product_notifications', JSON.stringify(items));
-      } catch (e) {}
-      callback(items);
+      if (items.length > 0) {
+        try {
+          localStorage.setItem('review_sincero_product_notifications', JSON.stringify(items));
+        } catch (e) {}
+        emitIfChanged(items);
+      }
     }, (error) => {
       console.warn('[ProductNotificationService] Snapshot error:', error);
-      fetchProductNotifications().then(callback);
+      // Fallback cleanly to local storage without recursively calling fetch
+      try {
+        const cached = localStorage.getItem('review_sincero_product_notifications');
+        if (cached) {
+          emitIfChanged(JSON.parse(cached));
+        }
+      } catch (err) {}
     });
   } catch (e) {
     console.warn('[ProductNotificationService] Could not setup onSnapshot:', e);
-    fetchProductNotifications().then(callback);
   }
 
   return () => {
